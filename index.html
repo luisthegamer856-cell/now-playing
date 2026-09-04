@@ -3,196 +3,219 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Now Spinning</title>
+<title>Now Playing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #17140f;
-    --bg-soft: #1f1b14;
-    --paper: #f5f1e8;
-    --paper-dim: #b7ae9c;
-    --accent: #e8a33d;
-    --accent-dim: #e8a33d55;
+    --c1: #FF3D81;
+    --c2: #7C3AED;
+    --ink: #14101F;
+    --paper: #FFF9F0;
+    --lime: #C6FF3D;
   }
   *{ box-sizing: border-box; margin: 0; padding: 0; }
   html, body{ height: 100%; }
   body{
-    background: radial-gradient(120% 140% at 20% -10%, var(--bg-soft), var(--bg) 60%);
-    color: var(--paper);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: var(--paper);
     min-height: 100vh;
-    padding: 24px;
+    display: flex;
+    background: linear-gradient(135deg, var(--c1), var(--c2) 70%);
+    background-attachment: fixed;
+    transition: background 1s ease;
     overflow-x: hidden;
   }
 
   .stage{
     width: 100%;
-    max-width: 420px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  /* --- vinyl + art --- */
-  .platter{
-    position: relative;
-    width: 260px;
-    height: 260px;
-    margin-bottom: 36px;
-    flex-shrink: 0;
-  }
-  .disc{
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background:
-      repeating-radial-gradient(circle at center,
-        #0c0a07 0px, #0c0a07 2px,
-        #1a160f 2px, #1a160f 4px);
-    box-shadow: 0 20px 50px -12px rgba(0,0,0,.7);
-    animation: spin 6s linear infinite;
-    animation-play-state: paused;
-  }
-  .disc.spinning{ animation-play-state: running; }
-  .art-wrap{
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 46%;
-    height: 46%;
-    transform: translate(-50%,-50%);
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid var(--bg);
-    box-shadow: 0 0 0 1px rgba(255,255,255,.08);
-    background: var(--bg-soft);
-    display: flex;
-    align-items: center;
     justify-content: center;
+    padding: 48px 32px;
+    max-width: 640px;
+    margin: 0 auto;
   }
-  .art-wrap img{ width: 100%; height: 100%; object-fit: cover; }
-  .art-wrap.empty::after{
-    content: '';
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--paper-dim);
-  }
-  @keyframes spin{ to{ transform: rotate(360deg); } }
 
-  /* --- text --- */
-  .track{
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    font-size: 26px;
-    line-height: 1.25;
-    letter-spacing: -0.01em;
-    margin-bottom: 6px;
-    max-width: 360px;
-  }
-  .artist{
+  /* ---------- login / idle ---------- */
+  .kicker{
     font-size: 15px;
-    color: var(--paper-dim);
-    margin-bottom: 28px;
+    font-weight: 500;
+    color: var(--paper);
+    opacity: .8;
+    margin-bottom: 10px;
   }
-
-  /* --- progress --- */
-  .progress-row{ width: 100%; max-width: 300px; margin-bottom: 22px; }
-  .track-bar{
-    position: relative;
-    height: 2px;
-    background: rgba(245,241,232,.14);
-    border-radius: 2px;
-    margin-bottom: 8px;
+  .big-headline{
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(40px, 9vw, 68px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    margin-bottom: 22px;
   }
-  .track-bar-fill{
-    position: absolute;
-    top: 0; left: 0; height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    width: 0%;
-    transition: width 1s linear, background .6s ease;
-  }
-  .time-row{
-    display: flex; justify-content: space-between;
-    font-size: 11px; color: var(--paper-dim);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .state{
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    color: var(--paper-dim);
-  }
-  .state .dot{
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--accent);
-    transition: background .6s ease;
-  }
-  .state .dot.paused{ background: var(--paper-dim); }
-
-  /* --- login / status card --- */
-  .intro{
-    font-size: 15px;
-    color: var(--paper-dim);
-    max-width: 300px;
+  .sub{
+    font-size: 16px;
     line-height: 1.6;
-    margin-bottom: 26px;
-  }
-  .needle{
-    width: 64px; height: 64px;
-    margin-bottom: 28px;
     opacity: .85;
+    max-width: 380px;
+    margin-bottom: 32px;
   }
-  button{
+  button.cta{
+    align-self: flex-start;
     background: var(--paper);
-    color: var(--bg);
+    color: var(--ink);
     border: none;
-    padding: 13px 26px;
+    padding: 16px 30px;
     border-radius: 999px;
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: 700;
+    font-size: 15px;
     font-family: inherit;
     cursor: pointer;
     transition: transform .15s ease, background .15s ease;
   }
-  button:hover{ background: var(--accent); }
-  button:active{ transform: scale(.97); }
-  button:focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; }
+  button.cta:hover{ background: var(--lime); }
+  button.cta:active{ transform: scale(.97); }
+  button.cta:focus-visible{ outline: 2px solid var(--paper); outline-offset: 3px; }
 
-  .foot-note{
-    margin-top: 22px;
-    font-size: 11px;
-    color: var(--paper-dim);
-    opacity: .6;
+  /* ---------- now playing ---------- */
+  .art-card{
+    width: 168px;
+    height: 168px;
+    border-radius: 26px;
+    overflow: hidden;
+    transform: rotate(-4deg);
+    box-shadow: 0 24px 48px -18px rgba(0,0,0,.55);
+    margin-bottom: 28px;
+    background: rgba(255,255,255,.08);
+    flex-shrink: 0;
+  }
+  .art-card img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .track-title{
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(32px, 7vw, 52px);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    word-break: break-word;
+  }
+  .track-artist{
+    font-size: 17px;
+    font-weight: 500;
+    opacity: .82;
+    margin-bottom: 30px;
   }
 
-  @media (prefers-reduced-motion: reduce){
-    .disc{ animation: none !important; }
+  .progress{
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 10px;
+  }
+  .progress-track{
+    position: relative;
+    height: 6px;
+    background: rgba(255,255,255,.22);
+    border-radius: 6px;
+  }
+  .progress-fill{
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    background: var(--paper);
+    border-radius: 6px;
+    width: 0%;
+    transition: width 1s linear;
+  }
+  .time-row{
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    opacity: .7;
+    font-variant-numeric: tabular-nums;
+    max-width: 420px;
+    margin-bottom: 30px;
   }
 
-  @media (max-width: 360px){
-    .platter{ width: 210px; height: 210px; }
-    .track{ font-size: 22px; }
+  .controls{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .ctrl-btn{
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,.14);
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease;
+    flex-shrink: 0;
+  }
+  .ctrl-btn:hover{ background: rgba(255,255,255,.26); }
+  .ctrl-btn:active{ transform: scale(.92); }
+  .ctrl-btn:focus-visible{ outline: 2px solid var(--paper); outline-offset: 3px; }
+  .ctrl-btn.main{
+    width: 64px; height: 64px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .ctrl-btn.main:hover{ background: var(--lime); }
+  .ctrl-btn svg{ width: 22px; height: 22px; }
+  .ctrl-btn.main svg{ width: 24px; height: 24px; }
+
+  .state-label{
+    font-size: 13px;
+    font-weight: 500;
+    opacity: .7;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .state-label .dot{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--lime);
+  }
+  .state-label .dot.paused{ background: var(--paper); opacity: .5; }
+
+  .toast{
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    max-width: 90vw;
+    text-align: center;
+  }
+  .toast.show{
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 420px){
+    .stage{ padding: 36px 22px; }
+    .art-card{ width: 132px; height: 132px; }
   }
 </style>
 </head>
 <body>
 
 <div class="stage" id="stage">
-  <div class="platter">
-    <svg class="needle" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="30" stroke="#f5f1e8" stroke-width="1.5" opacity=".5"/>
-      <circle cx="32" cy="32" r="4" fill="#e8a33d"/>
-    </svg>
-  </div>
-  <p class="intro">Loading…</p>
+  <p class="kicker">Loading…</p>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
 /* ============ CONFIGURE THIS ============ */
@@ -200,11 +223,20 @@ const CLIENT_ID = "f8ae9b8233d44779be5fa82f8351bbf9";
 /* ========================================= */
 
 const REDIRECT_URI = window.location.origin + window.location.pathname;
-const SCOPES = "user-read-currently-playing user-read-playback-state";
+const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state";
 const stage = document.getElementById('stage');
+const toastEl = document.getElementById('toast');
 
 let accessToken = null;
 let pollTimer = null;
+
+/* ---------- icons ---------- */
+const ICON = {
+  prev: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM19.5 5.5L9 12l10.5 6.5v-13z"/></svg>`,
+  next: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4.5 5.5L15 12 4.5 18.5v-13z"/></svg>`,
+  play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4.5v15l13-7.5z"/></svg>`,
+  pause:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>`
+};
 
 /* ---------- PKCE helpers ---------- */
 function randomString(len){
@@ -214,16 +246,13 @@ function randomString(len){
   return out;
 }
 async function sha256(plain){
-  const data = new TextEncoder().encode(plain);
-  return crypto.subtle.digest('SHA-256', data);
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(plain));
 }
 function base64UrlEncode(buffer){
   return btoa(String.fromCharCode(...new Uint8Array(buffer)))
     .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 
-/* window.name survives the redirect to Spotify and back, without touching
-   localStorage/sessionStorage (which this page intentionally avoids). */
 async function redirectToAuth(){
   const verifier = randomString(64);
   window.name = "sp_verifier:" + verifier;
@@ -241,10 +270,7 @@ async function redirectToAuth(){
 
 async function exchangeCodeForToken(code){
   const verifier = window.name.startsWith('sp_verifier:') ? window.name.slice(12) : null;
-  if(!verifier){
-    renderLogin("That link expired — log in again.");
-    return;
-  }
+  if(!verifier){ renderLogin("That link expired — log in again."); return; }
   const body = new URLSearchParams({
     client_id: CLIENT_ID,
     grant_type: 'authorization_code',
@@ -270,21 +296,19 @@ async function exchangeCodeForToken(code){
 /* ---------- rendering ---------- */
 function renderLogin(message){
   stage.innerHTML = `
-    <svg class="needle" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="30" stroke="#f5f1e8" stroke-width="1.5" opacity=".5"/>
-      <circle cx="32" cy="32" r="4" fill="#e8a33d"/>
-    </svg>
-    <p class="intro">${message || "Connect your Spotify account to see what's spinning right now."}</p>
-    <button id="loginBtn">Log in with Spotify</button>
+    <p class="kicker">Now playing</p>
+    <h1 class="big-headline">See what's<br>spinning.</h1>
+    <p class="sub">${message || "Connect Spotify to show your currently playing track, live, with skip controls."}</p>
+    <button class="cta" id="loginBtn">Log in with Spotify</button>
   `;
   document.getElementById('loginBtn').addEventListener('click', redirectToAuth);
 }
 
 function renderIdle(){
-  stopPolling(false);
   stage.innerHTML = `
-    <div class="platter"><div class="disc"></div><div class="art-wrap empty"></div></div>
-    <p class="intro" style="margin-bottom:0;">Nothing spinning right now.</p>
+    <p class="kicker">Now playing</p>
+    <h1 class="big-headline">Quiet for now.</h1>
+    <p class="sub">Nothing's playing on Spotify right now. Start something and this page will catch up automatically.</p>
   `;
 }
 
@@ -295,7 +319,13 @@ function msToClock(ms){
   return `${m}:${String(s).padStart(2,'0')}`;
 }
 
-function renderTrack(data, accentHex){
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderTrack(data){
   const track = data.item;
   const artists = track.artists.map(a => a.name).join(', ');
   const art = track.album.images[0]?.url || '';
@@ -305,60 +335,80 @@ function renderTrack(data, accentHex){
   const playing = !!data.is_playing;
 
   stage.innerHTML = `
-    <div class="platter">
-      <div class="disc ${playing ? 'spinning' : ''}"></div>
-      <div class="art-wrap"><img src="${art}" alt=""></div>
+    <div class="art-card"><img src="${art}" alt=""></div>
+    <h1 class="track-title">${escapeHtml(track.name)}</h1>
+    <p class="track-artist">${escapeHtml(artists)}</p>
+    <div class="progress">
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
     </div>
-    <h1 class="track">${escapeHtml(track.name)}</h1>
-    <p class="artist">${escapeHtml(artists)}</p>
-    <div class="progress-row">
-      <div class="track-bar"><div class="track-bar-fill" style="width:${pct}%"></div></div>
-      <div class="time-row"><span>${msToClock(progress)}</span><span>${msToClock(duration)}</span></div>
+    <div class="time-row"><span>${msToClock(progress)}</span><span>${msToClock(duration)}</span></div>
+    <div class="controls">
+      <button class="ctrl-btn" id="prevBtn" aria-label="Previous track">${ICON.prev}</button>
+      <button class="ctrl-btn main" id="playBtn" aria-label="${playing ? 'Pause' : 'Play'}">${playing ? ICON.pause : ICON.play}</button>
+      <button class="ctrl-btn" id="nextBtn" aria-label="Next track">${ICON.next}</button>
     </div>
-    <div class="state"><span class="dot ${playing ? '' : 'paused'}"></span>${playing ? 'Playing' : 'Paused'}</div>
+    <div class="state-label"><span class="dot ${playing ? '' : 'paused'}"></span>${playing ? 'Playing' : 'Paused'}</div>
   `;
-  if(accentHex){
-    document.documentElement.style.setProperty('--accent', accentHex);
+
+  document.getElementById('prevBtn').addEventListener('click', () => playerAction('POST', '/previous', 'Skipped back'));
+  document.getElementById('nextBtn').addEventListener('click', () => playerAction('POST', '/next', 'Skipped ahead'));
+  document.getElementById('playBtn').addEventListener('click', () => {
+    playerAction('PUT', playing ? '/pause' : '/play', playing ? 'Paused' : 'Playing');
+  });
+
+  extractGradient(art);
+}
+
+/* ---------- playback controls ---------- */
+async function playerAction(method, path, okMessage){
+  try{
+    const res = await fetch(`https://api.spotify.com/v1/me/player${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if(res.status === 403){ showToast("That needs Spotify Premium."); return; }
+    if(res.status === 401){ stopPolling(); renderLogin("Session expired — log in again."); return; }
+    if(res.status === 404){ showToast("Open Spotify on a device first."); return; }
+    showToast(okMessage);
+    setTimeout(tick, 450);
+  } catch(e){
+    showToast("Couldn't reach Spotify.");
   }
 }
 
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+let toastTimer = null;
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
 }
 
-/* ---------- pull a dominant color from the album art ---------- */
-function extractAccent(imgUrl){
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => {
-      try{
-        const canvas = document.createElement('canvas');
-        canvas.width = 24; canvas.height = 24;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, 24, 24);
-        const { data } = ctx.getImageData(0, 0, 24, 24);
+/* ---------- gradient from album art (two-tone, no storage used) ---------- */
+function extractGradient(imgUrl){
+  if(!imgUrl) return;
+  const img = new Image();
+  img.crossOrigin = 'Anonymous';
+  img.onload = () => {
+    try{
+      const canvas = document.createElement('canvas');
+      canvas.width = 20; canvas.height = 20;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, 20, 20);
+      const left = ctx.getImageData(0, 0, 8, 20).data;
+      const right = ctx.getImageData(12, 0, 8, 20).data;
+      const avg = (arr) => {
         let r=0,g=0,b=0,n=0;
-        for(let i=0;i<data.length;i+=4){
-          const [rr,gg,bb,aa] = [data[i],data[i+1],data[i+2],data[i+3]];
-          if(aa < 100) continue;
-          // skip near-black / near-white pixels so the accent stays vivid
-          const lum = (rr+gg+bb)/3;
-          if(lum < 25 || lum > 235) continue;
-          r+=rr; g+=gg; b+=bb; n++;
-        }
-        if(n === 0){ resolve(null); return; }
-        r = Math.round(r/n); g = Math.round(g/n); b = Math.round(b/n);
-        resolve(`rgb(${r},${g},${b})`);
-      } catch(e){
-        resolve(null); // canvas got tainted by CORS - just keep the default accent
-      }
-    };
-    img.onerror = () => resolve(null);
-    img.src = imgUrl;
-  });
+        for(let i=0;i<arr.length;i+=4){ r+=arr[i]; g+=arr[i+1]; b+=arr[i+2]; n++; }
+        return [Math.round(r/n), Math.round(g/n), Math.round(b/n)];
+      };
+      const [r1,g1,b1] = avg(left);
+      const [r2,g2,b2] = avg(right);
+      document.body.style.background =
+        `linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}) 75%)`;
+    } catch(e){ /* CORS-tainted canvas - keep the default gradient */ }
+  };
+  img.src = imgUrl;
 }
 
 /* ---------- polling ---------- */
@@ -367,20 +417,16 @@ async function tick(){
     const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
-    if(res.status === 204){ renderIdle(); startPolling(); return; }
-    if(res.status === 401){ stopPolling(false); renderLogin("Session expired — log in again."); return; }
+    if(res.status === 204){ renderIdle(); return; }
+    if(res.status === 401){ stopPolling(); renderLogin("Session expired — log in again."); return; }
     const data = await res.json();
-    if(!data || !data.item){ renderIdle(); startPolling(); return; }
-    const art = data.item.album.images[0]?.url;
-    const accent = art ? await extractAccent(art) : null;
-    renderTrack(data, accent);
-  } catch(e){
-    // transient network hiccup - keep the current view and try again next tick
-  }
+    if(!data || !data.item){ renderIdle(); return; }
+    renderTrack(data);
+  } catch(e){ /* transient network hiccup - keep current view, retry next tick */ }
 }
 
 function startPolling(){
-  stopPolling(false);
+  stopPolling();
   tick();
   pollTimer = setInterval(tick, 5000);
 }
