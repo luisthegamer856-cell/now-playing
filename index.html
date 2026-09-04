@@ -32,7 +32,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 48px 32px;
+    padding: 48px 32px 60px;
     max-width: 640px;
     margin: 0 auto;
   }
@@ -182,6 +182,59 @@
   }
   .state-label .dot.paused{ background: var(--paper); opacity: .5; }
 
+  /* ---------- library / playlists ---------- */
+  .section-label{
+    font-size: 14px;
+    font-weight: 600;
+    opacity: .8;
+    margin: 40px 0 14px;
+  }
+  .playlist-scroll{
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin: 0 -32px;
+    padding-left: 32px;
+    padding-right: 32px;
+    scroll-snap-type: x proximity;
+  }
+  .playlist-scroll::-webkit-scrollbar{ height: 6px; }
+  .playlist-scroll::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.25); border-radius: 6px; }
+  .playlist-card{
+    flex-shrink: 0;
+    width: 118px;
+    text-decoration: none;
+    color: inherit;
+    scroll-snap-align: start;
+  }
+  .playlist-cover-wrap{
+    width: 118px;
+    height: 118px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255,255,255,.1);
+    margin-bottom: 9px;
+    box-shadow: 0 10px 22px -12px rgba(0,0,0,.5);
+    transition: transform .15s ease;
+  }
+  .playlist-card:hover .playlist-cover-wrap{ transform: translateY(-3px); }
+  .playlist-cover-wrap img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+  .playlist-name{
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .playlist-count{
+    font-size: 11px;
+    opacity: .6;
+    margin-top: 2px;
+  }
+
   .toast{
     position: fixed;
     bottom: 28px;
@@ -198,6 +251,7 @@
     transition: opacity .25s ease, transform .25s ease;
     max-width: 90vw;
     text-align: center;
+    z-index: 10;
   }
   .toast.show{
     opacity: 1;
@@ -205,8 +259,9 @@
   }
 
   @media (max-width: 420px){
-    .stage{ padding: 36px 22px; }
+    .stage{ padding: 36px 22px 50px; }
     .art-card{ width: 132px; height: 132px; }
+    .playlist-scroll{ margin: 0 -22px; padding-left: 22px; padding-right: 22px; }
   }
 </style>
 </head>
@@ -223,12 +278,14 @@ const CLIENT_ID = "f8ae9b8233d44779be5fa82f8351bbf9";
 /* ========================================= */
 
 const REDIRECT_URI = window.location.origin + window.location.pathname;
-const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state";
+const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative";
 const stage = document.getElementById('stage');
 const toastEl = document.getElementById('toast');
 
 let accessToken = null;
 let pollTimer = null;
+let nowPlayingEl = null;
+let libraryEl = null;
 
 /* ---------- icons ---------- */
 const ICON = {
@@ -293,19 +350,21 @@ async function exchangeCodeForToken(code){
   }
 }
 
-/* ---------- rendering ---------- */
+/* ---------- rendering: login / idle / track ---------- */
 function renderLogin(message){
+  stopPolling();
   stage.innerHTML = `
     <p class="kicker">Now playing</p>
     <h1 class="big-headline">See what's<br>spinning.</h1>
-    <p class="sub">${message || "Connect Spotify to show your currently playing track, live, with skip controls."}</p>
+    <p class="sub">${message || "Connect Spotify to show your currently playing track, skip controls, and your playlists."}</p>
     <button class="cta" id="loginBtn">Log in with Spotify</button>
   `;
   document.getElementById('loginBtn').addEventListener('click', redirectToAuth);
 }
 
 function renderIdle(){
-  stage.innerHTML = `
+  if(!nowPlayingEl) return;
+  nowPlayingEl.innerHTML = `
     <p class="kicker">Now playing</p>
     <h1 class="big-headline">Quiet for now.</h1>
     <p class="sub">Nothing's playing on Spotify right now. Start something and this page will catch up automatically.</p>
@@ -326,6 +385,7 @@ function escapeHtml(str){
 }
 
 function renderTrack(data){
+  if(!nowPlayingEl) return;
   const track = data.item;
   const artists = track.artists.map(a => a.name).join(', ');
   const art = track.album.images[0]?.url || '';
@@ -334,7 +394,7 @@ function renderTrack(data){
   const pct = Math.min(100, (progress/duration) * 100);
   const playing = !!data.is_playing;
 
-  stage.innerHTML = `
+  nowPlayingEl.innerHTML = `
     <div class="art-card"><img src="${art}" alt=""></div>
     <h1 class="track-title">${escapeHtml(track.name)}</h1>
     <p class="track-artist">${escapeHtml(artists)}</p>
@@ -359,6 +419,40 @@ function renderTrack(data){
   extractGradient(art);
 }
 
+/* ---------- library: playlists ---------- */
+async function fetchLibrary(){
+  try{
+    const res = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if(!res.ok) return;
+    const data = await res.json();
+    renderPlaylists(data.items || []);
+  } catch(e){ /* leave library section empty on failure */ }
+}
+
+function renderPlaylists(playlists){
+  if(!libraryEl) return;
+  const usable = playlists.filter(p => p);
+  if(usable.length === 0){ libraryEl.innerHTML = ''; return; }
+  const cards = usable.map(p => {
+    const cover = p.images?.[0]?.url || '';
+    const url = p.external_urls?.spotify || '#';
+    const count = p.tracks?.total;
+    return `
+      <a class="playlist-card" href="${url}" target="_blank" rel="noopener">
+        <div class="playlist-cover-wrap">${cover ? `<img src="${cover}" alt="">` : ''}</div>
+        <p class="playlist-name">${escapeHtml(p.name)}</p>
+        ${typeof count === 'number' ? `<p class="playlist-count">${count} tracks</p>` : ''}
+      </a>
+    `;
+  }).join('');
+  libraryEl.innerHTML = `
+    <p class="section-label">Your playlists</p>
+    <div class="playlist-scroll">${cards}</div>
+  `;
+}
+
 /* ---------- playback controls ---------- */
 async function playerAction(method, path, okMessage){
   try{
@@ -367,7 +461,7 @@ async function playerAction(method, path, okMessage){
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     if(res.status === 403){ showToast("That needs Spotify Premium."); return; }
-    if(res.status === 401){ stopPolling(); renderLogin("Session expired — log in again."); return; }
+    if(res.status === 401){ renderLogin("Session expired — log in again."); return; }
     if(res.status === 404){ showToast("Open Spotify on a device first."); return; }
     showToast(okMessage);
     setTimeout(tick, 450);
@@ -418,7 +512,7 @@ async function tick(){
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     if(res.status === 204){ renderIdle(); return; }
-    if(res.status === 401){ stopPolling(); renderLogin("Session expired — log in again."); return; }
+    if(res.status === 401){ renderLogin("Session expired — log in again."); return; }
     const data = await res.json();
     if(!data || !data.item){ renderIdle(); return; }
     renderTrack(data);
@@ -427,7 +521,11 @@ async function tick(){
 
 function startPolling(){
   stopPolling();
+  stage.innerHTML = `<div id="nowPlaying"></div><div id="library"></div>`;
+  nowPlayingEl = document.getElementById('nowPlaying');
+  libraryEl = document.getElementById('library');
   tick();
+  fetchLibrary();
   pollTimer = setInterval(tick, 5000);
 }
 function stopPolling(){
