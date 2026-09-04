@@ -31,11 +31,12 @@
     width: 100%;
     min-height: 100vh;
     display: grid;
-    grid-template-columns: minmax(240px, 1fr) minmax(420px, 560px) minmax(240px, 1fr);
+    grid-template-columns: minmax(200px, 220px) minmax(360px, 380px) minmax(200px, 1fr);
     grid-template-areas: "lyrics player library";
     align-items: center;
-    gap: 36px;
-    padding: 48px 42px 60px;
+    justify-content: center;
+    gap: 24px;
+    padding: 48px 32px 60px;
     max-width: 1500px;
     margin: 0 auto;
   }
@@ -307,12 +308,13 @@
     transform: translateX(-50%) translateY(0);
   }
 
-  @media (max-width: 1050px){
+  @media (max-width: 800px){
     .stage{
-      grid-template-columns: minmax(220px, 1fr) minmax(360px, 1.4fr);
+      grid-template-columns: 1fr;
       grid-template-areas:
-        "player library"
-        "lyrics library";
+        "player"
+        "lyrics"
+        "library";
       gap: 28px;
       padding: 42px 28px 56px;
     }
@@ -322,7 +324,7 @@
     }
   }
 
-  @media (max-width: 720px){
+  @media (max-width: 600px){
     .stage{
       min-height: auto;
       grid-template-columns: 1fr;
