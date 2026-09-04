@@ -263,6 +263,24 @@
     .art-card{ width: 132px; height: 132px; }
     .playlist-scroll{ margin: 0 -22px; padding-left: 22px; padding-right: 22px; }
   }
+
+  .logout-btn{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255,255,255,.14);
+    color: var(--paper);
+    border: none;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 10;
+    transition: background .15s ease;
+  }
+  .logout-btn:hover{ background: rgba(255,255,255,.26); }
 </style>
 </head>
 <body>
@@ -325,6 +343,37 @@ async function redirectToAuth(){
   window.location.href = `https://accounts.spotify.com/authorize?${params}`;
 }
 
+
+const REFRESH_KEY = 'sp_refresh_token';
+
+async function refreshAccessToken(refreshToken){
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    client_id: CLIENT_ID
+  });
+  try{
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body
+    });
+    const data = await res.json();
+    if(data.access_token){
+      accessToken = data.access_token;
+      if(data.refresh_token){ localStorage.setItem(REFRESH_KEY, data.refresh_token); }
+      return true;
+    }
+  } catch(e){ /* fall through to false */ }
+  return false;
+}
+
+function logout(){
+  localStorage.removeItem(REFRESH_KEY);
+  stopPolling();
+  renderLogin();
+}
+
 async function exchangeCodeForToken(code){
   const verifier = window.name.startsWith('sp_verifier:') ? window.name.slice(12) : null;
   if(!verifier){ renderLogin("That link expired — log in again."); return; }
@@ -344,6 +393,7 @@ async function exchangeCodeForToken(code){
   window.history.replaceState({}, document.title, REDIRECT_URI);
   if(data.access_token){
     accessToken = data.access_token;
+    if(data.refresh_token){ localStorage.setItem(REFRESH_KEY, data.refresh_token); }
     startPolling();
   } else {
     renderLogin("Couldn't log in — try again.");
@@ -461,7 +511,12 @@ async function playerAction(method, path, okMessage){
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     if(res.status === 403){ showToast("That needs Spotify Premium."); return; }
-    if(res.status === 401){ renderLogin("Session expired — log in again."); return; }
+    if(res.status === 401){
+      const stored = localStorage.getItem(REFRESH_KEY);
+      if(stored && await refreshAccessToken(stored)){ setTimeout(tick, 300); return; }
+      renderLogin("Session expired — log in again.");
+      return;
+    }
     if(res.status === 404){ showToast("Open Spotify on a device first."); return; }
     showToast(okMessage);
     setTimeout(tick, 450);
@@ -512,7 +567,12 @@ async function tick(){
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     if(res.status === 204){ renderIdle(); return; }
-    if(res.status === 401){ renderLogin("Session expired — log in again."); return; }
+    if(res.status === 401){
+      const stored = localStorage.getItem(REFRESH_KEY);
+      if(stored && await refreshAccessToken(stored)){ tick(); return; }
+      renderLogin("Session expired — log in again.");
+      return;
+    }
     const data = await res.json();
     if(!data || !data.item){ renderIdle(); return; }
     renderTrack(data);
@@ -521,7 +581,8 @@ async function tick(){
 
 function startPolling(){
   stopPolling();
-  stage.innerHTML = `<div id="nowPlaying"></div><div id="library"></div>`;
+  stage.innerHTML = `<button class="logout-btn" id="logoutBtn">Log out</button><div id="nowPlaying"></div><div id="library"></div>`;
+  document.getElementById('logoutBtn').addEventListener('click', logout);
   nowPlayingEl = document.getElementById('nowPlaying');
   libraryEl = document.getElementById('library');
   tick();
@@ -533,7 +594,7 @@ function stopPolling(){
 }
 
 /* ---------- init ---------- */
-(function init(){
+(async function init(){
   if(CLIENT_ID.includes('PASTE_YOUR')){
     renderLogin("Add your Spotify Client ID in the code before this will work.");
     return;
@@ -542,9 +603,15 @@ function stopPolling(){
   const code = params.get('code');
   if(code){
     exchangeCodeForToken(code);
-  } else {
-    renderLogin();
+    return;
   }
+  const stored = localStorage.getItem(REFRESH_KEY);
+  if(stored){
+    const ok = await refreshAccessToken(stored);
+    if(ok){ startPolling(); return; }
+    localStorage.removeItem(REFRESH_KEY);
+  }
+  renderLogin();
 })();
 </script>
 </body>
