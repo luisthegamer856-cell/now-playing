@@ -31,7 +31,7 @@
     width: 100%;
     min-height: 100vh;
     display: grid;
-    grid-template-columns: minmax(200px, 220px) minmax(360px, 380px) minmax(200px, 1fr);
+    grid-template-columns: minmax(180px, 220px) minmax(360px, 380px) minmax(220px, 520px);
     grid-template-areas: "lyrics player library";
     align-items: center;
     justify-content: center;
@@ -85,6 +85,15 @@
     width: 100%;
     height: auto;
     aspect-ratio: 1;
+  }
+
+  @media (min-width: 801px){
+    #library{
+      resize: horizontal;
+      overflow: auto;
+      min-width: 220px;
+      max-width: 520px;
+    }
   }
 
   /* ---------- login / idle ---------- */
