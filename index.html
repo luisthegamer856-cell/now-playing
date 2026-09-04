@@ -281,6 +281,29 @@
     transition: background .15s ease;
   }
   .logout-btn:hover{ background: rgba(255,255,255,.26); }
+
+  .lyrics-box{
+    margin-top: 30px;
+    max-width: 460px;
+    max-height: 260px;
+    overflow-y: auto;
+    background: rgba(255,255,255,.08);
+    border-radius: 20px;
+    padding: 20px 22px;
+  }
+  .lyrics-box::-webkit-scrollbar{ width: 6px; }
+  .lyrics-box::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.25); border-radius: 6px; }
+  .lyrics-text{
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.75;
+    white-space: pre-line;
+    opacity: .92;
+  }
+  .lyrics-status{
+    font-size: 14px;
+    opacity: .6;
+  }
 </style>
 </head>
 <body>
@@ -304,6 +327,8 @@ let accessToken = null;
 let pollTimer = null;
 let nowPlayingEl = null;
 let libraryEl = null;
+let currentTrackId = null;
+let lyricsCache = {};
 
 /* ---------- icons ---------- */
 const ICON = {
@@ -458,6 +483,8 @@ function renderTrack(data){
       <button class="ctrl-btn" id="nextBtn" aria-label="Next track">${ICON.next}</button>
     </div>
     <div class="state-label"><span class="dot ${playing ? '' : 'paused'}"></span>${playing ? 'Playing' : 'Paused'}</div>
+    <p class="section-label" style="margin-bottom:10px;">Lyrics</p>
+    <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
   `;
 
   document.getElementById('prevBtn').addEventListener('click', () => playerAction('POST', '/previous', 'Skipped back'));
@@ -467,6 +494,54 @@ function renderTrack(data){
   });
 
   extractGradient(art);
+
+  if(track.id !== currentTrackId){
+    currentTrackId = track.id;
+    loadLyricsFor(track, duration);
+  } else if(lyricsCache[track.id] !== undefined){
+    renderLyricsBox(lyricsCache[track.id]);
+  }
+}
+
+/* ---------- lyrics (via lrclib.net - free, open, no key required) ---------- */
+async function fetchLyricsText(title, artist, album, durationSec){
+  try{
+    const exact = new URLSearchParams({ track_name: title, artist_name: artist, album_name: album, duration: durationSec });
+    let res = await fetch(`https://lrclib.net/api/get?${exact}`);
+    if(res.ok){
+      const data = await res.json();
+      if(data.plainLyrics) return data.plainLyrics;
+    }
+    const loose = new URLSearchParams({ track_name: title, artist_name: artist });
+    res = await fetch(`https://lrclib.net/api/search?${loose}`);
+    if(res.ok){
+      const results = await res.json();
+      if(Array.isArray(results)){
+        const hit = results.find(r => r.plainLyrics);
+        if(hit) return hit.plainLyrics;
+      }
+    }
+  } catch(e){ /* treat as not found */ }
+  return null;
+}
+
+function renderLyricsBox(text){
+  const box = document.getElementById('lyricsBox');
+  if(!box) return;
+  if(!text){
+    box.innerHTML = '<p class="lyrics-status">Lyrics not found for this track.</p>';
+    return;
+  }
+  box.innerHTML = `<pre class="lyrics-text">${escapeHtml(text)}</pre>`;
+}
+
+async function loadLyricsFor(track, durationMs){
+  const id = track.id;
+  if(lyricsCache[id] !== undefined){ renderLyricsBox(lyricsCache[id]); return; }
+  const artist = track.artists[0]?.name || '';
+  const text = await fetchLyricsText(track.name, artist, track.album.name, Math.round(durationMs / 1000));
+  lyricsCache[id] = text;
+  if(currentTrackId === id){ renderLyricsBox(text); }
 }
 
 /* ---------- library: playlists ---------- */
@@ -534,6 +609,23 @@ function showToast(msg){
 }
 
 /* ---------- gradient from album art (two-tone, no storage used) ---------- */
+function pickVibrant(pixelData){
+  let best = null, bestScore = -1, fallbackR=0, fallbackG=0, fallbackB=0, n=0;
+  for(let i=0;i<pixelData.length;i+=4){
+    const r=pixelData[i], g=pixelData[i+1], b=pixelData[i+2], a=pixelData[i+3];
+    if(a < 100) continue;
+    fallbackR+=r; fallbackG+=g; fallbackB+=b; n++;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    const lum=(max+min)/2;
+    if(lum < 30 || lum > 225) continue; // skip near-black/near-white pixels
+    const sat = max===0 ? 0 : (max-min)/max;
+    if(sat > bestScore){ bestScore = sat; best = [r,g,b]; }
+  }
+  if(best) return best;
+  if(n===0) return [124,58,237]; // ultimate fallback: violet
+  return [Math.round(fallbackR/n), Math.round(fallbackG/n), Math.round(fallbackB/n)];
+}
+
 function extractGradient(imgUrl){
   if(!imgUrl) return;
   const img = new Image();
@@ -541,21 +633,16 @@ function extractGradient(imgUrl){
   img.onload = () => {
     try{
       const canvas = document.createElement('canvas');
-      canvas.width = 20; canvas.height = 20;
+      canvas.width = 24; canvas.height = 24;
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, 20, 20);
-      const left = ctx.getImageData(0, 0, 8, 20).data;
-      const right = ctx.getImageData(12, 0, 8, 20).data;
-      const avg = (arr) => {
-        let r=0,g=0,b=0,n=0;
-        for(let i=0;i<arr.length;i+=4){ r+=arr[i]; g+=arr[i+1]; b+=arr[i+2]; n++; }
-        return [Math.round(r/n), Math.round(g/n), Math.round(b/n)];
-      };
-      const [r1,g1,b1] = avg(left);
-      const [r2,g2,b2] = avg(right);
+      ctx.drawImage(img, 0, 0, 24, 24);
+      const left = ctx.getImageData(0, 0, 10, 24).data;
+      const right = ctx.getImageData(14, 0, 10, 24).data;
+      const [r1,g1,b1] = pickVibrant(left);
+      const [r2,g2,b2] = pickVibrant(right);
       document.body.style.background =
         `linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}) 75%)`;
-    } catch(e){ /* CORS-tainted canvas - keep the default gradient */ }
+    } catch(e){ /* CORS-tainted canvas - keep the current gradient */ }
   };
   img.src = imgUrl;
 }
