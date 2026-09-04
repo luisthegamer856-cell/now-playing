@@ -29,70 +29,43 @@
 
   .stage{
     width: 100%;
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: minmax(180px, 220px) minmax(360px, 380px) minmax(220px, 520px);
-    grid-template-areas: "lyrics player library";
-    align-items: center;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
-    gap: 24px;
-    padding: 48px 32px 60px;
-    max-width: 1500px;
+    padding: 48px 40px 60px;
+    max-width: 1080px;
     margin: 0 auto;
   }
-
-  #nowPlaying{
-    grid-area: player;
+  .layout{
+    display: flex;
+    align-items: flex-start;
+    gap: 56px;
+    width: 100%;
+  }
+  .main-col{
+    flex: 1 1 420px;
     min-width: 0;
+    max-width: 460px;
   }
-
-  #lyricsPanel{
-    grid-area: lyrics;
-    min-width: 0;
-    align-self: center;
-  }
-
-  #library{
-    grid-area: library;
-    min-width: 0;
-    align-self: center;
-  }
-
-  #lyricsPanel .section-label{
-    margin-top: 0;
-  }
-
-  #library .section-label{
-    margin-top: 0;
-  }
-
-  #library .playlist-scroll{
-    display: grid;
-    grid-template-columns: repeat(2, minmax(100px, 1fr));
-    gap: 18px;
+  .side-col{
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 40px;
+    max-height: calc(100vh - 80px);
     overflow-y: auto;
-    overflow-x: hidden;
-    max-height: 620px;
-    margin: 0;
-    padding: 0 6px 10px 0;
+    padding-right: 4px;
   }
-
-  #library .playlist-card{
-    width: 100%;
-  }
-
-  #library .playlist-cover-wrap{
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1;
-  }
-
-  @media (min-width: 801px){
-    #library{
-      resize: horizontal;
-      overflow: auto;
-      min-width: 220px;
-      max-width: 520px;
+  .side-col::-webkit-scrollbar{ width: 6px; }
+  .side-col::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.25); border-radius: 6px; }
+  @media (max-width: 860px){
+    .layout{ flex-direction: column; }
+    .main-col{ max-width: none; width: 100%; }
+    .side-col{
+      width: 100%;
+      position: static;
+      max-height: none;
+      overflow-y: visible;
     }
   }
 
@@ -138,8 +111,8 @@
 
   /* ---------- now playing ---------- */
   .art-card{
-    width: 350px;
-    height: 350px;
+    width: 168px;
+    height: 168px;
     border-radius: 26px;
     overflow: hidden;
     transform: rotate(-4deg);
@@ -246,50 +219,45 @@
     font-size: 14px;
     font-weight: 600;
     opacity: .8;
-    margin: 40px 0 14px;
+    margin: 0 0 16px;
   }
-  .playlist-scroll{
+  .playlist-list{
     display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    padding-bottom: 10px;
-    margin: 0 -32px;
-    padding-left: 32px;
-    padding-right: 32px;
-    scroll-snap-type: x proximity;
+    flex-direction: column;
+    gap: 6px;
   }
-  .playlist-scroll::-webkit-scrollbar{ height: 6px; }
-  .playlist-scroll::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.25); border-radius: 6px; }
-  .playlist-card{
-    flex-shrink: 0;
-    width: 118px;
+  .playlist-row{
+    display: flex;
+    align-items: center;
+    gap: 12px;
     text-decoration: none;
     color: inherit;
-    scroll-snap-align: start;
+    padding: 8px;
+    border-radius: 14px;
+    transition: background .15s ease;
   }
-  .playlist-cover-wrap{
-    width: 118px;
-    height: 118px;
-    border-radius: 16px;
+  .playlist-row:hover{ background: rgba(255,255,255,.1); }
+  .playlist-row-cover{
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
     overflow: hidden;
     background: rgba(255,255,255,.1);
-    margin-bottom: 9px;
-    box-shadow: 0 10px 22px -12px rgba(0,0,0,.5);
-    transition: transform .15s ease;
+    flex-shrink: 0;
+    box-shadow: 0 8px 18px -10px rgba(0,0,0,.5);
   }
-  .playlist-card:hover .playlist-cover-wrap{ transform: translateY(-3px); }
-  .playlist-cover-wrap img{ width: 100%; height: 100%; object-fit: cover; display: block; }
-  .playlist-name{
-    font-size: 13px;
+  .playlist-row-cover img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+  .playlist-row-info{ min-width: 0; }
+  .playlist-row-name{
+    font-size: 14px;
     font-weight: 600;
     line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .playlist-count{
-    font-size: 11px;
+  .playlist-row-count{
+    font-size: 12px;
     opacity: .6;
     margin-top: 2px;
   }
@@ -317,43 +285,10 @@
     transform: translateX(-50%) translateY(0);
   }
 
-  @media (max-width: 800px){
-    .stage{
-      grid-template-columns: 1fr;
-      grid-template-areas:
-        "player"
-        "lyrics"
-        "library";
-      gap: 28px;
-      padding: 42px 28px 56px;
-    }
-
-    #library .playlist-scroll{
-      grid-template-columns: repeat(2, minmax(100px, 1fr));
-    }
-  }
-
-  @media (max-width: 600px){
-    .stage{
-      min-height: auto;
-      grid-template-columns: 1fr;
-      grid-template-areas:
-        "player"
-        "lyrics"
-        "library";
-      padding: 36px 22px 50px;
-      gap: 28px;
-    }
-
-    .art-card{
-      width: 132px;
-      height: 132px;
-    }
-
-    #library .playlist-scroll{
-      grid-template-columns: repeat(2, minmax(100px, 1fr));
-      max-height: none;
-    }
+  @media (max-width: 420px){
+    .stage{ padding: 36px 22px 50px; }
+    .art-card{ width: 132px; height: 132px; }
+    .playlist-scroll{ margin: 0 -22px; padding-left: 22px; padding-right: 22px; }
   }
 
   .logout-btn{
@@ -375,8 +310,8 @@
   .logout-btn:hover{ background: rgba(255,255,255,.26); }
 
   .lyrics-box{
-    margin-top: 12px;
-    max-width: 100%;
+    margin-top: 30px;
+    max-width: 460px;
     max-height: 260px;
     overflow-y: auto;
     background: rgba(255,255,255,.08);
@@ -575,6 +510,8 @@ function renderTrack(data){
       <button class="ctrl-btn" id="nextBtn" aria-label="Next track">${ICON.next}</button>
     </div>
     <div class="state-label"><span class="dot ${playing ? '' : 'paused'}"></span>${playing ? 'Playing' : 'Paused'}</div>
+    <p class="section-label" style="margin-top:30px;">Lyrics</p>
+    <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
   `;
 
   document.getElementById('prevBtn').addEventListener('click', () => playerAction('POST', '/previous', 'Skipped back'));
@@ -650,21 +587,23 @@ function renderPlaylists(playlists){
   if(!libraryEl) return;
   const usable = playlists.filter(p => p);
   if(usable.length === 0){ libraryEl.innerHTML = ''; return; }
-  const cards = usable.map(p => {
+  const rows = usable.map(p => {
     const cover = p.images?.[0]?.url || '';
     const url = p.external_urls?.spotify || '#';
     const count = p.tracks?.total;
     return `
-      <a class="playlist-card" href="${url}" target="_blank" rel="noopener">
-        <div class="playlist-cover-wrap">${cover ? `<img src="${cover}" alt="">` : ''}</div>
-        <p class="playlist-name">${escapeHtml(p.name)}</p>
-        ${typeof count === 'number' ? `<p class="playlist-count">${count} tracks</p>` : ''}
+      <a class="playlist-row" href="${url}" target="_blank" rel="noopener">
+        <div class="playlist-row-cover">${cover ? `<img src="${cover}" alt="">` : ''}</div>
+        <div class="playlist-row-info">
+          <p class="playlist-row-name">${escapeHtml(p.name)}</p>
+          ${typeof count === 'number' ? `<p class="playlist-row-count">${count} tracks</p>` : ''}
+        </div>
       </a>
     `;
   }).join('');
   libraryEl.innerHTML = `
     <p class="section-label">Your playlists</p>
-    <div class="playlist-scroll">${cards}</div>
+    <div class="playlist-list">${rows}</div>
   `;
 }
 
@@ -758,13 +697,13 @@ async function tick(){
 
 function startPolling(){
   stopPolling();
-  stage.innerHTML = `<button class="logout-btn" id="logoutBtn">Log out</button>
-    <div id="lyricsPanel">
-      <p class="section-label">Lyrics</p>
-      <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
+  stage.innerHTML = `
+    <button class="logout-btn" id="logoutBtn">Log out</button>
+    <div class="layout">
+      <div class="main-col" id="nowPlaying"></div>
+      <aside class="side-col" id="library"></aside>
     </div>
-    <div id="nowPlaying"></div>
-    <div id="library"></div>`;
+  `;
   document.getElementById('logoutBtn').addEventListener('click', logout);
   nowPlayingEl = document.getElementById('nowPlaying');
   libraryEl = document.getElementById('library');
