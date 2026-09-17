@@ -58,8 +58,8 @@
   .blob-c{
     width: 40vmax; height: 40vmax;
     top: 28%; left: 38%;
-    background: var(--lime);
-    opacity: .35;
+    background: var(--c3, var(--lime));
+    opacity: .4;
     animation: floatC 22s ease-in-out infinite alternate;
   }
   @keyframes floatA{
@@ -155,9 +155,9 @@
 
   /* ---------- now playing ---------- */
   .art-card{
-    width: 168px;
-    height: 168px;
-    border-radius: 26px;
+    width: 216px;
+    height: 216px;
+    border-radius: 30px;
     overflow: hidden;
     transform: rotate(-4deg);
     box-shadow: 0 24px 48px -18px rgba(0,0,0,.55);
@@ -317,6 +317,11 @@
     background-clip: text;
     color: transparent;
     transition: text-shadow .2s ease;
+    /* Isolates each word on its own compositing layer, which stops the
+       flicker Chrome otherwise produces on background-clip:text elements
+       when an ancestor's transform changes every frame (the scroll). */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
   .lyric-word.current{
     text-shadow: 0 0 20px rgba(47,230,255,.55);
@@ -403,7 +408,7 @@
 
   @media (max-width: 420px){
     .stage{ padding: 36px 22px 50px; }
-    .art-card{ width: 132px; height: 132px; }
+    .art-card{ width: 160px; height: 160px; }
     .lyric-line{ font-size: 24px; }
   }
 </style>
@@ -909,10 +914,13 @@ function extractGradient(imgUrl){
       ctx.drawImage(img, 0, 0, 24, 24);
       const left = ctx.getImageData(0, 0, 10, 24).data;
       const right = ctx.getImageData(14, 0, 10, 24).data;
+      const top = ctx.getImageData(0, 0, 24, 10).data;
       const [r1,g1,b1] = pickVibrant(left);
       const [r2,g2,b2] = pickVibrant(right);
+      const [r3,g3,b3] = pickVibrant(top);
       document.documentElement.style.setProperty('--c1', `rgb(${r1},${g1},${b1})`);
       document.documentElement.style.setProperty('--c2', `rgb(${r2},${g2},${b2})`);
+      document.documentElement.style.setProperty('--c3', `rgb(${r3},${g3},${b3})`);
     } catch(e){ /* CORS-tainted canvas - keep the current colors */ }
   };
   img.src = imgUrl;
