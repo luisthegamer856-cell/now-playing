@@ -272,9 +272,13 @@
     position: relative;
     height: min(66vh, 600px);
     overflow: hidden;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
   }
+  /* NOTE: deliberately no mask-image here. A CSS mask on a container whose
+     child transform updates every frame forces a full re-rasterize of the
+     masked layer each frame, which was the main cause of the glitching
+     (and the repaint pressure bleeding into the artwork). The soft edge is
+     done with per-line opacity instead, set only when the active line
+     changes rather than every frame. */
   .lyrics-track{
     position: absolute;
     left: 0; right: 0; top: 0;
@@ -298,40 +302,44 @@
     font-size: 30px;
     font-weight: 800;
     line-height: 1.45;
-    transition: font-size .35s ease;
+    transition: font-size .35s ease, opacity .5s ease;
   }
   .lyric-line.active{
     font-size: 38px;
   }
-  /* ---------- word sweep ---------- */
-  /* Two distinct rendering modes, kept deliberately separate:
-     - resting words (already sung, or not yet reached) get a plain solid
-       color — no gradient involved at all.
-     - only the ONE word currently being sung gets the animated gradient
-       sweep. Reusing the sweep gradient for resting words was the bug:
-       its "glow" stop sits at the fill position, so at fill:0% it lit up
-       a sliver at the very start of every untouched word (i.e. the first
-       letter). Isolating the gradient to only the active word removes
-       that artifact entirely.
+
+  /* ---------- word sweep ----------
+     Each word is rendered twice: a dim base copy, and a bright copy layered
+     exactly on top inside an overflow-hidden wrapper. Sweeping a word means
+     animating that wrapper's width from 0% to 100%.
+
+     This replaces the previous background-clip:text + gradient approach.
+     Animating a width on a small inline element is a plain, cheap, totally
+     standard operation with none of the rendering fragility that clipped-
+     gradient text has inside a continuously transforming ancestor. It also
+     structurally removes the "bright first letter" artifact, since there is
+     no gradient glow stop to sit at position 0 on untouched words.
   */
   .lyric-word{
+    position: relative;
     display: inline-block;
+    white-space: pre;
+  }
+  .w-base{
     color: rgba(255,255,255,.3);
-    transition: color .25s ease;
   }
-  .lyric-word.word-sung{
+  .w-fill{
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 0%;
+    overflow: hidden;
     color: var(--cyan);
+    text-shadow: 0 0 18px rgba(47,230,255,.45);
+    pointer-events: none;
   }
-  .lyric-word.word-sweeping{
-    --fill: 0%;
-    background-image: linear-gradient(90deg,
-      var(--cyan) clamp(0%, calc(var(--fill) - 18%), 100%),
-      rgba(255,255,255,.94) var(--fill),
-      rgba(255,255,255,.3) clamp(0%, calc(var(--fill) + 18%), 100%));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 0 20px rgba(47,230,255,.55);
+  .w-fill > span{
+    display: block;
+    white-space: pre;
   }
 
   /* ---------- top bar: profile + logout ---------- */
@@ -764,10 +772,16 @@ function renderLyricsBox(data){
   const box = document.getElementById('lyricsBox');
   if(!box) return;
   if(data.synced && data.synced.length){
+    // Each word gets a dim base copy plus a bright copy clipped by width.
+    const word = (text) => {
+      const safe = escapeHtml(text) || '\u266A';
+      return `<span class="lyric-word"><span class="w-base">${safe}</span>` +
+             `<span class="w-fill"><span>${safe}</span></span></span>`;
+    };
     const lines = data.synced.map((l, i) => {
       const wordsHtml = l.words.length
-        ? l.words.map(w => `<span class="lyric-word">${escapeHtml(w.text)}</span>`).join(' ')
-        : (escapeHtml(l.text) || '\u266A');
+        ? l.words.map(w => word(w.text)).join(' ')
+        : word(l.text);
       return `<p class="lyric-line" data-i="${i}">${wordsHtml}</p>`;
     }).join('');
     box.innerHTML = `<div class="lyrics-track" id="lyricsTrack">${lines}</div>`;
@@ -814,15 +828,15 @@ function stopLyricsLoop(){
 /* Sets every word in a line to a resting state: fully sung (solid cyan)
    or not yet reached (default dim). Never touches the sweep gradient —
    that's reserved for the single word actively being highlighted. */
-function setLineState(lineEl, sung){
-  const state = sung ? 'sung' : 'idle';
-  lineEl.querySelectorAll('.lyric-word').forEach(w => {
-    if(w.dataset.state === state) return;
-    w.dataset.state = state;
-    w.classList.remove('word-sweeping');
-    w.style.removeProperty('--fill');
-    delete w.dataset.fill;
-    w.classList.toggle('word-sung', sung);
+/* Sets every word in a line to a resting state by driving the clip width
+   directly: 100% = fully sung, 0% = not yet reached. No classes, no custom
+   properties, no gradients — just a width. */
+function setLineFillPct(lineEl, pct){
+  const v = pct + '%';
+  lineEl.querySelectorAll('.w-fill').forEach(f => {
+    if(f.dataset.w === v) return;
+    f.dataset.w = v;
+    f.style.width = v;
   });
 }
 
@@ -848,68 +862,52 @@ function updateLyrics(){
   if(idx !== lyricsMeta.lastActiveIdx){
     lineEls.forEach((el, i) => {
       el.classList.toggle('active', i === idx);
-      // Lines already passed sit fully sung; lines not yet reached sit
-      // fully dim. Only the active line gets a continuous per-frame sweep
-      // below, so this only needs to run once per line change, not per frame.
+
+      // Distance-based fade replaces the old CSS mask. Only recalculated
+      // when the active line changes, so it costs nothing per frame.
+      const dist = Math.abs(i - idx);
+      const op = Math.max(1 - dist * 0.16, 0.12).toFixed(2);
+      if(el.dataset.op !== op){
+        el.dataset.op = op;
+        el.style.opacity = op;
+      }
+
+      // Lines already passed sit fully filled; lines not yet reached sit
+      // empty. Only the active line is swept per frame below.
       if(i !== idx){
-        setLineState(el, i < idx);
+        setLineFillPct(el, i < idx ? 100 : 0);
       }
     });
     lyricsMeta.lastActiveIdx = idx;
-    lyricsMeta.lastWordIdx = -1;
   }
 
   const currentLineEl = lineEls[idx];
   if(currentLineEl){
-    // Continuous word-level sweep: recomputed every frame with the exact
-    // interpolated fill percentage, so the color wipe moves smoothly. Only
-    // the single word currently being sung gets the gradient treatment —
-    // words already finished switch to a plain solid color instead of
-    // staying in gradient mode, and words not yet reached stay at their
-    // default resting color. This is what avoids the "bright first letter"
-    // artifact: the gradient's glow stop only ever exists on one word at a
-    // time, never sitting idle on a word that hasn't started yet.
-    const words = currentLineEl.querySelectorAll('.lyric-word');
-    if(words.length){
+    // Word-level sweep on the active line: each word's bright copy is
+    // revealed by widening its clip from 0% to 100% across that word's
+    // estimated duration. Writes are skipped unless the rounded percentage
+    // actually changed, so a held word costs nothing.
+    const fills = currentLineEl.querySelectorAll('.w-fill');
+    if(fills.length){
       const timeInLine = elapsedSec - lines[idx].time;
       const wdata = lines[idx].words;
-      let activeWordIdx = -1;
 
-      words.forEach((w, i) => {
+      fills.forEach((f, i) => {
         const wd = wdata[i];
-        let state;
+        let pct;
         if(!wd || timeInLine >= wd.start + wd.duration){
-          state = 'sung';
+          pct = 100;
         } else if(timeInLine <= wd.start){
-          state = 'idle';
+          pct = 0;
         } else {
-          state = 'sweep';
+          pct = Math.round(((timeInLine - wd.start) / wd.duration) * 100);
         }
-
-        // Only write to the DOM when the state genuinely changed. Rewriting
-        // every word's classes on every frame caused style/layer thrash,
-        // which is what made the words (and the artwork) glitch.
-        if(w.dataset.state !== state){
-          w.dataset.state = state;
-          w.classList.toggle('word-sung', state === 'sung');
-          w.classList.toggle('word-sweeping', state === 'sweep');
-          if(state !== 'sweep'){
-            w.style.removeProperty('--fill');
-            delete w.dataset.fill;
-          }
-        }
-
-        if(state === 'sweep'){
-          const pct = Math.round(((timeInLine - wd.start) / wd.duration) * 100);
-          if(w.dataset.fill !== String(pct)){
-            w.dataset.fill = String(pct);
-            w.style.setProperty('--fill', pct + '%');
-          }
-          activeWordIdx = i;
+        const v = pct + '%';
+        if(f.dataset.w !== v){
+          f.dataset.w = v;
+          f.style.width = v;
         }
       });
-
-      lyricsMeta.lastWordIdx = activeWordIdx;
     }
 
     // continuous, eased vertical scroll toward centering the active line
