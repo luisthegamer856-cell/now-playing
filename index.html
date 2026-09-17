@@ -163,6 +163,10 @@
     margin-bottom: 28px;
     background: rgba(255,255,255,.08);
     flex-shrink: 0;
+    /* Stable, permanent layer promotion (created once, never torn down)
+       so the artwork isn't caught up in the lyrics repaints. */
+    transform: translateZ(0);
+    will-change: transform;
   }
   .art-card img{ width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -328,11 +332,6 @@
     background-clip: text;
     color: transparent;
     text-shadow: 0 0 20px rgba(47,230,255,.55);
-    /* Isolates this word on its own compositing layer, which stops the
-       flicker Chrome otherwise produces on background-clip:text elements
-       when an ancestor's transform changes every frame (the scroll). */
-    transform: translateZ(0);
-    backface-visibility: hidden;
   }
 
   /* ---------- top bar: profile + logout ---------- */
@@ -476,9 +475,35 @@ function base64UrlEncode(buffer){
     .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 
+const VERIFIER_KEY = 'sp_verifier';
+
+/* iOS Safari and in-app browsers (Instagram, Messenger, etc.) wipe
+   window.name on cross-origin navigation, which silently destroyed the
+   PKCE verifier on the way back from Spotify. Storage survives the
+   round trip; window.name is kept only as a last-resort fallback. */
+function saveVerifier(v){
+  try{ sessionStorage.setItem(VERIFIER_KEY, v); }catch(e){}
+  try{ localStorage.setItem(VERIFIER_KEY, v); }catch(e){}
+  try{ window.name = 'sp_verifier:' + v; }catch(e){}
+}
+function readVerifier(){
+  let v = null;
+  try{ v = sessionStorage.getItem(VERIFIER_KEY); }catch(e){}
+  if(!v){ try{ v = localStorage.getItem(VERIFIER_KEY); }catch(e){} }
+  if(!v && typeof window.name === 'string' && window.name.startsWith('sp_verifier:')){
+    v = window.name.slice(12);
+  }
+  return v;
+}
+function clearVerifier(){
+  try{ sessionStorage.removeItem(VERIFIER_KEY); }catch(e){}
+  try{ localStorage.removeItem(VERIFIER_KEY); }catch(e){}
+  try{ if(typeof window.name === 'string' && window.name.startsWith('sp_verifier:')) window.name = ''; }catch(e){}
+}
+
 async function redirectToAuth(){
   const verifier = randomString(64);
-  window.name = "sp_verifier:" + verifier;
+  saveVerifier(verifier);
   const challenge = base64UrlEncode(await sha256(verifier));
   const params = new URLSearchParams({
     client_id: CLIENT_ID,
@@ -522,7 +547,7 @@ function logout(){
 }
 
 async function exchangeCodeForToken(code){
-  const verifier = window.name.startsWith('sp_verifier:') ? window.name.slice(12) : null;
+  const verifier = readVerifier();
   if(!verifier){ renderLogin("That link expired — log in again."); return; }
   const body = new URLSearchParams({
     client_id: CLIENT_ID,
@@ -538,6 +563,7 @@ async function exchangeCodeForToken(code){
   });
   const data = await res.json();
   window.history.replaceState({}, document.title, REDIRECT_URI);
+  clearVerifier();
   if(data.access_token){
     accessToken = data.access_token;
     if(data.refresh_token){ localStorage.setItem(REFRESH_KEY, data.refresh_token); }
@@ -664,14 +690,36 @@ function parseLRC(lrcText){
 /* Since lrclib only gives one timestamp per line, word-level highlighting is
    an estimate: each word gets a time slice of the line proportional to its
    character length. Not perfectly precise, but reads very close to real sync. */
+/* Rough syllable count via vowel groups. Works reasonably for both English
+   and Spanish, and tracks singing duration far better than letter count —
+   "strength" is one syllable but eight letters, while "area" is three
+   syllables in four letters. */
+function countSyllables(word){
+  const w = word.toLowerCase().replace(/[^a-záéíóúüñ]/g, '');
+  if(!w) return 1;
+  const groups = w.match(/[aeiouyáéíóúü]+/g);
+  return groups ? groups.length : 1;
+}
+
 function estimateWordTimings(text, lineDuration){
   const words = text.split(/\s+/).filter(Boolean);
   if(words.length === 0) return [];
-  const totalChars = words.reduce((sum, w) => sum + w.length, 0) || 1;
+
+  const syllables = words.map(countSyllables);
+  const totalSyllables = syllables.reduce((a, b) => a + b, 0) || 1;
+
+  /* A line's "duration" is really the gap until the next line, which often
+     includes instrumental space after the vocal ends. Stretching the sweep
+     across that whole gap is what made it drag. So the sweep runs at a
+     natural singing pace and simply finishes early when the gap is long. */
+  const NATURAL_SEC_PER_SYLLABLE = 0.33;
+  const naturalDuration = totalSyllables * NATURAL_SEC_PER_SYLLABLE;
+  const effective = Math.max(Math.min(lineDuration, naturalDuration), 0.3);
+
   let offset = 0;
-  return words.map(w => {
-    const share = w.length / totalChars;
-    const wordDuration = lineDuration * share;
+  return words.map((w, i) => {
+    const share = syllables[i] / totalSyllables;
+    const wordDuration = Math.max(effective * share, 0.08);
     const start = offset;
     offset += wordDuration;
     return { text: w, start, duration: wordDuration };
@@ -767,9 +815,13 @@ function stopLyricsLoop(){
    or not yet reached (default dim). Never touches the sweep gradient —
    that's reserved for the single word actively being highlighted. */
 function setLineState(lineEl, sung){
+  const state = sung ? 'sung' : 'idle';
   lineEl.querySelectorAll('.lyric-word').forEach(w => {
+    if(w.dataset.state === state) return;
+    w.dataset.state = state;
     w.classList.remove('word-sweeping');
     w.style.removeProperty('--fill');
+    delete w.dataset.fill;
     w.classList.toggle('word-sung', sung);
   });
 }
@@ -825,21 +877,34 @@ function updateLyrics(){
 
       words.forEach((w, i) => {
         const wd = wdata[i];
-        const finished = !wd || timeInLine >= wd.start + wd.duration;
-        const notStarted = wd && timeInLine <= wd.start;
-
-        if(finished){
-          w.classList.remove('word-sweeping');
-          w.style.removeProperty('--fill');
-          w.classList.add('word-sung');
-        } else if(notStarted){
-          w.classList.remove('word-sweeping', 'word-sung');
-          w.style.removeProperty('--fill');
+        let state;
+        if(!wd || timeInLine >= wd.start + wd.duration){
+          state = 'sung';
+        } else if(timeInLine <= wd.start){
+          state = 'idle';
         } else {
-          const pct = ((timeInLine - wd.start) / wd.duration) * 100;
-          w.classList.remove('word-sung');
-          w.classList.add('word-sweeping');
-          w.style.setProperty('--fill', pct + '%');
+          state = 'sweep';
+        }
+
+        // Only write to the DOM when the state genuinely changed. Rewriting
+        // every word's classes on every frame caused style/layer thrash,
+        // which is what made the words (and the artwork) glitch.
+        if(w.dataset.state !== state){
+          w.dataset.state = state;
+          w.classList.toggle('word-sung', state === 'sung');
+          w.classList.toggle('word-sweeping', state === 'sweep');
+          if(state !== 'sweep'){
+            w.style.removeProperty('--fill');
+            delete w.dataset.fill;
+          }
+        }
+
+        if(state === 'sweep'){
+          const pct = Math.round(((timeInLine - wd.start) / wd.duration) * 100);
+          if(w.dataset.fill !== String(pct)){
+            w.dataset.fill = String(pct);
+            w.style.setProperty('--fill', pct + '%');
+          }
           activeWordIdx = i;
         }
       });
@@ -853,7 +918,13 @@ function updateLyrics(){
     const lineHeight = currentLineEl.offsetHeight;
     const targetY = boxHeight / 2 - (lineTop + lineHeight / 2);
     lyricsMeta.currentY += (targetY - lyricsMeta.currentY) * 0.12;
-    track.style.transform = `translateY(${lyricsMeta.currentY}px)`;
+    // Skip the write once the position has effectively settled — avoids
+    // repainting every frame while sitting still on a long line.
+    const rounded = Math.round(lyricsMeta.currentY * 10) / 10;
+    if(lyricsMeta.lastY !== rounded){
+      lyricsMeta.lastY = rounded;
+      track.style.transform = `translateY(${rounded}px)`;
+    }
   }
 }
 
