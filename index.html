@@ -203,7 +203,6 @@
     background: var(--paper);
     border-radius: 6px;
     width: 0%;
-    transition: width 1s linear;
   }
   .time-row{
     display: flex;
@@ -456,6 +455,7 @@ let pollTimer = null;
 let nowPlayingEl = null;
 let lyricsColEl = null;
 let currentTrackId = null;
+let currentTrackDurationMs = 0;
 let lyricsCache = {};
 let lyricsRAF = null;
 let lyricsMeta = { lines: null, startMs: 0, startWallClock: 0, playing: false, lastActiveIdx: -1, lastWordIdx: -1, currentY: 0 };
@@ -605,6 +605,7 @@ function renderIdle(){
   }
   lyricsMeta.lines = null;
   currentTrackId = null;
+  currentTrackDurationMs = 0;
 }
 
 function msToClock(ms){
@@ -623,46 +624,21 @@ function escapeHtml(str){
 function renderTrack(data){
   if(!nowPlayingEl) return;
   const track = data.item;
-  const artists = track.artists.map(a => a.name).join(', ');
-  const art = track.album.images[0]?.url || '';
   const progress = data.progress_ms || 0;
   const duration = track.duration_ms || 1;
-  const pct = Math.min(100, (progress/duration) * 100);
   const playing = !!data.is_playing;
 
-  nowPlayingEl.innerHTML = `
-    <div class="art-card"><img src="${art}" alt=""></div>
-    <h1 class="track-title">${escapeHtml(track.name)}</h1>
-    <p class="track-artist">${escapeHtml(artists)}</p>
-    <div class="progress">
-      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
-    </div>
-    <div class="time-row"><span>${msToClock(progress)}</span><span>${msToClock(duration)}</span></div>
-    <div class="controls">
-      <button class="ctrl-btn" id="prevBtn" aria-label="Previous track">${ICON.prev}</button>
-      <button class="ctrl-btn main" id="playBtn" aria-label="${playing ? 'Pause' : 'Play'}">${playing ? ICON.pause : ICON.play}</button>
-      <button class="ctrl-btn" id="nextBtn" aria-label="Next track">${ICON.next}</button>
-    </div>
-    <div class="state-label"><span class="dot ${playing ? '' : 'paused'}"></span>${playing ? 'Playing' : 'Paused'}</div>
-  `;
-
-  document.getElementById('prevBtn').addEventListener('click', () => playerAction('POST', '/previous', 'Skipped back'));
-  document.getElementById('nextBtn').addEventListener('click', () => playerAction('POST', '/next', 'Skipped ahead'));
-  document.getElementById('playBtn').addEventListener('click', () => {
-    playerAction('PUT', playing ? '/pause' : '/play', playing ? 'Paused' : 'Playing');
-  });
-
-  extractGradient(art);
-
-  // Keep the sync clock accurate to Spotify's real position, corrected every poll.
-  lyricsMeta.startMs = progress;
-  lyricsMeta.startWallClock = Date.now();
-  lyricsMeta.playing = playing;
-
-  // Only touch the lyrics panel's DOM when the song actually changes — rebuilding
-  // it on every poll was resetting the scroll position and word sync each time.
+  // Build the card's DOM (including the <img>) only once per song. This is
+  // the actual fix for the artwork glitch: the previous version rebuilt this
+  // whole block — a fresh <img> tag included — on every 5s poll, forcing the
+  // browser to redecode/repaint the image each time. Now the element is
+  // created once and simply left alone; only the values below get updated.
   if(track.id !== currentTrackId){
     currentTrackId = track.id;
+    currentTrackDurationMs = duration;
+    buildTrackCard(track);
+    extractGradient(track.album.images[0]?.url || '');
+
     if(lyricsColEl){
       lyricsColEl.innerHTML = `
         <p class="section-label">Lyrics</p>
@@ -670,6 +646,87 @@ function renderTrack(data){
       `;
     }
     loadLyricsFor(track, duration);
+  } else {
+    currentTrackDurationMs = duration;
+  }
+
+  // This is the single source of truth for "where are we in the song right
+  // now" — both the progress bar/time (updateProgressUI) and the lyrics
+  // sweep (updateLyrics) read from it every animation frame, corrected back
+  // to Spotify's real position on every 5s poll to avoid drifting.
+  lyricsMeta.startMs = progress;
+  lyricsMeta.startWallClock = Date.now();
+  lyricsMeta.playing = playing;
+}
+
+/* Builds the now-playing card's DOM once per song. */
+function buildTrackCard(track){
+  const artists = track.artists.map(a => a.name).join(', ');
+  const art = track.album.images[0]?.url || '';
+
+  nowPlayingEl.innerHTML = `
+    <div class="art-card"><img src="${art}" alt=""></div>
+    <h1 class="track-title">${escapeHtml(track.name)}</h1>
+    <p class="track-artist">${escapeHtml(artists)}</p>
+    <div class="progress">
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="time-row"><span id="timeNow">0:00</span><span id="timeTotal">${msToClock(track.duration_ms || 1)}</span></div>
+    <div class="controls">
+      <button class="ctrl-btn" id="prevBtn" aria-label="Previous track">${ICON.prev}</button>
+      <button class="ctrl-btn main" id="playBtn" aria-label="Play">${ICON.play}</button>
+      <button class="ctrl-btn" id="nextBtn" aria-label="Next track">${ICON.next}</button>
+    </div>
+    <div class="state-label"><span class="dot" id="stateDot"></span><span id="stateText">Paused</span></div>
+  `;
+
+  document.getElementById('prevBtn').addEventListener('click', () => playerAction('POST', '/previous', 'Skipped back'));
+  document.getElementById('nextBtn').addEventListener('click', () => playerAction('POST', '/next', 'Skipped ahead'));
+  document.getElementById('playBtn').addEventListener('click', () => {
+    playerAction('PUT', lyricsMeta.playing ? '/pause' : '/play', lyricsMeta.playing ? 'Paused' : 'Playing');
+  });
+}
+
+/* Runs every animation frame alongside the lyrics sweep. Reads the same
+   clock (lyricsMeta), so the progress bar, the time, the play/pause icon,
+   and the lyrics all move in lockstep off one source of truth. Every write
+   is guarded so it only touches the DOM when the displayed value actually
+   changes. */
+function updateProgressUI(){
+  const fill = document.getElementById('progressFill');
+  if(!fill || !currentTrackDurationMs) return;
+
+  let elapsedMs = lyricsMeta.startMs;
+  if(lyricsMeta.playing){
+    elapsedMs += Date.now() - lyricsMeta.startWallClock;
+  }
+  elapsedMs = Math.max(0, Math.min(elapsedMs, currentTrackDurationMs));
+
+  const pct = (Math.min(100, (elapsedMs / currentTrackDurationMs) * 100)).toFixed(1);
+  if(fill.dataset.pct !== pct){
+    fill.dataset.pct = pct;
+    fill.style.width = pct + '%';
+  }
+
+  const timeNow = document.getElementById('timeNow');
+  if(timeNow){
+    const clock = msToClock(elapsedMs);
+    if(timeNow.textContent !== clock) timeNow.textContent = clock;
+  }
+
+  const playBtn = document.getElementById('playBtn');
+  if(playBtn && playBtn.dataset.playing !== String(lyricsMeta.playing)){
+    playBtn.dataset.playing = String(lyricsMeta.playing);
+    playBtn.innerHTML = lyricsMeta.playing ? ICON.pause : ICON.play;
+    playBtn.setAttribute('aria-label', lyricsMeta.playing ? 'Pause' : 'Play');
+  }
+
+  const stateDot = document.getElementById('stateDot');
+  const stateText = document.getElementById('stateText');
+  if(stateText && stateText.dataset.playing !== String(lyricsMeta.playing)){
+    stateText.dataset.playing = String(lyricsMeta.playing);
+    stateText.textContent = lyricsMeta.playing ? 'Playing' : 'Paused';
+    if(stateDot) stateDot.classList.toggle('paused', !lyricsMeta.playing);
   }
 }
 
@@ -814,6 +871,7 @@ async function loadLyricsFor(track, durationMs){
 /* Runs every animation frame (not tied to the 5s poll) for a continuously
    smooth scroll and word sweep, instead of snapping in discrete steps. */
 function lyricsFrame(){
+  updateProgressUI();
   updateLyrics();
   lyricsRAF = requestAnimationFrame(lyricsFrame);
 }
