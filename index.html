@@ -159,7 +159,6 @@
     height: 216px;
     border-radius: 30px;
     overflow: hidden;
-    transform: rotate(-4deg);
     box-shadow: 0 24px 48px -18px rgba(0,0,0,.55);
     margin-bottom: 28px;
     background: rgba(255,255,255,.08);
@@ -301,13 +300,25 @@
     font-size: 38px;
   }
   /* ---------- word sweep ---------- */
-  /* The fill sweeps smoothly across each word: --fill is updated every
-     animation frame with the exact interpolated percentage (not toggled
-     between two states), and the gradient has a soft blended edge (rather
-     than a hard cutoff) so the wipe reads like a gentle glow moving across
-     the text instead of a sharp line. */
+  /* Two distinct rendering modes, kept deliberately separate:
+     - resting words (already sung, or not yet reached) get a plain solid
+       color — no gradient involved at all.
+     - only the ONE word currently being sung gets the animated gradient
+       sweep. Reusing the sweep gradient for resting words was the bug:
+       its "glow" stop sits at the fill position, so at fill:0% it lit up
+       a sliver at the very start of every untouched word (i.e. the first
+       letter). Isolating the gradient to only the active word removes
+       that artifact entirely.
+  */
   .lyric-word{
     display: inline-block;
+    color: rgba(255,255,255,.3);
+    transition: color .25s ease;
+  }
+  .lyric-word.word-sung{
+    color: var(--cyan);
+  }
+  .lyric-word.word-sweeping{
     --fill: 0%;
     background-image: linear-gradient(90deg,
       var(--cyan) clamp(0%, calc(var(--fill) - 18%), 100%),
@@ -316,15 +327,12 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    transition: text-shadow .2s ease;
-    /* Isolates each word on its own compositing layer, which stops the
+    text-shadow: 0 0 20px rgba(47,230,255,.55);
+    /* Isolates this word on its own compositing layer, which stops the
        flicker Chrome otherwise produces on background-clip:text elements
        when an ancestor's transform changes every frame (the scroll). */
     transform: translateZ(0);
     backface-visibility: hidden;
-  }
-  .lyric-word.current{
-    text-shadow: 0 0 20px rgba(47,230,255,.55);
   }
 
   /* ---------- top bar: profile + logout ---------- */
@@ -755,8 +763,15 @@ function stopLyricsLoop(){
   if(lyricsRAF){ cancelAnimationFrame(lyricsRAF); lyricsRAF = null; }
 }
 
-function setLineFill(lineEl, pct){
-  lineEl.querySelectorAll('.lyric-word').forEach(w => w.style.setProperty('--fill', pct + '%'));
+/* Sets every word in a line to a resting state: fully sung (solid cyan)
+   or not yet reached (default dim). Never touches the sweep gradient —
+   that's reserved for the single word actively being highlighted. */
+function setLineState(lineEl, sung){
+  lineEl.querySelectorAll('.lyric-word').forEach(w => {
+    w.classList.remove('word-sweeping');
+    w.style.removeProperty('--fill');
+    w.classList.toggle('word-sung', sung);
+  });
 }
 
 function updateLyrics(){
@@ -781,11 +796,11 @@ function updateLyrics(){
   if(idx !== lyricsMeta.lastActiveIdx){
     lineEls.forEach((el, i) => {
       el.classList.toggle('active', i === idx);
-      // Lines already passed sit fully filled; lines not yet reached sit
+      // Lines already passed sit fully sung; lines not yet reached sit
       // fully dim. Only the active line gets a continuous per-frame sweep
       // below, so this only needs to run once per line change, not per frame.
       if(i !== idx){
-        setLineFill(el, i < idx ? 100 : 0);
+        setLineState(el, i < idx);
       }
     });
     lyricsMeta.lastActiveIdx = idx;
@@ -794,33 +809,42 @@ function updateLyrics(){
 
   const currentLineEl = lineEls[idx];
   if(currentLineEl){
-    // Continuous word-level sweep: recompute every frame with the exact
-    // interpolated fill percentage, so the color wipe moves smoothly
-    // across each word instead of snapping between two states.
+    // Continuous word-level sweep: recomputed every frame with the exact
+    // interpolated fill percentage, so the color wipe moves smoothly. Only
+    // the single word currently being sung gets the gradient treatment —
+    // words already finished switch to a plain solid color instead of
+    // staying in gradient mode, and words not yet reached stay at their
+    // default resting color. This is what avoids the "bright first letter"
+    // artifact: the gradient's glow stop only ever exists on one word at a
+    // time, never sitting idle on a word that hasn't started yet.
     const words = currentLineEl.querySelectorAll('.lyric-word');
     if(words.length){
       const timeInLine = elapsedSec - lines[idx].time;
       const wdata = lines[idx].words;
       let activeWordIdx = -1;
+
       words.forEach((w, i) => {
         const wd = wdata[i];
-        let pct;
-        if(!wd){
-          pct = 100;
-        } else if(timeInLine >= wd.start + wd.duration){
-          pct = 100;
-        } else if(timeInLine <= wd.start){
-          pct = 0;
+        const finished = !wd || timeInLine >= wd.start + wd.duration;
+        const notStarted = wd && timeInLine <= wd.start;
+
+        if(finished){
+          w.classList.remove('word-sweeping');
+          w.style.removeProperty('--fill');
+          w.classList.add('word-sung');
+        } else if(notStarted){
+          w.classList.remove('word-sweeping', 'word-sung');
+          w.style.removeProperty('--fill');
         } else {
-          pct = ((timeInLine - wd.start) / wd.duration) * 100;
+          const pct = ((timeInLine - wd.start) / wd.duration) * 100;
+          w.classList.remove('word-sung');
+          w.classList.add('word-sweeping');
+          w.style.setProperty('--fill', pct + '%');
           activeWordIdx = i;
         }
-        w.style.setProperty('--fill', pct + '%');
       });
-      if(activeWordIdx !== lyricsMeta.lastWordIdx){
-        words.forEach((w, i) => w.classList.toggle('current', i === activeWordIdx));
-        lyricsMeta.lastWordIdx = activeWordIdx;
-      }
+
+      lyricsMeta.lastWordIdx = activeWordIdx;
     }
 
     // continuous, eased vertical scroll toward centering the active line
