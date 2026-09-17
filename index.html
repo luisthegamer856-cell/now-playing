@@ -420,6 +420,19 @@
     font-size: 14px;
     opacity: .6;
   }
+  .lyric-line{
+    font-size: 14px;
+    line-height: 1.9;
+    opacity: .45;
+    margin: 0;
+    transition: opacity .25s ease, color .25s ease, font-size .25s ease;
+  }
+  .lyric-line.active{
+    opacity: 1;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--lime);
+  }
 </style>
 </head>
 <body>
@@ -451,6 +464,8 @@ let nowPlayingEl = null;
 let libraryEl = null;
 let currentTrackId = null;
 let lyricsCache = {};
+let lyricTickTimer = null;
+let lyricsMeta = { lines: null, startMs: 0, startWallClock: 0, playing: false, lastActiveIdx: -1 };
 
 /* ---------- icons ---------- */
 const ICON = {
@@ -617,53 +632,119 @@ function renderTrack(data){
 
   extractGradient(art);
 
+  // Keep the sync clock accurate to Spotify's real position, corrected every poll.
+  lyricsMeta.startMs = progress;
+  lyricsMeta.startWallClock = Date.now();
+  lyricsMeta.playing = playing;
+
   if(track.id !== currentTrackId){
     currentTrackId = track.id;
     loadLyricsFor(track, duration);
   } else if(lyricsCache[track.id] !== undefined){
-    renderLyricsBox(lyricsCache[track.id]);
+    // The whole card just got rebuilt (fresh DOM), so reapply the cached lyrics
+    // and force the highlighter to recompute which line is active.
+    applyLyricsData(lyricsCache[track.id]);
   }
 }
 
 /* ---------- lyrics (via lrclib.net - free, open, no key required) ---------- */
-async function fetchLyricsText(title, artist, album, durationSec){
+
+/* Parses standard LRC timestamps, e.g. "[00:12.34]Some line", including
+   lines with multiple leading timestamps pointing at the same text. */
+function parseLRC(lrcText){
+  const lines = lrcText.split('\n');
+  const tagRe = /\[(\d{2}):(\d{2})(?:\.(\d{1,3}))?\]/g;
+  const out = [];
+  for(const line of lines){
+    const tags = [...line.matchAll(tagRe)];
+    if(tags.length === 0) continue;
+    const text = line.replace(tagRe, '').trim();
+    for(const t of tags){
+      const min = parseInt(t[1], 10);
+      const sec = parseInt(t[2], 10);
+      const msRaw = (t[3] || '0').padEnd(3, '0').slice(0, 3);
+      out.push({ time: min * 60 + sec + parseInt(msRaw, 10) / 1000, text });
+    }
+  }
+  return out.sort((a, b) => a.time - b.time);
+}
+
+async function fetchLyricsData(title, artist, album, durationSec){
+  const parse = (data) => ({
+    plain: data.plainLyrics || null,
+    synced: data.syncedLyrics ? parseLRC(data.syncedLyrics) : null
+  });
   try{
     const exact = new URLSearchParams({ track_name: title, artist_name: artist, album_name: album, duration: durationSec });
     let res = await fetch(`https://lrclib.net/api/get?${exact}`);
     if(res.ok){
       const data = await res.json();
-      if(data.plainLyrics) return data.plainLyrics;
+      if(data.plainLyrics || data.syncedLyrics) return parse(data);
     }
     const loose = new URLSearchParams({ track_name: title, artist_name: artist });
     res = await fetch(`https://lrclib.net/api/search?${loose}`);
     if(res.ok){
       const results = await res.json();
       if(Array.isArray(results)){
-        const hit = results.find(r => r.plainLyrics);
-        if(hit) return hit.plainLyrics;
+        const hit = results.find(r => r.plainLyrics || r.syncedLyrics);
+        if(hit) return parse(hit);
       }
     }
   } catch(e){ /* treat as not found */ }
-  return null;
+  return { plain: null, synced: null };
 }
 
-function renderLyricsBox(text){
+function renderLyricsBox(data){
   const box = document.getElementById('lyricsBox');
   if(!box) return;
-  if(!text){
+  if(data.synced && data.synced.length){
+    box.innerHTML = data.synced.map(l => `<p class="lyric-line">${escapeHtml(l.text || '\u266A')}</p>`).join('');
+  } else if(data.plain){
+    box.innerHTML = `<pre class="lyrics-text">${escapeHtml(data.plain)}</pre>`;
+  } else {
     box.innerHTML = '<p class="lyrics-status">Lyrics not found for this track.</p>';
-    return;
   }
-  box.innerHTML = `<pre class="lyrics-text">${escapeHtml(text)}</pre>`;
+}
+
+function applyLyricsData(data){
+  lyricsMeta.lines = data.synced;
+  lyricsMeta.lastActiveIdx = -1;
+  renderLyricsBox(data);
 }
 
 async function loadLyricsFor(track, durationMs){
   const id = track.id;
-  if(lyricsCache[id] !== undefined){ renderLyricsBox(lyricsCache[id]); return; }
+  if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id]); return; }
   const artist = track.artists[0]?.name || '';
-  const text = await fetchLyricsText(track.name, artist, track.album.name, Math.round(durationMs / 1000));
-  lyricsCache[id] = text;
-  if(currentTrackId === id){ renderLyricsBox(text); }
+  const data = await fetchLyricsData(track.name, artist, track.album.name, Math.round(durationMs / 1000));
+  lyricsCache[id] = data;
+  if(currentTrackId === id){ applyLyricsData(data); }
+}
+
+/* Runs on a fast interval (not tied to the 5s poll) so the highlighted
+   line advances smoothly instead of jumping every 5 seconds. */
+function updateLyricHighlight(){
+  if(!lyricsMeta.lines || lyricsMeta.lines.length === 0) return;
+  const box = document.getElementById('lyricsBox');
+  if(!box) return;
+
+  let elapsedSec = lyricsMeta.startMs / 1000;
+  if(lyricsMeta.playing){
+    elapsedSec += (Date.now() - lyricsMeta.startWallClock) / 1000;
+  }
+
+  let activeIdx = -1;
+  for(let i = 0; i < lyricsMeta.lines.length; i++){
+    if(lyricsMeta.lines[i].time <= elapsedSec) activeIdx = i; else break;
+  }
+  if(activeIdx === lyricsMeta.lastActiveIdx) return;
+  lyricsMeta.lastActiveIdx = activeIdx;
+
+  const nodes = box.querySelectorAll('.lyric-line');
+  nodes.forEach((n, i) => n.classList.toggle('active', i === activeIdx));
+  if(activeIdx >= 0 && nodes[activeIdx]){
+    nodes[activeIdx].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
 }
 
 /* ---------- library: playlists ---------- */
@@ -829,9 +910,11 @@ function startPolling(){
   tick();
   fetchLibrary();
   pollTimer = setInterval(tick, 5000);
+  lyricTickTimer = setInterval(updateLyricHighlight, 300);
 }
 function stopPolling(){
   if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  if(lyricTickTimer){ clearInterval(lyricTickTimer); lyricTickTimer = null; }
 }
 
 /* ---------- init ---------- */
