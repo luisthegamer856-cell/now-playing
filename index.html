@@ -13,6 +13,7 @@
     --ink: #14101F;
     --paper: #FFF9F0;
     --lime: #C6FF3D;
+    --cyan: #2FE6FF;
   }
   *{ box-sizing: border-box; margin: 0; padding: 0; }
   html{ height: 100%; }
@@ -77,17 +78,18 @@
     .blob{ animation: none !important; }
   }
 
-  .stage{ position: relative; z-index: 1; }
-
   .stage{
     width: 100%;
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 48px 40px 60px;
-    max-width: 1080px;
+    max-width: 1180px;
     margin: 0 auto;
   }
+
   .layout{
     display: flex;
     align-items: flex-start;
@@ -95,30 +97,20 @@
     width: 100%;
   }
   .main-col{
-    flex: 1 1 420px;
+    flex: 1 1 380px;
     min-width: 0;
-    max-width: 460px;
+    max-width: 420px;
   }
-  .side-col{
-    width: 280px;
+  .lyrics-col{
+    width: 460px;
     flex-shrink: 0;
     position: sticky;
     top: 40px;
-    max-height: calc(100vh - 80px);
-    overflow-y: auto;
-    padding-right: 4px;
   }
-  .side-col::-webkit-scrollbar{ width: 6px; }
-  .side-col::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.25); border-radius: 6px; }
-  @media (max-width: 860px){
+  @media (max-width: 900px){
     .layout{ flex-direction: column; }
     .main-col{ max-width: none; width: 100%; }
-    .side-col{
-      width: 100%;
-      position: static;
-      max-height: none;
-      overflow-y: visible;
-    }
+    .lyrics-col{ width: 100%; position: static; }
   }
 
   /* ---------- login / idle ---------- */
@@ -266,83 +258,68 @@
   }
   .state-label .dot.paused{ background: var(--paper); opacity: .5; }
 
-  /* ---------- library / playlists ---------- */
+  /* ---------- lyrics (big, synced, word-level sweep) ---------- */
   .section-label{
     font-size: 14px;
     font-weight: 600;
     opacity: .8;
     margin: 0 0 16px;
   }
-  .playlist-list{
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .playlist-row{
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
-    color: inherit;
-    padding: 8px;
-    border-radius: 14px;
-    transition: background .15s ease;
-  }
-  .playlist-row:hover{ background: rgba(255,255,255,.1); }
-  .playlist-row-cover{
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
+  .lyrics-box{
+    position: relative;
+    height: min(66vh, 600px);
     overflow: hidden;
-    background: rgba(255,255,255,.1);
-    flex-shrink: 0;
-    box-shadow: 0 8px 18px -10px rgba(0,0,0,.5);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
   }
-  .playlist-row-cover img{ width: 100%; height: 100%; object-fit: cover; display: block; }
-  .playlist-row-info{ min-width: 0; }
-  .playlist-row-name{
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .lyrics-track{
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    will-change: transform;
   }
-  .playlist-row-count{
-    font-size: 12px;
+  .lyrics-text{
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    line-height: 1.8;
+    white-space: pre-line;
+    opacity: .92;
+  }
+  .lyrics-status{
+    font-size: 15px;
     opacity: .6;
-    margin-top: 2px;
   }
-
-  .toast{
-    position: fixed;
-    bottom: 28px;
-    left: 50%;
-    transform: translateX(-50%) translateY(12px);
-    background: var(--ink);
-    color: var(--paper);
-    padding: 12px 20px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 500;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease, transform .25s ease;
-    max-width: 90vw;
-    text-align: center;
-    z-index: 10;
+  .lyric-line{
+    margin: 0;
+    padding: 10px 0;
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.5;
+    opacity: .32;
+    filter: blur(.3px);
+    transition: opacity .4s ease, font-size .4s ease, filter .4s ease;
   }
-  .toast.show{
+  .lyric-line.active{
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    font-size: 28px;
+    filter: blur(0);
+  }
+  .lyric-word{
+    display: inline-block;
+    opacity: .55;
+    color: var(--paper);
+    transition: opacity .18s linear, color .18s linear, text-shadow .18s linear;
+  }
+  .lyric-word.sung{
+    opacity: 1;
+    color: var(--cyan);
+  }
+  .lyric-word.current{
+    opacity: 1;
+    color: var(--paper);
+    text-shadow: 0 0 16px rgba(47,230,255,.85);
   }
 
-  @media (max-width: 420px){
-    .stage{ padding: 36px 22px 50px; }
-    .art-card{ width: 132px; height: 132px; }
-    .playlist-scroll{ margin: 0 -22px; padding-left: 22px; padding-right: 22px; }
-  }
-
+  /* ---------- top bar: profile + logout ---------- */
   .topbar{
     position: fixed;
     top: 20px;
@@ -398,40 +375,33 @@
   }
   .logout-btn:hover{ background: rgba(255,255,255,.26); }
 
-  .lyrics-box{
-    margin-top: 30px;
-    max-width: 460px;
-    max-height: 260px;
-    overflow-y: auto;
-    background: rgba(255,255,255,.08);
-    border-radius: 20px;
-    padding: 20px 22px;
+  .toast{
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    max-width: 90vw;
+    text-align: center;
+    z-index: 10;
   }
-  .lyrics-box::-webkit-scrollbar{ width: 6px; }
-  .lyrics-box::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.25); border-radius: 6px; }
-  .lyrics-text{
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    line-height: 1.75;
-    white-space: pre-line;
-    opacity: .92;
-  }
-  .lyrics-status{
-    font-size: 14px;
-    opacity: .6;
-  }
-  .lyric-line{
-    font-size: 14px;
-    line-height: 1.9;
-    opacity: .45;
-    margin: 0;
-    transition: opacity .25s ease, color .25s ease, font-size .25s ease;
-  }
-  .lyric-line.active{
+  .toast.show{
     opacity: 1;
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--lime);
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 420px){
+    .stage{ padding: 36px 22px 50px; }
+    .art-card{ width: 132px; height: 132px; }
+    .lyric-line.active{ font-size: 22px; }
   }
 </style>
 </head>
@@ -454,18 +424,18 @@ const CLIENT_ID = "f8ae9b8233d44779be5fa82f8351bbf9";
 /* ========================================= */
 
 const REDIRECT_URI = window.location.origin + window.location.pathname;
-const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state playlist-read-private playlist-read-collaborative user-read-private";
+const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state user-read-private";
 const stage = document.getElementById('stage');
 const toastEl = document.getElementById('toast');
 
 let accessToken = null;
 let pollTimer = null;
 let nowPlayingEl = null;
-let libraryEl = null;
+let lyricsColEl = null;
 let currentTrackId = null;
 let lyricsCache = {};
-let lyricTickTimer = null;
-let lyricsMeta = { lines: null, startMs: 0, startWallClock: 0, playing: false, lastActiveIdx: -1 };
+let lyricsRAF = null;
+let lyricsMeta = { lines: null, startMs: 0, startWallClock: 0, playing: false, lastActiveIdx: -1, currentY: 0 };
 
 /* ---------- icons ---------- */
 const ICON = {
@@ -504,7 +474,6 @@ async function redirectToAuth(){
   });
   window.location.href = `https://accounts.spotify.com/authorize?${params}`;
 }
-
 
 const REFRESH_KEY = 'sp_refresh_token';
 
@@ -568,7 +537,7 @@ function renderLogin(message){
   stage.innerHTML = `
     <p class="kicker">Now playing</p>
     <h1 class="big-headline">See what's<br>spinning.</h1>
-    <p class="sub">${message || "Connect Spotify to show your currently playing track, skip controls, and your playlists."}</p>
+    <p class="sub">${message || "Connect Spotify to show your currently playing track, skip controls, and synced lyrics."}</p>
     <button class="cta" id="loginBtn">Log in with Spotify</button>
   `;
   document.getElementById('loginBtn').addEventListener('click', redirectToAuth);
@@ -581,6 +550,10 @@ function renderIdle(){
     <h1 class="big-headline">Quiet for now.</h1>
     <p class="sub">Nothing's playing on Spotify right now. Start something and this page will catch up automatically.</p>
   `;
+  if(lyricsColEl){
+    lyricsColEl.innerHTML = '';
+  }
+  lyricsMeta.lines = null;
 }
 
 function msToClock(ms){
@@ -620,8 +593,6 @@ function renderTrack(data){
       <button class="ctrl-btn" id="nextBtn" aria-label="Next track">${ICON.next}</button>
     </div>
     <div class="state-label"><span class="dot ${playing ? '' : 'paused'}"></span>${playing ? 'Playing' : 'Paused'}</div>
-    <p class="section-label" style="margin-top:30px;">Lyrics</p>
-    <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
   `;
 
   document.getElementById('prevBtn').addEventListener('click', () => playerAction('POST', '/previous', 'Skipped back'));
@@ -632,6 +603,13 @@ function renderTrack(data){
 
   extractGradient(art);
 
+  if(lyricsColEl){
+    lyricsColEl.innerHTML = `
+      <p class="section-label">Lyrics</p>
+      <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
+    `;
+  }
+
   // Keep the sync clock accurate to Spotify's real position, corrected every poll.
   lyricsMeta.startMs = progress;
   lyricsMeta.startWallClock = Date.now();
@@ -641,9 +619,7 @@ function renderTrack(data){
     currentTrackId = track.id;
     loadLyricsFor(track, duration);
   } else if(lyricsCache[track.id] !== undefined){
-    // The whole card just got rebuilt (fresh DOM), so reapply the cached lyrics
-    // and force the highlighter to recompute which line is active.
-    applyLyricsData(lyricsCache[track.id]);
+    applyLyricsData(lyricsCache[track.id], duration / 1000);
   }
 }
 
@@ -667,6 +643,32 @@ function parseLRC(lrcText){
     }
   }
   return out.sort((a, b) => a.time - b.time);
+}
+
+/* Since lrclib only gives one timestamp per line, word-level highlighting is
+   an estimate: each word gets a time slice of the line proportional to its
+   character length. Not perfectly precise, but reads very close to real sync. */
+function estimateWordTimings(text, lineDuration){
+  const words = text.split(/\s+/).filter(Boolean);
+  if(words.length === 0) return [];
+  const totalChars = words.reduce((sum, w) => sum + w.length, 0) || 1;
+  let offset = 0;
+  return words.map(w => {
+    const share = w.length / totalChars;
+    const wordDuration = lineDuration * share;
+    const start = offset;
+    offset += wordDuration;
+    return { text: w, start, duration: wordDuration };
+  });
+}
+
+function prepareLines(lines, trackDurationSec){
+  return lines.map((line, i) => {
+    const next = lines[i + 1];
+    const end = next ? next.time : trackDurationSec;
+    const duration = Math.max(end - line.time, 0.3);
+    return { time: line.time, text: line.text, words: estimateWordTimings(line.text, duration) };
+  });
 }
 
 async function fetchLyricsData(title, artist, album, durationSec){
@@ -698,7 +700,13 @@ function renderLyricsBox(data){
   const box = document.getElementById('lyricsBox');
   if(!box) return;
   if(data.synced && data.synced.length){
-    box.innerHTML = data.synced.map(l => `<p class="lyric-line">${escapeHtml(l.text || '\u266A')}</p>`).join('');
+    const lines = data.synced.map((l, i) => {
+      const wordsHtml = l.words.length
+        ? l.words.map(w => `<span class="lyric-word">${escapeHtml(w.text)}</span>`).join(' ')
+        : (escapeHtml(l.text) || '\u266A');
+      return `<p class="lyric-line" data-i="${i}">${wordsHtml}</p>`;
+    }).join('');
+    box.innerHTML = `<div class="lyrics-track" id="lyricsTrack">${lines}</div>`;
   } else if(data.plain){
     box.innerHTML = `<pre class="lyrics-text">${escapeHtml(data.plain)}</pre>`;
   } else {
@@ -706,48 +714,90 @@ function renderLyricsBox(data){
   }
 }
 
-function applyLyricsData(data){
-  lyricsMeta.lines = data.synced;
+function applyLyricsData(data, trackDurationSec){
+  const prepared = data.synced ? prepareLines(data.synced, trackDurationSec) : null;
+  lyricsMeta.lines = prepared;
   lyricsMeta.lastActiveIdx = -1;
-  renderLyricsBox(data);
+  lyricsMeta.currentY = 0;
+  renderLyricsBox({ plain: data.plain, synced: prepared });
 }
 
 async function loadLyricsFor(track, durationMs){
   const id = track.id;
-  if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id]); return; }
+  const durationSec = durationMs / 1000;
+  if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id], durationSec); return; }
   const artist = track.artists[0]?.name || '';
-  const data = await fetchLyricsData(track.name, artist, track.album.name, Math.round(durationMs / 1000));
+  const data = await fetchLyricsData(track.name, artist, track.album.name, Math.round(durationSec));
   lyricsCache[id] = data;
-  if(currentTrackId === id){ applyLyricsData(data); }
+  if(currentTrackId === id){ applyLyricsData(data, durationSec); }
 }
 
-/* Runs on a fast interval (not tied to the 5s poll) so the highlighted
-   line advances smoothly instead of jumping every 5 seconds. */
-function updateLyricHighlight(){
+/* Runs every animation frame (not tied to the 5s poll) for a continuously
+   smooth scroll and word sweep, instead of snapping in discrete steps. */
+function lyricsFrame(){
+  updateLyrics();
+  lyricsRAF = requestAnimationFrame(lyricsFrame);
+}
+function startLyricsLoop(){
+  stopLyricsLoop();
+  lyricsRAF = requestAnimationFrame(lyricsFrame);
+}
+function stopLyricsLoop(){
+  if(lyricsRAF){ cancelAnimationFrame(lyricsRAF); lyricsRAF = null; }
+}
+
+function updateLyrics(){
   if(!lyricsMeta.lines || lyricsMeta.lines.length === 0) return;
   const box = document.getElementById('lyricsBox');
-  if(!box) return;
+  const track = document.getElementById('lyricsTrack');
+  if(!box || !track) return;
 
   let elapsedSec = lyricsMeta.startMs / 1000;
   if(lyricsMeta.playing){
     elapsedSec += (Date.now() - lyricsMeta.startWallClock) / 1000;
   }
 
-  let activeIdx = -1;
-  for(let i = 0; i < lyricsMeta.lines.length; i++){
-    if(lyricsMeta.lines[i].time <= elapsedSec) activeIdx = i; else break;
+  const lines = lyricsMeta.lines;
+  let idx = -1;
+  for(let i = 0; i < lines.length; i++){
+    if(lines[i].time <= elapsedSec) idx = i; else break;
   }
-  if(activeIdx === lyricsMeta.lastActiveIdx) return;
-  lyricsMeta.lastActiveIdx = activeIdx;
+  if(idx < 0) idx = 0;
 
-  const nodes = box.querySelectorAll('.lyric-line');
-  nodes.forEach((n, i) => n.classList.toggle('active', i === activeIdx));
-  if(activeIdx >= 0 && nodes[activeIdx]){
-    nodes[activeIdx].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  const lineEls = track.querySelectorAll('.lyric-line');
+  if(idx !== lyricsMeta.lastActiveIdx){
+    lineEls.forEach((el, i) => el.classList.toggle('active', i === idx));
+    lyricsMeta.lastActiveIdx = idx;
+  }
+
+  const currentLineEl = lineEls[idx];
+  if(currentLineEl){
+    // word-level sweep within the active line
+    const words = currentLineEl.querySelectorAll('.lyric-word');
+    if(words.length){
+      const timeInLine = elapsedSec - lines[idx].time;
+      const wdata = lines[idx].words;
+      let wIdx = 0;
+      for(let i = 0; i < wdata.length; i++){
+        if(timeInLine >= wdata[i].start) wIdx = i; else break;
+      }
+      words.forEach((w, i) => {
+        w.classList.toggle('sung', i < wIdx);
+        w.classList.toggle('current', i === wIdx);
+      });
+    }
+
+    // continuous, eased vertical scroll toward centering the active line
+    const boxHeight = box.clientHeight;
+    const lineTop = currentLineEl.offsetTop;
+    const lineHeight = currentLineEl.offsetHeight;
+    const targetY = boxHeight / 2 - (lineTop + lineHeight / 2);
+    lyricsMeta.currentY += (targetY - lyricsMeta.currentY) * 0.12;
+    track.style.transform = `translateY(${lyricsMeta.currentY}px)`;
   }
 }
 
-/* ---------- library: playlists ---------- */
+/* ---------- profile ---------- */
 async function fetchProfile(){
   try{
     const res = await fetch('https://api.spotify.com/v1/me', {
@@ -766,41 +816,6 @@ async function fetchProfile(){
       <span class="profile-name">${escapeHtml(name)}</span>
     `;
   } catch(e){ /* leave the chip hidden on failure */ }
-}
-
-async function fetchLibrary(){
-  try{
-    const res = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    if(!res.ok) return;
-    const data = await res.json();
-    renderPlaylists(data.items || []);
-  } catch(e){ /* leave library section empty on failure */ }
-}
-
-function renderPlaylists(playlists){
-  if(!libraryEl) return;
-  const usable = playlists.filter(p => p);
-  if(usable.length === 0){ libraryEl.innerHTML = ''; return; }
-  const rows = usable.map(p => {
-    const cover = p.images?.[0]?.url || '';
-    const url = p.external_urls?.spotify || '#';
-    const count = p.tracks?.total;
-    return `
-      <a class="playlist-row" href="${url}" target="_blank" rel="noopener">
-        <div class="playlist-row-cover">${cover ? `<img src="${cover}" alt="">` : ''}</div>
-        <div class="playlist-row-info">
-          <p class="playlist-row-name">${escapeHtml(p.name)}</p>
-          ${typeof count === 'number' ? `<p class="playlist-row-count">${count} tracks</p>` : ''}
-        </div>
-      </a>
-    `;
-  }).join('');
-  libraryEl.innerHTML = `
-    <p class="section-label">Your playlists</p>
-    <div class="playlist-list">${rows}</div>
-  `;
 }
 
 /* ---------- playback controls ---------- */
@@ -842,12 +857,12 @@ function pickVibrant(pixelData){
     fallbackR+=r; fallbackG+=g; fallbackB+=b; n++;
     const max=Math.max(r,g,b), min=Math.min(r,g,b);
     const lum=(max+min)/2;
-    if(lum < 30 || lum > 225) continue; // skip near-black/near-white pixels
+    if(lum < 30 || lum > 225) continue;
     const sat = max===0 ? 0 : (max-min)/max;
     if(sat > bestScore){ bestScore = sat; best = [r,g,b]; }
   }
   if(best) return best;
-  if(n===0) return [124,58,237]; // ultimate fallback: violet
+  if(n===0) return [124,58,237];
   return [Math.round(fallbackR/n), Math.round(fallbackG/n), Math.round(fallbackB/n)];
 }
 
@@ -900,21 +915,20 @@ function startPolling(){
     </div>
     <div class="layout">
       <div class="main-col" id="nowPlaying"></div>
-      <aside class="side-col" id="library"></aside>
+      <div class="lyrics-col" id="lyricsCol"></div>
     </div>
   `;
   document.getElementById('logoutBtn').addEventListener('click', logout);
   fetchProfile();
   nowPlayingEl = document.getElementById('nowPlaying');
-  libraryEl = document.getElementById('library');
+  lyricsColEl = document.getElementById('lyricsCol');
   tick();
-  fetchLibrary();
   pollTimer = setInterval(tick, 5000);
-  lyricTickTimer = setInterval(updateLyricHighlight, 300);
+  startLyricsLoop();
 }
 function stopPolling(){
   if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
-  if(lyricTickTimer){ clearInterval(lyricTickTimer); lyricTickTimer = null; }
+  stopLyricsLoop();
 }
 
 /* ---------- init ---------- */
