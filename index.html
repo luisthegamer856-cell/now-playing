@@ -290,38 +290,36 @@
   }
   .lyric-line{
     margin: 0;
-    padding: 12px 0;
+    padding: 10px 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Onest', sans-serif;
-    font-size: 25px;
-    font-weight: 750;
-    line-height: 1.5;
-    opacity: .32;
-    filter: blur(.3px);
-    transition: opacity .4s ease, font-size .4s ease, filter .4s ease;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.45;
+    transition: font-size .35s ease;
   }
   .lyric-line.active{
-    opacity: 1;
-    font-size: 36px;
-    filter: blur(0);
+    font-size: 38px;
   }
+  /* ---------- word sweep ---------- */
   /* The fill sweeps smoothly across each word: --fill is updated every
      animation frame with the exact interpolated percentage (not toggled
-     between two states), so the color wipe reads as continuous motion
-     rather than a snap. */
+     between two states), and the gradient has a soft blended edge (rather
+     than a hard cutoff) so the wipe reads like a gentle glow moving across
+     the text instead of a sharp line. */
   .lyric-word{
     display: inline-block;
     --fill: 0%;
     background-image: linear-gradient(90deg,
-      var(--cyan) var(--fill),
-      rgba(255,255,255,.32) var(--fill));
+      var(--cyan) clamp(0%, calc(var(--fill) - 18%), 100%),
+      rgba(255,255,255,.94) var(--fill),
+      rgba(255,255,255,.3) clamp(0%, calc(var(--fill) + 18%), 100%));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    transition: text-shadow .2s ease, transform .2s ease;
+    transition: text-shadow .2s ease;
   }
   .lyric-word.current{
-    text-shadow: 0 0 18px rgba(47,230,255,.8);
-    transform: translateY(-1px);
+    text-shadow: 0 0 20px rgba(47,230,255,.55);
   }
 
   /* ---------- top bar: profile + logout ---------- */
@@ -406,7 +404,7 @@
   @media (max-width: 420px){
     .stage{ padding: 36px 22px 50px; }
     .art-card{ width: 132px; height: 132px; }
-    .lyric-line.active{ font-size: 28px; }
+    .lyric-line{ font-size: 24px; }
   }
 </style>
 </head>
