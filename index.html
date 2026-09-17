@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Now Playing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=Onest:wght@400..800&display=swap" rel="stylesheet">
 <style>
   :root{
     --c1: #FF3D81;
@@ -291,8 +291,9 @@
   .lyric-line{
     margin: 0;
     padding: 12px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Onest', sans-serif;
     font-size: 25px;
-    font-weight: 600;
+    font-weight: 750;
     line-height: 1.5;
     opacity: .32;
     filter: blur(.3px);
@@ -303,20 +304,24 @@
     font-size: 36px;
     filter: blur(0);
   }
+  /* The fill sweeps smoothly across each word: --fill is updated every
+     animation frame with the exact interpolated percentage (not toggled
+     between two states), so the color wipe reads as continuous motion
+     rather than a snap. */
   .lyric-word{
     display: inline-block;
-    opacity: .55;
-    color: var(--paper);
-    transition: opacity .18s linear, color .18s linear, text-shadow .18s linear;
-  }
-  .lyric-word.sung{
-    opacity: 1;
-    color: var(--cyan);
+    --fill: 0%;
+    background-image: linear-gradient(90deg,
+      var(--cyan) var(--fill),
+      rgba(255,255,255,.32) var(--fill));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: text-shadow .2s ease, transform .2s ease;
   }
   .lyric-word.current{
-    opacity: 1;
-    color: var(--paper);
-    text-shadow: 0 0 16px rgba(47,230,255,.85);
+    text-shadow: 0 0 18px rgba(47,230,255,.8);
+    transform: translateY(-1px);
   }
 
   /* ---------- top bar: profile + logout ---------- */
@@ -435,7 +440,7 @@ let lyricsColEl = null;
 let currentTrackId = null;
 let lyricsCache = {};
 let lyricsRAF = null;
-let lyricsMeta = { lines: null, startMs: 0, startWallClock: 0, playing: false, lastActiveIdx: -1, currentY: 0 };
+let lyricsMeta = { lines: null, startMs: 0, startWallClock: 0, playing: false, lastActiveIdx: -1, lastWordIdx: -1, currentY: 0 };
 
 /* ---------- icons ---------- */
 const ICON = {
@@ -718,6 +723,7 @@ function applyLyricsData(data, trackDurationSec){
   const prepared = data.synced ? prepareLines(data.synced, trackDurationSec) : null;
   lyricsMeta.lines = prepared;
   lyricsMeta.lastActiveIdx = -1;
+  lyricsMeta.lastWordIdx = -1;
   lyricsMeta.currentY = 0;
   renderLyricsBox({ plain: data.plain, synced: prepared });
 }
@@ -746,6 +752,10 @@ function stopLyricsLoop(){
   if(lyricsRAF){ cancelAnimationFrame(lyricsRAF); lyricsRAF = null; }
 }
 
+function setLineFill(lineEl, pct){
+  lineEl.querySelectorAll('.lyric-word').forEach(w => w.style.setProperty('--fill', pct + '%'));
+}
+
 function updateLyrics(){
   if(!lyricsMeta.lines || lyricsMeta.lines.length === 0) return;
   const box = document.getElementById('lyricsBox');
@@ -766,25 +776,48 @@ function updateLyrics(){
 
   const lineEls = track.querySelectorAll('.lyric-line');
   if(idx !== lyricsMeta.lastActiveIdx){
-    lineEls.forEach((el, i) => el.classList.toggle('active', i === idx));
+    lineEls.forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+      // Lines already passed sit fully filled; lines not yet reached sit
+      // fully dim. Only the active line gets a continuous per-frame sweep
+      // below, so this only needs to run once per line change, not per frame.
+      if(i !== idx){
+        setLineFill(el, i < idx ? 100 : 0);
+      }
+    });
     lyricsMeta.lastActiveIdx = idx;
+    lyricsMeta.lastWordIdx = -1;
   }
 
   const currentLineEl = lineEls[idx];
   if(currentLineEl){
-    // word-level sweep within the active line
+    // Continuous word-level sweep: recompute every frame with the exact
+    // interpolated fill percentage, so the color wipe moves smoothly
+    // across each word instead of snapping between two states.
     const words = currentLineEl.querySelectorAll('.lyric-word');
     if(words.length){
       const timeInLine = elapsedSec - lines[idx].time;
       const wdata = lines[idx].words;
-      let wIdx = 0;
-      for(let i = 0; i < wdata.length; i++){
-        if(timeInLine >= wdata[i].start) wIdx = i; else break;
-      }
+      let activeWordIdx = -1;
       words.forEach((w, i) => {
-        w.classList.toggle('sung', i < wIdx);
-        w.classList.toggle('current', i === wIdx);
+        const wd = wdata[i];
+        let pct;
+        if(!wd){
+          pct = 100;
+        } else if(timeInLine >= wd.start + wd.duration){
+          pct = 100;
+        } else if(timeInLine <= wd.start){
+          pct = 0;
+        } else {
+          pct = ((timeInLine - wd.start) / wd.duration) * 100;
+          activeWordIdx = i;
+        }
+        w.style.setProperty('--fill', pct + '%');
       });
+      if(activeWordIdx !== lyricsMeta.lastWordIdx){
+        words.forEach((w, i) => w.classList.toggle('current', i === activeWordIdx));
+        lyricsMeta.lastWordIdx = activeWordIdx;
+      }
     }
 
     // continuous, eased vertical scroll toward centering the active line
