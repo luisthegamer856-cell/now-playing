@@ -301,31 +301,15 @@
     font-size: 30px;
     font-weight: 800;
     line-height: 1.45;
-    transition: font-size .35s ease, opacity .5s ease;
+    color: rgba(255,255,255,.3);
+    transition: font-size .35s ease, opacity .5s ease, color .3s ease;
   }
   .lyric-line.active{
     font-size: 38px;
-  }
-
-  /* ---------- word sweep ----------
-     Each word is rendered twice: a dim base copy, and a bright copy layered
-     exactly on top inside an overflow-hidden wrapper. Sweeping a word means
-     animating that wrapper's width from 0% to 100%.
-
-     This replaces the previous background-clip:text + gradient approach.
-     Animating a width on a small inline element is a plain, cheap, totally
-     standard operation with none of the rendering fragility that clipped-
-     gradient text has inside a continuously transforming ancestor. It also
-     structurally removes the "bright first letter" artifact, since there is
-     no gradient glow stop to sit at position 0 on untouched words.
-  */
-  .lyric-word{
-    display: inline-block;
-    color: rgba(255,255,255,.3);
-    transition: color .22s ease;
-  }
-  .lyric-word.word-sung{
     color: var(--cyan);
+  }
+  .lyric-line.sung{
+    color: var(--paper);
   }
 
   /* ---------- top bar: profile + logout ---------- */
@@ -746,45 +730,8 @@ function parseLRC(lrcText){
    and Spanish, and tracks singing duration far better than letter count —
    "strength" is one syllable but eight letters, while "area" is three
    syllables in four letters. */
-function countSyllables(word){
-  const w = word.toLowerCase().replace(/[^a-záéíóúüñ]/g, '');
-  if(!w) return 1;
-  const groups = w.match(/[aeiouyáéíóúü]+/g);
-  return groups ? groups.length : 1;
-}
-
-function estimateWordTimings(text, lineDuration){
-  const words = text.split(/\s+/).filter(Boolean);
-  if(words.length === 0) return [];
-
-  const syllables = words.map(countSyllables);
-  const totalSyllables = syllables.reduce((a, b) => a + b, 0) || 1;
-
-  /* A line's "duration" is really the gap until the next line, which often
-     includes instrumental space after the vocal ends. Stretching the sweep
-     across that whole gap is what made it drag. So the sweep runs at a
-     natural singing pace and simply finishes early when the gap is long. */
-  const NATURAL_SEC_PER_SYLLABLE = 0.33;
-  const naturalDuration = totalSyllables * NATURAL_SEC_PER_SYLLABLE;
-  const effective = Math.max(Math.min(lineDuration, naturalDuration), 0.3);
-
-  let offset = 0;
-  return words.map((w, i) => {
-    const share = syllables[i] / totalSyllables;
-    const wordDuration = Math.max(effective * share, 0.08);
-    const start = offset;
-    offset += wordDuration;
-    return { text: w, start, duration: wordDuration };
-  });
-}
-
-function prepareLines(lines, trackDurationSec){
-  return lines.map((line, i) => {
-    const next = lines[i + 1];
-    const end = next ? next.time : trackDurationSec;
-    const duration = Math.max(end - line.time, 0.3);
-    return { time: line.time, text: line.text, words: estimateWordTimings(line.text, duration) };
-  });
+function prepareLines(lines){
+  return lines.map(line => ({ time: line.time, text: line.text }));
 }
 
 async function fetchLyricsData(title, artist, album, durationSec){
@@ -816,12 +763,9 @@ function renderLyricsBox(data){
   const box = document.getElementById('lyricsBox');
   if(!box) return;
   if(data.synced && data.synced.length){
-    const word = (text) => `<span class="lyric-word">${escapeHtml(text) || '\u266A'}</span>`;
     const lines = data.synced.map((l, i) => {
-      const wordsHtml = l.words.length
-        ? l.words.map(w => word(w.text)).join(' ')
-        : word(l.text);
-      return `<p class="lyric-line" data-i="${i}">${wordsHtml}</p>`;
+      const text = escapeHtml(l.text) || '\u266A';
+      return `<p class="lyric-line" data-i="${i}">${text}</p>`;
     }).join('');
     box.innerHTML = `<div class="lyrics-track" id="lyricsTrack">${lines}</div>`;
   } else if(data.plain){
@@ -831,8 +775,8 @@ function renderLyricsBox(data){
   }
 }
 
-function applyLyricsData(data, trackDurationSec){
-  const prepared = data.synced ? prepareLines(data.synced, trackDurationSec) : null;
+function applyLyricsData(data){
+  const prepared = data.synced ? prepareLines(data.synced) : null;
   lyricsMeta.lines = prepared;
   lyricsMeta.lastActiveIdx = -1;
   lyricsMeta.lastWordIdx = -1;
@@ -843,11 +787,11 @@ function applyLyricsData(data, trackDurationSec){
 async function loadLyricsFor(track, durationMs){
   const id = track.id;
   const durationSec = durationMs / 1000;
-  if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id], durationSec); return; }
+  if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id]); return; }
   const artist = track.artists[0]?.name || '';
   const data = await fetchLyricsData(track.name, artist, track.album.name, Math.round(durationSec));
   lyricsCache[id] = data;
-  if(currentTrackId === id){ applyLyricsData(data, durationSec); }
+  if(currentTrackId === id){ applyLyricsData(data); }
 }
 
 /* Runs every animation frame (not tied to the 5s poll) for a continuously
@@ -872,11 +816,9 @@ function stopLyricsLoop(){
    directly: 100% = fully sung, 0% = not yet reached. No classes, no custom
    properties, no gradients — just a width. */
 function setLineSung(lineEl, sung){
-  lineEl.querySelectorAll('.lyric-word').forEach(w => {
-    if(w.dataset.sung === String(sung)) return;
-    w.dataset.sung = String(sung);
-    w.classList.toggle('word-sung', sung);
-  });
+  if(lineEl.dataset.sung === String(sung)) return;
+  lineEl.dataset.sung = String(sung);
+  lineEl.classList.toggle('sung', sung);
 }
 
 function updateLyrics(){
@@ -901,6 +843,7 @@ function updateLyrics(){
   if(idx !== lyricsMeta.lastActiveIdx){
     lineEls.forEach((el, i) => {
       el.classList.toggle('active', i === idx);
+      setLineSung(el, i < idx);
 
       // Distance-based fade replaces the old CSS mask. Only recalculated
       // when the active line changes, so it costs nothing per frame.
@@ -910,36 +853,12 @@ function updateLyrics(){
         el.dataset.op = op;
         el.style.opacity = op;
       }
-
-      // Lines already passed sit fully sung; lines not yet reached sit dim.
-      // Only the active line is stepped through word-by-word below.
-      if(i !== idx){
-        setLineSung(el, i < idx);
-      }
     });
     lyricsMeta.lastActiveIdx = idx;
   }
 
   const currentLineEl = lineEls[idx];
   if(currentLineEl){
-    // Word-by-word on the active line: each word just switches from dim to
-    // cyan the moment its estimated start time is reached — a quick color
-    // fade (via the CSS transition), not a sweep or reveal within the word.
-    const words = currentLineEl.querySelectorAll('.lyric-word');
-    if(words.length){
-      const timeInLine = elapsedSec - lines[idx].time;
-      const wdata = lines[idx].words;
-
-      words.forEach((w, i) => {
-        const wd = wdata[i];
-        const sung = !wd || timeInLine >= wd.start;
-        if(w.dataset.sung !== String(sung)){
-          w.dataset.sung = String(sung);
-          w.classList.toggle('word-sung', sung);
-        }
-      });
-    }
-
     // continuous, eased vertical scroll toward centering the active line
     const boxHeight = box.clientHeight;
     const lineTop = currentLineEl.offsetTop;
