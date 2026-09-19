@@ -1005,8 +1005,32 @@ function stopPolling(){
   stopLyricsLoop();
 }
 
+/* ---------- keep the screen awake while viewing ---------- */
+let wakeLock = null;
+
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)) return; // unsupported browser - fail silently
+  try{
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch(e){
+    // Denied or unavailable (e.g. low battery mode on some devices) - fine,
+    // the page just behaves normally without it.
+  }
+}
+
+// The browser automatically releases the lock when the tab is hidden
+// (switching apps, locking the screen), so it needs to be re-requested
+// once the tab is visible again — it won't resume on its own.
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && !wakeLock){
+    requestWakeLock();
+  }
+});
+
 /* ---------- init ---------- */
 (async function init(){
+  requestWakeLock();
   if(CLIENT_ID.includes('PASTE_YOUR')){
     renderLogin("Add your Spotify Client ID in the code before this will work.");
     return;
