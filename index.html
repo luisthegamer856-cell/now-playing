@@ -306,24 +306,10 @@
   }
   .lyric-line.active{
     font-size: 38px;
-  }
-  /* Sentence-mode: the whole line just switches to solid cyan while active. */
-  .lyric-line.active:not(.word-mode){
     color: var(--cyan);
   }
   .lyric-line.sung{
     color: var(--paper);
-  }
-  /* Word-mode (long/held lines only, detected automatically): the line
-     itself stays dim so each word can carry its own state — only the
-     .word-sung words light up as the estimated timing reaches them.
-     Once the whole line is finished, .sung above takes over and reads as
-     plain white, same as every sentence-mode line. */
-  .lyric-word{
-    transition: color .22s ease;
-  }
-  .lyric-word.word-sung{
-    color: var(--cyan);
   }
 
   /* ---------- top bar: profile + logout ---------- */
@@ -737,57 +723,8 @@ function parseLRC(lrcText){
   return out.sort((a, b) => a.time - b.time);
 }
 
-/* Since lrclib only gives one timestamp per line, word-level highlighting is
-   an estimate: each word gets a time slice of the line proportional to its
-   character length. Not perfectly precise, but reads very close to real sync. */
-/* Rough syllable count via vowel groups. Works reasonably for both English
-   and Spanish, and tracks singing duration far better than letter count —
-   "strength" is one syllable but eight letters, while "area" is three
-   syllables in four letters. Only used for "slow" lines (see below); normal
-   lines don't need this at all. */
-function countSyllables(word){
-  const w = word.toLowerCase().replace(/[^a-záéíóúüñ]/g, '');
-  if(!w) return 1;
-  const groups = w.match(/[aeiouyáéíóúü]+/g);
-  return groups ? groups.length : 1;
-}
-
-function estimateWordTimings(text, lineDuration){
-  const words = text.split(/\s+/).filter(Boolean);
-  if(words.length === 0) return [];
-
-  const syllables = words.map(countSyllables);
-  const totalSyllables = syllables.reduce((a, b) => a + b, 0) || 1;
-
-  let offset = 0;
-  return words.map((w, i) => {
-    const share = syllables[i] / totalSyllables;
-    const wordDuration = Math.max(lineDuration * share, 0.08);
-    const start = offset;
-    offset += wordDuration;
-    return { text: w, start, duration: wordDuration };
-  });
-}
-
-/* A line held for a while before the next one starts — a long note, a
-   drawn-out phrase — reads much better word-by-word than as one static
-   sentence sitting there unchanged for several seconds. Normal-paced lines
-   (the vast majority) stay simple sentence-by-sentence, which is also the
-   more accurate mode since it uses lrclib's real timestamp directly instead
-   of an estimate. */
-const SLOW_LINE_SECONDS = 4;
-
-function prepareLines(lines, trackDurationSec){
-  return lines.map((line, i) => {
-    const next = lines[i + 1];
-    const gap = Math.max((next ? next.time : trackDurationSec) - line.time, 0.3);
-    const slow = gap >= SLOW_LINE_SECONDS;
-    return {
-      time: line.time,
-      text: line.text,
-      words: slow ? estimateWordTimings(line.text, gap) : null
-    };
-  });
+function prepareLines(lines){
+  return lines.map(line => ({ time: line.time, text: line.text }));
 }
 
 async function fetchLyricsData(title, artist, album, durationSec){
@@ -820,12 +757,6 @@ function renderLyricsBox(data){
   if(!box) return;
   if(data.synced && data.synced.length){
     const lines = data.synced.map((l, i) => {
-      if(l.words && l.words.length){
-        const wordsHtml = l.words
-          .map(w => `<span class="lyric-word">${escapeHtml(w.text) || '\u266A'}</span>`)
-          .join(' ');
-        return `<p class="lyric-line word-mode" data-i="${i}">${wordsHtml}</p>`;
-      }
       const text = escapeHtml(l.text) || '\u266A';
       return `<p class="lyric-line" data-i="${i}">${text}</p>`;
     }).join('');
@@ -837,8 +768,8 @@ function renderLyricsBox(data){
   }
 }
 
-function applyLyricsData(data, trackDurationSec){
-  const prepared = data.synced ? prepareLines(data.synced, trackDurationSec) : null;
+function applyLyricsData(data){
+  const prepared = data.synced ? prepareLines(data.synced) : null;
   lyricsMeta.lines = prepared;
   lyricsMeta.lastActiveIdx = -1;
   lyricsMeta.lastWordIdx = -1;
@@ -849,11 +780,11 @@ function applyLyricsData(data, trackDurationSec){
 async function loadLyricsFor(track, durationMs){
   const id = track.id;
   const durationSec = durationMs / 1000;
-  if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id], durationSec); return; }
+  if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id]); return; }
   const artist = track.artists[0]?.name || '';
   const data = await fetchLyricsData(track.name, artist, track.album.name, Math.round(durationSec));
   lyricsCache[id] = data;
-  if(currentTrackId === id){ applyLyricsData(data, durationSec); }
+  if(currentTrackId === id){ applyLyricsData(data); }
 }
 
 /* Runs every animation frame (not tied to the 5s poll) for a continuously
@@ -881,15 +812,6 @@ function setLineSung(lineEl, sung){
   if(lineEl.dataset.sung === String(sung)) return;
   lineEl.dataset.sung = String(sung);
   lineEl.classList.toggle('sung', sung);
-  // Word-mode lines that are done reading get their per-word state cleared
-  // so they fall back to the plain line-level color (.sung => white), same
-  // as every sentence-mode line — no leftover cyan/dim words once finished.
-  if(lineEl.classList.contains('word-mode')){
-    lineEl.querySelectorAll('.lyric-word').forEach(w => {
-      w.classList.remove('word-sung');
-      delete w.dataset.sung;
-    });
-  }
 }
 
 function updateLyrics(){
@@ -930,24 +852,6 @@ function updateLyrics(){
 
   const currentLineEl = lineEls[idx];
   if(currentLineEl){
-    // Only "slow" lines carry word spans at all (see SLOW_LINE_SECONDS) —
-    // normal lines are plain text and skip this entirely.
-    if(currentLineEl.classList.contains('word-mode')){
-      const words = currentLineEl.querySelectorAll('.lyric-word');
-      const wdata = lines[idx].words;
-      if(words.length && wdata){
-        const timeInLine = elapsedSec - lines[idx].time;
-        words.forEach((w, i) => {
-          const wd = wdata[i];
-          const sung = !wd || timeInLine >= wd.start;
-          if(w.dataset.sung !== String(sung)){
-            w.dataset.sung = String(sung);
-            w.classList.toggle('word-sung', sung);
-          }
-        });
-      }
-    }
-
     // continuous, eased vertical scroll toward centering the active line
     const boxHeight = box.clientHeight;
     const lineTop = currentLineEl.offsetTop;
