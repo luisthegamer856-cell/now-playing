@@ -937,6 +937,32 @@ function pickVibrant(pixelData){
   return [Math.round(fallbackR/n), Math.round(fallbackG/n), Math.round(fallbackB/n)];
 }
 
+/* Standard relative-luminance formula (WCAG) — tells us how bright a color
+   actually reads as, not just how "colorful" it is. Pure yellow, for
+   instance, comes out very high here even though it isn't literally white. */
+function relativeLuminance(r, g, b){
+  const [rs, gs, bs] = [r, g, b].map(c => {
+    c /= 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+/* The lyrics highlight defaults to cyan, which reads great on the usual
+   dark/moody backgrounds. But against a bright background (a pale yellow
+   album cover, for instance) light cyan text can wash out. So: check how
+   bright the current background colors actually are, and if it's bright
+   enough that light text would struggle, swap to a deep, dark accent
+   instead — that's the one combination that stays readable regardless of
+   which color the background leans toward. */
+function pickLyricsAccent(colors){
+  const avg = colors.reduce((sum, c) => [sum[0]+c[0], sum[1]+c[1], sum[2]+c[2]], [0,0,0])
+    .map(v => v / colors.length);
+  const lum = relativeLuminance(avg[0], avg[1], avg[2]);
+  const BRIGHT_THRESHOLD = 0.55;
+  return lum > BRIGHT_THRESHOLD ? '#1B0F3D' : '#2FE6FF';
+}
+
 function extractGradient(imgUrl){
   if(!imgUrl) return;
   const img = new Image();
@@ -950,12 +976,13 @@ function extractGradient(imgUrl){
       const left = ctx.getImageData(0, 0, 10, 24).data;
       const right = ctx.getImageData(14, 0, 10, 24).data;
       const top = ctx.getImageData(0, 0, 24, 10).data;
-      const [r1,g1,b1] = pickVibrant(left);
-      const [r2,g2,b2] = pickVibrant(right);
-      const [r3,g3,b3] = pickVibrant(top);
-      document.documentElement.style.setProperty('--c1', `rgb(${r1},${g1},${b1})`);
-      document.documentElement.style.setProperty('--c2', `rgb(${r2},${g2},${b2})`);
-      document.documentElement.style.setProperty('--c3', `rgb(${r3},${g3},${b3})`);
+      const c1 = pickVibrant(left);
+      const c2 = pickVibrant(right);
+      const c3 = pickVibrant(top);
+      document.documentElement.style.setProperty('--c1', `rgb(${c1[0]},${c1[1]},${c1[2]})`);
+      document.documentElement.style.setProperty('--c2', `rgb(${c2[0]},${c2[1]},${c2[2]})`);
+      document.documentElement.style.setProperty('--c3', `rgb(${c3[0]},${c3[1]},${c3[2]})`);
+      document.documentElement.style.setProperty('--cyan', pickLyricsAccent([c1, c2, c3]));
     } catch(e){ /* CORS-tainted canvas - keep the current colors */ }
   };
   img.src = imgUrl;
