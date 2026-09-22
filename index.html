@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Now Playing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=Onest:wght@400..800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --c1: #FF3D81;
+    --c2: #7C3AED;
+    --ink: #14101F;
+    --paper: #FFF9F0;
+    --lime: #C6FF3D;
+    --cyan: #2FE6FF;
+  }
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+  html{ height: 100%; }
+  body{
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--paper);
+    min-height: 100vh;
+    display: flex;
+    background: var(--ink);
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ---------- moving background ---------- */
+  .bg-blobs{
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+    filter: blur(90px);
+  }
+  .blob{
+    position: absolute;
+    border-radius: 50%;
+    mix-blend-mode: screen;
+    transition: background 1.2s ease;
+  }
+  .blob-a{
+    width: 60vmax; height: 60vmax;
+    top: -22%; left: -18%;
+    background: var(--c1);
+    opacity: .8;
+    animation: floatA 28s ease-in-out infinite alternate;
+  }
+  .blob-b{
+    width: 54vmax; height: 54vmax;
+    bottom: -26%; right: -14%;
+    background: var(--c2);
+    opacity: .75;
+    animation: floatB 34s ease-in-out infinite alternate;
+  }
+  .blob-c{
+    width: 40vmax; height: 40vmax;
+    top: 28%; left: 38%;
+    background: var(--c3, var(--lime));
+    opacity: .4;
+    animation: floatC 22s ease-in-out infinite alternate;
+  }
+  @keyframes floatA{
+    0%{ transform: translate(0,0) scale(1); }
+    100%{ transform: translate(12vw,14vh) scale(1.18); }
+  }
+  @keyframes floatB{
+    0%{ transform: translate(0,0) scale(1); }
+    100%{ transform: translate(-14vw,-10vh) scale(1.12); }
+  }
+  @keyframes floatC{
+    0%{ transform: translate(0,0) scale(1); }
+    100%{ transform: translate(9vw,-14vh) scale(0.88); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .blob{ animation: none !important; }
+  }
+
+  .stage{
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 40px 60px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .layout{
+    display: flex;
+    align-items: flex-start;
+    gap: 56px;
+    width: 100%;
+  }
+  .main-col{
+    flex: 1 1 380px;
+    min-width: 0;
+    max-width: 420px;
+  }
+  .lyrics-col{
+    width: 460px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 40px;
+  }
+  @media (max-width: 900px){
+    .layout{ flex-direction: column; }
+    .main-col{ max-width: none; width: 100%; }
+    .lyrics-col{ width: 100%; position: static; }
+  }
+
+  /* ---------- login / idle ---------- */
+  .kicker{
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--paper);
+    opacity: .8;
+    margin-bottom: 10px;
+  }
+  .big-headline{
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(40px, 9vw, 68px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    margin-bottom: 22px;
+  }
+  .sub{
+    font-size: 16px;
+    line-height: 1.6;
+    opacity: .85;
+    max-width: 380px;
+    margin-bottom: 32px;
+  }
+  button.cta{
+    align-self: flex-start;
+    background: var(--paper);
+    color: var(--ink);
+    border: none;
+    padding: 16px 30px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .15s ease, background .15s ease;
+  }
+  button.cta:hover{ background: var(--lime); }
+  button.cta:active{ transform: scale(.97); }
+  button.cta:focus-visible{ outline: 2px solid var(--paper); outline-offset: 3px; }
+
+  /* ---------- now playing ---------- */
+  .art-card{
+    width: 216px;
+    height: 216px;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 24px 48px -18px rgba(0,0,0,.55);
+    margin-bottom: 28px;
+    background: rgba(255,255,255,.08);
+    flex-shrink: 0;
+    /* Stable, permanent layer promotion (created once, never torn down)
+       so the artwork isn't caught up in the lyrics repaints. */
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  .art-card img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .track-title{
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(32px, 7vw, 52px);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    word-break: break-word;
+  }
+  .track-artist{
+    font-size: 17px;
+    font-weight: 500;
+    opacity: .82;
+    margin-bottom: 30px;
+  }
+
+  .progress{
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 10px;
+  }
+  .progress-track{
+    position: relative;
+    height: 6px;
+    background: rgba(255,255,255,.22);
+    border-radius: 6px;
+  }
+  .progress-fill{
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    background: var(--paper);
+    border-radius: 6px;
+    width: 0%;
+  }
+  .time-row{
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    opacity: .7;
+    font-variant-numeric: tabular-nums;
+    max-width: 420px;
+    margin-bottom: 30px;
+  }
+
+  .controls{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .ctrl-btn{
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,.14);
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease;
+    flex-shrink: 0;
+  }
+  .ctrl-btn:hover{ background: rgba(255,255,255,.26); }
+  .ctrl-btn:active{ transform: scale(.92); }
+  .ctrl-btn:focus-visible{ outline: 2px solid var(--paper); outline-offset: 3px; }
+  .ctrl-btn.main{
+    width: 64px; height: 64px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .ctrl-btn.main:hover{ background: var(--lime); }
+  .ctrl-btn svg{ width: 22px; height: 22px; }
+  .ctrl-btn.main svg{ width: 24px; height: 24px; }
+
+  .state-label{
+    font-size: 13px;
+    font-weight: 500;
+    opacity: .7;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .state-label .dot{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--lime);
+  }
+  .state-label .dot.paused{ background: var(--paper); opacity: .5; }
+
+  .up-next{
+    margin-top: 26px;
+    max-width: 420px;
+  }
+  .up-next-label{
+    font-size: 13px;
+    font-weight: 600;
+    opacity: .7;
+    margin-bottom: 8px;
+  }
+  .up-next-content{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,.08);
+    border-radius: 16px;
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+  .up-next-art{
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255,255,255,.1);
+  }
+  .up-next-info{ min-width: 0; }
+  .up-next-title{
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .up-next-artist{
+    font-size: 12px;
+    opacity: .65;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .up-next-placeholder{
+    font-size: 13px;
+    opacity: .55;
+  }
+
+  /* ---------- lyrics (big, synced, word-level sweep) ---------- */
+  .section-label{
+    font-size: 14px;
+    font-weight: 600;
+    opacity: .8;
+    margin: 0 0 16px;
+  }
+  .lyrics-box{
+    position: relative;
+    height: min(66vh, 600px);
+    overflow: hidden;
+  }
+  /* NOTE: deliberately no mask-image here. A CSS mask on a container whose
+     child transform updates every frame forces a full re-rasterize of the
+     masked layer each frame, which was the main cause of the glitching
+     (and the repaint pressure bleeding into the artwork). The soft edge is
+     done with per-line opacity instead, set only when the active line
+     changes rather than every frame. */
+  .lyrics-track{
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    will-change: transform;
+  }
+  .lyrics-text{
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    line-height: 1.8;
+    white-space: pre-line;
+    opacity: .92;
+  }
+  .lyrics-status{
+    font-size: 15px;
+    opacity: .6;
+  }
+  .lyric-line{
+    margin: 0;
+    padding: 10px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Onest', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.45;
+    color: rgba(255,255,255,.3);
+    transition: font-size .35s ease, opacity .5s ease, color .3s ease;
+  }
+  .lyric-line.active{
+    font-size: 38px;
+    color: var(--cyan);
+  }
+  .lyric-line.sung{
+    color: var(--paper);
+  }
+
+  /* ---------- top bar: profile + logout ---------- */
+  .topbar{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+  }
+  .profile-chip{
+    display: none;
+    align-items: center;
+    gap: 11px;
+    background: rgba(255,255,255,.14);
+    padding: 7px 20px 7px 7px;
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--paper);
+    font-size: 16px;
+    font-weight: 600;
+    max-width: 260px;
+    transition: background .15s ease;
+  }
+  .profile-chip:hover{ background: rgba(255,255,255,.26); }
+  .profile-avatar{
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(255,255,255,.25);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .profile-name{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .logout-btn{
+    background: rgba(255,255,255,.14);
+    color: var(--paper);
+    border: none;
+    padding: 13px 22px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .logout-btn:hover{ background: rgba(255,255,255,.26); }
+
+  .toast{
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    max-width: 90vw;
+    text-align: center;
+    z-index: 10;
+  }
+  .toast.show{
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 420px){
+    .stage{ padding: 36px 22px 50px; }
+    .art-card{ width: 160px; height: 160px; }
+    .lyric-line{ font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-blobs">
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+  <div class="blob blob-c"></div>
+</div>
+
+<div class="stage" id="stage">
+  <p class="kicker">Loading…</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ CONFIGURE THIS ============ */
+const CLIENT_ID = "f8ae9b8233d44779be5fa82f8351bbf9";
+/* ========================================= */
+
+const REDIRECT_URI = window.location.origin + window.location.pathname;
+const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state user-read-private";
+const stage = document.getElementById('stage');
+const toastEl = document.getElementById('toast');
+
+let accessToken = null;
+let pollTimer = null;
+let nowPlayingEl = null;
+let lyricsColEl = null;
+let currentTrackId = null;
+let currentTrackDurationMs = 0;
+let lyricsCache = {};
+let lyricsRAF = null;
+let lyricsMeta = { lines: null, startMs: 0, startWallClock: 0, playing: false, lastActiveIdx: -1, lastWordIdx: -1, currentY: 0 };
+
+/* ---------- icons ---------- */
+const ICON = {
+  prev: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM19.5 5.5L9 12l10.5 6.5v-13z"/></svg>`,
+  next: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4.5 5.5L15 12 4.5 18.5v-13z"/></svg>`,
+  play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4.5v15l13-7.5z"/></svg>`,
+  pause:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>`
+};
+
+/* ---------- PKCE helpers ---------- */
+function randomString(len){
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let out = '';
+  for(let i=0;i<len;i++) out += chars.charAt(Math.floor(Math.random()*chars.length));
+  return out;
+}
+async function sha256(plain){
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(plain));
+}
+function base64UrlEncode(buffer){
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+const VERIFIER_KEY = 'sp_verifier';
+
+/* iOS Safari and in-app browsers (Instagram, Messenger, etc.) wipe
+   window.name on cross-origin navigation, which silently destroyed the
+   PKCE verifier on the way back from Spotify. Storage survives the
+   round trip; window.name is kept only as a last-resort fallback. */
+function saveVerifier(v){
+  try{ sessionStorage.setItem(VERIFIER_KEY, v); }catch(e){}
+  try{ localStorage.setItem(VERIFIER_KEY, v); }catch(e){}
+  try{ window.name = 'sp_verifier:' + v; }catch(e){}
+}
+function readVerifier(){
+  let v = null;
+  try{ v = sessionStorage.getItem(VERIFIER_KEY); }catch(e){}
+  if(!v){ try{ v = localStorage.getItem(VERIFIER_KEY); }catch(e){} }
+  if(!v && typeof window.name === 'string' && window.name.startsWith('sp_verifier:')){
+    v = window.name.slice(12);
+  }
+  return v;
+}
+function clearVerifier(){
+  try{ sessionStorage.removeItem(VERIFIER_KEY); }catch(e){}
+  try{ localStorage.removeItem(VERIFIER_KEY); }catch(e){}
+  try{ if(typeof window.name === 'string' && window.name.startsWith('sp_verifier:')) window.name = ''; }catch(e){}
+}
+
+async function redirectToAuth(){
+  const verifier = randomString(64);
+  saveVerifier(verifier);
+  const challenge = base64UrlEncode(await sha256(verifier));
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: REDIRECT_URI,
+    scope: SCOPES,
+    code_challenge_method: 'S256',
+    code_challenge: challenge
+  });
+  window.location.href = `https://accounts.spotify.com/authorize?${params}`;
+}
+
+const REFRESH_KEY = 'sp_refresh_token';
+
+async function refreshAccessToken(refreshToken){
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    client_id: CLIENT_ID
+  });
+  try{
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body
+    });
+    const data = await res.json();
+    if(data.access_token){
+      accessToken = data.access_token;
+      if(data.refresh_token){ localStorage.setItem(REFRESH_KEY, data.refresh_token); }
+      return true;
+    }
+  } catch(e){ /* fall through to false */ }
+  return false;
+}
+
+function logout(){
+  localStorage.removeItem(REFRESH_KEY);
+  stopPolling();
+  renderLogin();
+}
+
+async function exchangeCodeForToken(code){
+  const verifier = readVerifier();
+  if(!verifier){ renderLogin("That link expired — log in again."); return; }
+  const body = new URLSearchParams({
+    client_id: CLIENT_ID,
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: REDIRECT_URI,
+    code_verifier: verifier
+  });
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body
+  });
+  const data = await res.json();
+  window.history.replaceState({}, document.title, REDIRECT_URI);
+  clearVerifier();
+  if(data.access_token){
+    accessToken = data.access_token;
+    if(data.refresh_token){ localStorage.setItem(REFRESH_KEY, data.refresh_token); }
+    startPolling();
+  } else {
+    renderLogin("Couldn't log in — try again.");
+  }
+}
+
+/* ---------- rendering: login / idle / track ---------- */
+function renderLogin(message){
+  stopPolling();
+  stage.innerHTML = `
+    <p class="kicker">Now playing</p>
+    <h1 class="big-headline">See what's<br>spinning.</h1>
+    <p class="sub">${message || "Connect Spotify to show your currently playing track, skip controls, and synced lyrics."}</p>
+    <button class="cta" id="loginBtn">Log in with Spotify</button>
+  `;
+  document.getElementById('loginBtn').addEventListener('click', redirectToAuth);
+}
+
+function renderIdle(){
+  if(!nowPlayingEl) return;
+  nowPlayingEl.innerHTML = `
+    <p class="kicker">Now playing</p>
+    <h1 class="big-headline">Quiet for now.</h1>
+    <p class="sub">Nothing's playing on Spotify right now. Start something and this page will catch up automatically.</p>
+  `;
+  if(lyricsColEl){
+    lyricsColEl.innerHTML = '';
+  }
+  lyricsMeta.lines = null;
+  currentTrackId = null;
+  currentTrackDurationMs = 0;
+}
+
+function msToClock(ms){
+  const total = Math.floor(ms/1000);
+  const m = Math.floor(total/60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderTrack(data){
+  if(!nowPlayingEl) return;
+  const track = data.item;
+  const progress = data.progress_ms || 0;
+  const duration = track.duration_ms || 1;
+  const playing = !!data.is_playing;
+
+  // Build the card's DOM (including the <img>) only once per song. This is
+  // the actual fix for the artwork glitch: the previous version rebuilt this
+  // whole block — a fresh <img> tag included — on every 5s poll, forcing the
+  // browser to redecode/repaint the image each time. Now the element is
+  // created once and simply left alone; only the values below get updated.
+  if(track.id !== currentTrackId){
+    currentTrackId = track.id;
+    currentTrackDurationMs = duration;
+    buildTrackCard(track);
+    extractGradient(track.album.images[0]?.url || '');
+
+    if(lyricsColEl){
+      lyricsColEl.innerHTML = `
+        <p class="section-label">Lyrics</p>
+        <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
+      `;
+    }
+    loadLyricsFor(track, duration);
+  } else {
+    currentTrackDurationMs = duration;
+  }
+
+  // This is the single source of truth for "where are we in the song right
+  // now" — both the progress bar/time (updateProgressUI) and the lyrics
+  // sweep (updateLyrics) read from it every animation frame, corrected back
+  // to Spotify's real position on every 5s poll to avoid drifting.
+  lyricsMeta.startMs = progress;
+  lyricsMeta.startWallClock = Date.now();
+  lyricsMeta.playing = playing;
+}
+
+/* Builds the now-playing card's DOM once per song. */
+function buildTrackCard(track){
+  const artists = track.artists.map(a => a.name).join(', ');
+  const art = track.album.images[0]?.url || '';
+
+  nowPlayingEl.innerHTML = `
+    <div class="art-card"><img src="${art}" alt=""></div>
+    <h1 class="track-title">${escapeHtml(track.name)}</h1>
+    <p class="track-artist">${escapeHtml(artists)}</p>
+    <div class="progress">
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="time-row"><span id="timeNow">0:00</span><span id="timeTotal">${msToClock(track.duration_ms || 1)}</span></div>
+    <div class="controls">
+      <button class="ctrl-btn" id="prevBtn" aria-label="Previous track">${ICON.prev}</button>
+      <button class="ctrl-btn main" id="playBtn" aria-label="Play">${ICON.play}</button>
+      <button class="ctrl-btn" id="nextBtn" aria-label="Next track">${ICON.next}</button>
+    </div>
+    <div class="state-label"><span class="dot" id="stateDot"></span><span id="stateText">Paused</span></div>
+    <div class="up-next">
+      <p class="up-next-label">Up next</p>
+      <div class="up-next-content" id="upNextContent"><p class="up-next-placeholder">Loading…</p></div>
+    </div>
+  `;
+
+  document.getElementById('prevBtn').addEventListener('click', () => playerAction('POST', '/previous', 'Skipped back'));
+  document.getElementById('nextBtn').addEventListener('click', () => playerAction('POST', '/next', 'Skipped ahead'));
+  document.getElementById('playBtn').addEventListener('click', () => {
+    playerAction('PUT', lyricsMeta.playing ? '/pause' : '/play', lyricsMeta.playing ? 'Paused' : 'Playing');
+  });
+}
+
+/* Runs every animation frame alongside the lyrics sweep. Reads the same
+   clock (lyricsMeta), so the progress bar, the time, the play/pause icon,
+   and the lyrics all move in lockstep off one source of truth. Every write
+   is guarded so it only touches the DOM when the displayed value actually
+   changes. */
+function updateProgressUI(){
+  const fill = document.getElementById('progressFill');
+  if(!fill || !currentTrackDurationMs) return;
+
+  let elapsedMs = lyricsMeta.startMs;
+  if(lyricsMeta.playing){
+    elapsedMs += Date.now() - lyricsMeta.startWallClock;
+  }
+  elapsedMs = Math.max(0, Math.min(elapsedMs, currentTrackDurationMs));
+
+  const pct = (Math.min(100, (elapsedMs / currentTrackDurationMs) * 100)).toFixed(1);
+  if(fill.dataset.pct !== pct){
+    fill.dataset.pct = pct;
+    fill.style.width = pct + '%';
+  }
+
+  const timeNow = document.getElementById('timeNow');
+  if(timeNow){
+    const clock = msToClock(elapsedMs);
+    if(timeNow.textContent !== clock) timeNow.textContent = clock;
+  }
+
+  const playBtn = document.getElementById('playBtn');
+  if(playBtn && playBtn.dataset.playing !== String(lyricsMeta.playing)){
+    playBtn.dataset.playing = String(lyricsMeta.playing);
+    playBtn.innerHTML = lyricsMeta.playing ? ICON.pause : ICON.play;
+    playBtn.setAttribute('aria-label', lyricsMeta.playing ? 'Pause' : 'Play');
+  }
+
+  const stateDot = document.getElementById('stateDot');
+  const stateText = document.getElementById('stateText');
+  if(stateText && stateText.dataset.playing !== String(lyricsMeta.playing)){
+    stateText.dataset.playing = String(lyricsMeta.playing);
+    stateText.textContent = lyricsMeta.playing ? 'Playing' : 'Paused';
+    if(stateDot) stateDot.classList.toggle('paused', !lyricsMeta.playing);
+  }
+}
+
+/* ---------- lyrics (via lrclib.net - free, open, no key required) ---------- */
+
+/* Parses standard LRC timestamps, e.g. "[00:12.34]Some line", including
+   lines with multiple leading timestamps pointing at the same text. */
+function parseLRC(lrcText){
+  const lines = lrcText.split('\n');
+  const tagRe = /\[(\d{2}):(\d{2})(?:\.(\d{1,3}))?\]/g;
+  const out = [];
+  for(const line of lines){
+    const tags = [...line.matchAll(tagRe)];
+    if(tags.length === 0) continue;
+    const text = line.replace(tagRe, '').trim();
+    for(const t of tags){
+      const min = parseInt(t[1], 10);
+      const sec = parseInt(t[2], 10);
+      const msRaw = (t[3] || '0').padEnd(3, '0').slice(0, 3);
+      out.push({ time: min * 60 + sec + parseInt(msRaw, 10) / 1000, text });
+    }
+  }
+  return out.sort((a, b) => a.time - b.time);
+}
+
+function prepareLines(lines){
+  return lines.map(line => ({ time: line.time, text: line.text }));
+}
+
+async function fetchLyricsData(title, artist, album, durationSec){
+  const parse = (data) => ({
+    plain: data.plainLyrics || null,
+    synced: data.syncedLyrics ? parseLRC(data.syncedLyrics) : null
+  });
+  try{
+    const exact = new URLSearchParams({ track_name: title, artist_name: artist, album_name: album, duration: durationSec });
+    let res = await fetch(`https://lrclib.net/api/get?${exact}`);
+    if(res.ok){
+      const data = await res.json();
+      if(data.plainLyrics || data.syncedLyrics) return parse(data);
+    }
+    const loose = new URLSearchParams({ track_name: title, artist_name: artist });
+    res = await fetch(`https://lrclib.net/api/search?${loose}`);
+    if(res.ok){
+      const results = await res.json();
+      if(Array.isArray(results)){
+        const hit = results.find(r => r.plainLyrics || r.syncedLyrics);
+        if(hit) return parse(hit);
+      }
+    }
+  } catch(e){ /* treat as not found */ }
+  return { plain: null, synced: null };
+}
+
+function renderLyricsBox(data){
+  const box = document.getElementById('lyricsBox');
+  if(!box) return;
+  if(data.synced && data.synced.length){
+    const lines = data.synced.map((l, i) => {
+      const text = escapeHtml(l.text) || '\u266A';
+      return `<p class="lyric-line" data-i="${i}">${text}</p>`;
+    }).join('');
+    box.innerHTML = `<div class="lyrics-track" id="lyricsTrack">${lines}</div>`;
+  } else if(data.plain){
+    box.innerHTML = `<pre class="lyrics-text">${escapeHtml(data.plain)}</pre>`;
+  } else {
+    box.innerHTML = '<p class="lyrics-status">Lyrics not found for this track.</p>';
+  }
+}
+
+function applyLyricsData(data){
+  const prepared = data.synced ? prepareLines(data.synced) : null;
+  lyricsMeta.lines = prepared;
+  lyricsMeta.lastActiveIdx = -1;
+  lyricsMeta.lastWordIdx = -1;
+  lyricsMeta.currentY = 0;
+  renderLyricsBox({ plain: data.plain, synced: prepared });
+}
+
+async function loadLyricsFor(track, durationMs){
+  const id = track.id;
+  const durationSec = durationMs / 1000;
+  if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id]); return; }
+  const artist = track.artists[0]?.name || '';
+  const data = await fetchLyricsData(track.name, artist, track.album.name, Math.round(durationSec));
+  lyricsCache[id] = data;
+  if(currentTrackId === id){ applyLyricsData(data); }
+}
+
+/* Runs every animation frame (not tied to the 5s poll) for a continuously
+   smooth scroll and word sweep, instead of snapping in discrete steps. */
+function lyricsFrame(){
+  updateProgressUI();
+  updateLyrics();
+  lyricsRAF = requestAnimationFrame(lyricsFrame);
+}
+function startLyricsLoop(){
+  stopLyricsLoop();
+  lyricsRAF = requestAnimationFrame(lyricsFrame);
+}
+function stopLyricsLoop(){
+  if(lyricsRAF){ cancelAnimationFrame(lyricsRAF); lyricsRAF = null; }
+}
+
+/* Sets every word in a line to a resting state: fully sung (solid cyan)
+   or not yet reached (default dim). Never touches the sweep gradient —
+   that's reserved for the single word actively being highlighted. */
+/* Sets every word in a line to a resting state by driving the clip width
+   directly: 100% = fully sung, 0% = not yet reached. No classes, no custom
+   properties, no gradients — just a width. */
+function setLineSung(lineEl, sung){
+  if(lineEl.dataset.sung === String(sung)) return;
+  lineEl.dataset.sung = String(sung);
+  lineEl.classList.toggle('sung', sung);
+}
+
+function updateLyrics(){
+  if(!lyricsMeta.lines || lyricsMeta.lines.length === 0) return;
+  const box = document.getElementById('lyricsBox');
+  const track = document.getElementById('lyricsTrack');
+  if(!box || !track) return;
+
+  let elapsedSec = lyricsMeta.startMs / 1000;
+  if(lyricsMeta.playing){
+    elapsedSec += (Date.now() - lyricsMeta.startWallClock) / 1000;
+  }
+
+  const lines = lyricsMeta.lines;
+  let idx = -1;
+  for(let i = 0; i < lines.length; i++){
+    if(lines[i].time <= elapsedSec) idx = i; else break;
+  }
+  if(idx < 0) idx = 0;
+
+  const lineEls = track.querySelectorAll('.lyric-line');
+  if(idx !== lyricsMeta.lastActiveIdx){
+    lineEls.forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+      setLineSung(el, i < idx);
+
+      // Distance-based fade replaces the old CSS mask. Only recalculated
+      // when the active line changes, so it costs nothing per frame.
+      const dist = Math.abs(i - idx);
+      const op = Math.max(1 - dist * 0.16, 0.12).toFixed(2);
+      if(el.dataset.op !== op){
+        el.dataset.op = op;
+        el.style.opacity = op;
+      }
+    });
+    lyricsMeta.lastActiveIdx = idx;
+  }
+
+  const currentLineEl = lineEls[idx];
+  if(currentLineEl){
+    // continuous, eased vertical scroll toward centering the active line
+    const boxHeight = box.clientHeight;
+    const lineTop = currentLineEl.offsetTop;
+    const lineHeight = currentLineEl.offsetHeight;
+    const targetY = boxHeight / 2 - (lineTop + lineHeight / 2);
+    lyricsMeta.currentY += (targetY - lyricsMeta.currentY) * 0.12;
+    // Skip the write once the position has effectively settled — avoids
+    // repainting every frame while sitting still on a long line.
+    const rounded = Math.round(lyricsMeta.currentY * 10) / 10;
+    if(lyricsMeta.lastY !== rounded){
+      lyricsMeta.lastY = rounded;
+      track.style.transform = `translateY(${rounded}px)`;
+    }
+  }
+}
+
+/* ---------- profile ---------- */
+async function fetchProfile(){
+  try{
+    const res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if(!res.ok) return;
+    const data = await res.json();
+    const chip = document.getElementById('profileChip');
+    if(!chip) return;
+    const avatar = data.images?.[0]?.url;
+    const name = data.display_name || 'Your profile';
+    chip.href = data.external_urls?.spotify || '#';
+    chip.style.display = 'flex';
+    chip.innerHTML = `
+      ${avatar ? `<img class="profile-avatar" src="${avatar}" alt="">` : `<span class="profile-avatar">${escapeHtml(name.charAt(0).toUpperCase())}</span>`}
+      <span class="profile-name">${escapeHtml(name)}</span>
+    `;
+  } catch(e){ /* leave the chip hidden on failure */ }
+}
+
+/* ---------- playback controls ---------- */
+async function playerAction(method, path, okMessage){
+  try{
+    const res = await fetch(`https://api.spotify.com/v1/me/player${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if(res.status === 403){ showToast("That needs Spotify Premium."); return; }
+    if(res.status === 401){
+      const stored = localStorage.getItem(REFRESH_KEY);
+      if(stored && await refreshAccessToken(stored)){ setTimeout(tick, 300); return; }
+      renderLogin("Session expired — log in again.");
+      return;
+    }
+    if(res.status === 404){ showToast("Open Spotify on a device first."); return; }
+    showToast(okMessage);
+    setTimeout(tick, 450);
+  } catch(e){
+    showToast("Couldn't reach Spotify.");
+  }
+}
+
+let toastTimer = null;
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+}
+
+/* ---------- gradient from album art (two-tone, no storage used) ---------- */
+function pickVibrant(pixelData){
+  let best = null, bestScore = -1, fallbackR=0, fallbackG=0, fallbackB=0, n=0;
+  for(let i=0;i<pixelData.length;i+=4){
+    const r=pixelData[i], g=pixelData[i+1], b=pixelData[i+2], a=pixelData[i+3];
+    if(a < 100) continue;
+    fallbackR+=r; fallbackG+=g; fallbackB+=b; n++;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    const lum=(max+min)/2;
+    if(lum < 30 || lum > 225) continue;
+    const sat = max===0 ? 0 : (max-min)/max;
+    if(sat > bestScore){ bestScore = sat; best = [r,g,b]; }
+  }
+  if(best) return best;
+  if(n===0) return [124,58,237];
+  return [Math.round(fallbackR/n), Math.round(fallbackG/n), Math.round(fallbackB/n)];
+}
+
+/* Standard relative-luminance formula (WCAG) — tells us how bright a color
+   actually reads as, not just how "colorful" it is. Pure yellow, for
+   instance, comes out very high here even though it isn't literally white. */
+function relativeLuminance(r, g, b){
+  const [rs, gs, bs] = [r, g, b].map(c => {
+    c /= 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+/* The lyrics highlight defaults to cyan, which reads great on the usual
+   dark/moody backgrounds. But against a bright background (a pale yellow
+   album cover, for instance) light cyan text can wash out. So: check how
+   bright the current background colors actually are, and if it's bright
+   enough that light text would struggle, swap to a deep, dark accent
+   instead — that's the one combination that stays readable regardless of
+   which color the background leans toward. */
+function pickLyricsAccent(colors){
+  const avg = colors.reduce((sum, c) => [sum[0]+c[0], sum[1]+c[1], sum[2]+c[2]], [0,0,0])
+    .map(v => v / colors.length);
+  const lum = relativeLuminance(avg[0], avg[1], avg[2]);
+  const BRIGHT_THRESHOLD = 0.55;
+  return lum > BRIGHT_THRESHOLD ? '#1B0F3D' : '#2FE6FF';
+}
+
+function extractGradient(imgUrl){
+  if(!imgUrl) return;
+  const img = new Image();
+  img.crossOrigin = 'Anonymous';
+  img.onload = () => {
+    try{
+      const canvas = document.createElement('canvas');
+      canvas.width = 24; canvas.height = 24;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, 24, 24);
+      const left = ctx.getImageData(0, 0, 10, 24).data;
+      const right = ctx.getImageData(14, 0, 10, 24).data;
+      const top = ctx.getImageData(0, 0, 24, 10).data;
+      const c1 = pickVibrant(left);
+      const c2 = pickVibrant(right);
+      const c3 = pickVibrant(top);
+      document.documentElement.style.setProperty('--c1', `rgb(${c1[0]},${c1[1]},${c1[2]})`);
+      document.documentElement.style.setProperty('--c2', `rgb(${c2[0]},${c2[1]},${c2[2]})`);
+      document.documentElement.style.setProperty('--c3', `rgb(${c3[0]},${c3[1]},${c3[2]})`);
+      document.documentElement.style.setProperty('--cyan', pickLyricsAccent([c1, c2, c3]));
+    } catch(e){ /* CORS-tainted canvas - keep the current colors */ }
+  };
+  img.src = imgUrl;
+}
+
+/* ---------- polling ---------- */
+async function tick(){
+  try{
+    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if(res.status === 204){ renderIdle(); return; }
+    if(res.status === 401){
+      const stored = localStorage.getItem(REFRESH_KEY);
+      if(stored && await refreshAccessToken(stored)){ tick(); return; }
+      renderLogin("Session expired — log in again.");
+      return;
+    }
+    const data = await res.json();
+    if(!data || !data.item){ renderIdle(); return; }
+    renderTrack(data);
+    fetchQueue();
+  } catch(e){ /* transient network hiccup - keep current view, retry next tick */ }
+}
+
+async function fetchQueue(){
+  try{
+    const res = await fetch('https://api.spotify.com/v1/me/player/queue', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if(!res.ok) return;
+    const data = await res.json();
+    renderUpNext(data.queue && data.queue[0]);
+  } catch(e){ /* leave whatever was showing */ }
+}
+
+function renderUpNext(track){
+  const box = document.getElementById('upNextContent');
+  if(!box) return;
+  if(!track){
+    box.innerHTML = '<p class="up-next-placeholder">Nothing queued</p>';
+    return;
+  }
+  const images = track.album?.images || [];
+  const art = images[images.length - 1]?.url || images[0]?.url || '';
+  const artists = (track.artists || []).map(a => a.name).join(', ');
+  box.innerHTML = `
+    ${art ? `<img class="up-next-art" src="${art}" alt="">` : '<div class="up-next-art"></div>'}
+    <div class="up-next-info">
+      <p class="up-next-title">${escapeHtml(track.name || '')}</p>
+      <p class="up-next-artist">${escapeHtml(artists)}</p>
+    </div>
+  `;
+}
+
+function startPolling(){
+  stopPolling();
+  stage.innerHTML = `
+    <div class="topbar">
+      <a class="profile-chip" id="profileChip" href="#" target="_blank" rel="noopener"></a>
+      <button class="logout-btn" id="logoutBtn">Log out</button>
+    </div>
+    <div class="layout">
+      <div class="main-col" id="nowPlaying"></div>
+      <div class="lyrics-col" id="lyricsCol"></div>
+    </div>
+  `;
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+  fetchProfile();
+  nowPlayingEl = document.getElementById('nowPlaying');
+  lyricsColEl = document.getElementById('lyricsCol');
+  tick();
+  pollTimer = setInterval(tick, 5000);
+  startLyricsLoop();
+}
+function stopPolling(){
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  stopLyricsLoop();
+}
+
+/* ---------- keep the screen awake while viewing ---------- */
+let wakeLock = null;
+
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)) return; // unsupported browser - fail silently
+  try{
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch(e){
+    // Denied or unavailable (e.g. low battery mode on some devices) - fine,
+    // the page just behaves normally without it.
+  }
+}
+
+// The browser automatically releases the lock when the tab is hidden
+// (switching apps, locking the screen), so it needs to be re-requested
+// once the tab is visible again — it won't resume on its own.
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && !wakeLock){
+    requestWakeLock();
+  }
+});
+
+/* ---------- init ---------- */
+(async function init(){
+  requestWakeLock();
+  if(CLIENT_ID.includes('PASTE_YOUR')){
+    renderLogin("Add your Spotify Client ID in the code before this will work.");
+    return;
+  }
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if(code){
+    exchangeCodeForToken(code);
+    return;
+  }
+  const stored = localStorage.getItem(REFRESH_KEY);
+  if(stored){
+    const ok = await refreshAccessToken(stored);
+    if(ok){ startPolling(); return; }
+    localStorage.removeItem(REFRESH_KEY);
+  }
+  renderLogin();
+})();
+</script>
+</body>
+</html>
