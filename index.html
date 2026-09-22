@@ -260,6 +260,53 @@
   }
   .state-label .dot.paused{ background: var(--paper); opacity: .5; }
 
+  .up-next{
+    margin-top: 26px;
+    max-width: 420px;
+  }
+  .up-next-label{
+    font-size: 13px;
+    font-weight: 600;
+    opacity: .7;
+    margin-bottom: 8px;
+  }
+  .up-next-content{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,.08);
+    border-radius: 16px;
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+  .up-next-art{
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255,255,255,.1);
+  }
+  .up-next-info{ min-width: 0; }
+  .up-next-title{
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .up-next-artist{
+    font-size: 12px;
+    opacity: .65;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .up-next-placeholder{
+    font-size: 13px;
+    opacity: .55;
+  }
+
   /* ---------- lyrics (big, synced, word-level sweep) ---------- */
   .section-label{
     font-size: 14px;
@@ -649,6 +696,10 @@ function buildTrackCard(track){
       <button class="ctrl-btn" id="nextBtn" aria-label="Next track">${ICON.next}</button>
     </div>
     <div class="state-label"><span class="dot" id="stateDot"></span><span id="stateText">Paused</span></div>
+    <div class="up-next">
+      <p class="up-next-label">Up next</p>
+      <div class="up-next-content" id="upNextContent"><p class="up-next-placeholder">Loading…</p></div>
+    </div>
   `;
 
   document.getElementById('prevBtn').addEventListener('click', () => playerAction('POST', '/previous', 'Skipped back'));
@@ -1004,7 +1055,38 @@ async function tick(){
     const data = await res.json();
     if(!data || !data.item){ renderIdle(); return; }
     renderTrack(data);
+    fetchQueue();
   } catch(e){ /* transient network hiccup - keep current view, retry next tick */ }
+}
+
+async function fetchQueue(){
+  try{
+    const res = await fetch('https://api.spotify.com/v1/me/player/queue', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if(!res.ok) return;
+    const data = await res.json();
+    renderUpNext(data.queue && data.queue[0]);
+  } catch(e){ /* leave whatever was showing */ }
+}
+
+function renderUpNext(track){
+  const box = document.getElementById('upNextContent');
+  if(!box) return;
+  if(!track){
+    box.innerHTML = '<p class="up-next-placeholder">Nothing queued</p>';
+    return;
+  }
+  const images = track.album?.images || [];
+  const art = images[images.length - 1]?.url || images[0]?.url || '';
+  const artists = (track.artists || []).map(a => a.name).join(', ');
+  box.innerHTML = `
+    ${art ? `<img class="up-next-art" src="${art}" alt="">` : '<div class="up-next-art"></div>'}
+    <div class="up-next-info">
+      <p class="up-next-title">${escapeHtml(track.name || '')}</p>
+      <p class="up-next-artist">${escapeHtml(artists)}</p>
+    </div>
+  `;
 }
 
 function startPolling(){
