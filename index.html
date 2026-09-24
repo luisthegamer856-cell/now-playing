@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" type="image/jpeg" href="sky.jpg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Now Playing</title>
+<link rel="icon" type="image/jpeg" href="Sky.jpeg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=Onest:wght@400..800&display=swap" rel="stylesheet">
 <style>
@@ -625,6 +625,7 @@ function renderIdle(){
   lyricsMeta.lines = null;
   currentTrackId = null;
   currentTrackDurationMs = 0;
+  updateFavicon(null);
 }
 
 function msToClock(ms){
@@ -657,6 +658,7 @@ function renderTrack(data){
     currentTrackDurationMs = duration;
     buildTrackCard(track);
     extractGradient(track.album.images[0]?.url || '');
+    updateFavicon(track.album.images[0]?.url || '');
 
     if(lyricsColEl){
       lyricsColEl.innerHTML = `
@@ -676,6 +678,18 @@ function renderTrack(data){
   lyricsMeta.startMs = progress;
   lyricsMeta.startWallClock = Date.now();
   lyricsMeta.playing = playing;
+}
+
+/* Swaps the browser tab icon to the currently playing track's album art. */
+const DEFAULT_FAVICON = 'Sky.jpeg';
+function updateFavicon(url){
+  let link = document.querySelector("link[rel~='icon']");
+  if(!link){
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  link.href = url || DEFAULT_FAVICON;
 }
 
 /* Builds the now-playing card's DOM once per song. */
@@ -1092,6 +1106,7 @@ function renderUpNext(track){
 
 function startPolling(){
   stopPolling();
+  requestWakeLock();
   stage.innerHTML = `
     <div class="topbar">
       <a class="profile-chip" id="profileChip" href="#" target="_blank" rel="noopener"></a>
@@ -1128,6 +1143,15 @@ async function requestWakeLock(){
     // the page just behaves normally without it.
   }
 }
+
+// Safety net: some platforms (e.g. ChromeOS idle/screensaver) don't reliably
+// fire visibilitychange before releasing the lock, so periodically make sure
+// it's still held while the tab is visible and re-acquire it if not.
+setInterval(() => {
+  if(document.visibilityState === 'visible' && !wakeLock){
+    requestWakeLock();
+  }
+}, 10000);
 
 // The browser automatically releases the lock when the tab is hidden
 // (switching apps, locking the screen), so it needs to be re-requested
