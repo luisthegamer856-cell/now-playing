@@ -197,7 +197,30 @@
     height: 6px;
     background: rgba(255,255,255,.22);
     border-radius: 6px;
+    cursor: pointer;
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
   }
+  /* invisible taller hit area so the thin bar is easy to tap/drag */
+  .progress-track::before{
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: -14px; bottom: -14px;
+  }
+  .progress-thumb{
+    position: absolute;
+    top: 50%; left: 0;
+    width: 14px; height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    background: var(--paper);
+    box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    transform: scale(0);
+    transition: transform .15s ease;
+    pointer-events: none;
+  }
+  .progress-track:hover .progress-thumb,
+  .progress-track.seeking .progress-thumb{ transform: scale(1); }
   .progress-fill{
     position: absolute;
     top: 0; left: 0; height: 100%;
@@ -702,7 +725,7 @@ function buildTrackCard(track){
     <h1 class="track-title">${escapeHtml(track.name)}</h1>
     <p class="track-artist">${escapeHtml(artists)}</p>
     <div class="progress">
-      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div><div class="progress-thumb" id="progressThumb"></div></div>
     </div>
     <div class="time-row"><span id="timeNow">0:00</span><span id="timeTotal">${msToClock(track.duration_ms || 1)}</span></div>
     <div class="controls">
@@ -722,6 +745,46 @@ function buildTrackCard(track){
   document.getElementById('playBtn').addEventListener('click', () => {
     playerAction('PUT', lyricsMeta.playing ? '/pause' : '/play', lyricsMeta.playing ? 'Paused' : 'Playing');
   });
+  setupSeeking();
+}
+
+/* Click or drag the progress bar to jump to a spot in the song.
+   While dragging, the bar/time show a preview; the actual seek request is
+   sent once on release. */
+let seekPreviewMs = null;
+function setupSeeking(){
+  const track = document.querySelector('.progress-track');
+  if(!track) return;
+
+  const msFromEvent = (e) => {
+    const rect = track.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    return Math.round(frac * currentTrackDurationMs);
+  };
+
+  track.addEventListener('pointerdown', (e) => {
+    if(!currentTrackDurationMs) return;
+    track.setPointerCapture(e.pointerId);
+    track.classList.add('seeking');
+    seekPreviewMs = msFromEvent(e);
+  });
+  track.addEventListener('pointermove', (e) => {
+    if(seekPreviewMs === null) return;
+    seekPreviewMs = msFromEvent(e);
+  });
+  const finish = (e, commit) => {
+    if(seekPreviewMs === null) return;
+    const ms = commit ? msFromEvent(e) : null;
+    seekPreviewMs = null;
+    track.classList.remove('seeking');
+    if(ms === null) return;
+    // optimistic local update so bar + lyrics jump instantly
+    lyricsMeta.startMs = ms;
+    lyricsMeta.startWallClock = Date.now();
+    playerAction('PUT', `/seek?position_ms=${ms}`, `Jumped to ${msToClock(ms)}`);
+  };
+  track.addEventListener('pointerup', (e) => finish(e, true));
+  track.addEventListener('pointercancel', (e) => finish(e, false));
 }
 
 /* Runs every animation frame alongside the lyrics sweep. Reads the same
@@ -737,12 +800,15 @@ function updateProgressUI(){
   if(lyricsMeta.playing){
     elapsedMs += Date.now() - lyricsMeta.startWallClock;
   }
+  if(seekPreviewMs !== null) elapsedMs = seekPreviewMs;
   elapsedMs = Math.max(0, Math.min(elapsedMs, currentTrackDurationMs));
 
   const pct = (Math.min(100, (elapsedMs / currentTrackDurationMs) * 100)).toFixed(1);
   if(fill.dataset.pct !== pct){
     fill.dataset.pct = pct;
     fill.style.width = pct + '%';
+    const thumb = document.getElementById('progressThumb');
+    if(thumb) thumb.style.left = pct + '%';
   }
 
   const timeNow = document.getElementById('timeNow');
