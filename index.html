@@ -374,6 +374,12 @@
     line-height: 1.45;
     color: rgba(255,255,255,.3);
     transition: font-size .35s ease, opacity .5s ease, color .3s ease;
+    cursor: pointer;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lyric-line:not(.active):not(.sung):hover{
+    color: rgba(255,255,255,.65);
   }
   .lyric-line.active{
     font-size: 38px;
@@ -893,6 +899,19 @@ function renderLyricsBox(data){
       return `<p class="lyric-line" data-i="${i}">${text}</p>`;
     }).join('');
     box.innerHTML = `<div class="lyrics-track" id="lyricsTrack">${lines}</div>`;
+    // One delegated handler (assigned, not added, so re-renders never stack listeners).
+    box.onclick = (e) => {
+      const lineEl = e.target.closest('.lyric-line');
+      if(!lineEl || !lyricsMeta.lines) return;
+      const line = lyricsMeta.lines[Number(lineEl.dataset.i)];
+      if(!line) return;
+      // ceil so float rounding can never land a hair before the line's timestamp
+      const ms = Math.max(0, Math.ceil(line.time * 1000));
+      // optimistic local update so the lyrics + bar jump instantly
+      lyricsMeta.startMs = ms;
+      lyricsMeta.startWallClock = Date.now();
+      playerAction('PUT', `/seek?position_ms=${ms}`, `Jumped to ${msToClock(ms)}`);
+    };
   } else if(data.plain){
     box.innerHTML = `<pre class="lyrics-text">${escapeHtml(data.plain)}</pre>`;
   } else {
