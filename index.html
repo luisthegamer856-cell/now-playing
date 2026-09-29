@@ -656,6 +656,7 @@ function renderIdle(){
   currentTrackId = null;
   currentTrackDurationMs = 0;
   updateFavicon(null);
+  updateTitle(null);
 }
 
 function msToClock(ms){
@@ -689,6 +690,7 @@ function renderTrack(data){
     buildTrackCard(track);
     extractGradient(track.album.images[0]?.url || '');
     updateFavicon(track.album.images[0]?.url || '');
+    updateTitle(track);
 
     if(lyricsColEl){
       lyricsColEl.innerHTML = `
@@ -711,6 +713,11 @@ function renderTrack(data){
 }
 
 /* Swaps the browser tab icon to the currently playing track's album art. */
+const DEFAULT_TITLE = 'Now Playing';
+function updateTitle(track){
+  document.title = track ? `${track.name} \u2014 ${track.artists.map(a => a.name).join(', ')}` : DEFAULT_TITLE;
+}
+
 const DEFAULT_FAVICON = 'Sky.jpeg';
 function updateFavicon(url){
   let link = document.querySelector("link[rel~='icon']");
