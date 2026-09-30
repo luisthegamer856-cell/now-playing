@@ -14,6 +14,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=Onest:wght@400..800&display=swap" rel="stylesheet">
 <style>
   :root{
+    /* Side safe areas. The page shrinks the one on the side WITHOUT the notch /
+       Dynamic Island (set from the phone's rotation in JS) to use that space. */
+    --sa-l: env(safe-area-inset-left);
+    --sa-r: env(safe-area-inset-right);
     --c1: #FF3D81;
     --c2: #7C3AED;
     --ink: #14101F;
@@ -22,6 +26,8 @@
   }
   *{ box-sizing: border-box; margin: 0; padding: 0; }
   html{ height: 100%; background: var(--ink); }
+  html.island-left{ --sa-r: 0px; }
+  html.island-right{ --sa-l: 0px; }
   body{
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--paper);
@@ -31,7 +37,7 @@
     background: var(--ink);
     /* keep content out of the notch / home-indicator areas while the
        background still fills the whole screen (viewport-fit=cover) */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: env(safe-area-inset-top) var(--sa-r) env(safe-area-inset-bottom) var(--sa-l);
     overflow-x: hidden;
     position: relative;
   }
@@ -402,7 +408,7 @@
   .topbar{
     position: fixed;
     top: calc(20px + env(safe-area-inset-top));
-    right: calc(20px + env(safe-area-inset-right));
+    right: calc(20px + var(--sa-r));
     display: flex;
     align-items: center;
     gap: 10px;
@@ -511,7 +517,7 @@
   html.mobile .art-card{ width: min(64vw, 240px); height: min(64vw, 240px); margin-left: auto; margin-right: auto; }
   html.mobile .lyric-line{ font-size: 24px; }
   html.mobile .lyrics-box{ height: 52vh; }
-  html.mobile .topbar{ top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); gap: 8px; }
+  html.mobile .topbar{ top: calc(12px + env(safe-area-inset-top)); right: calc(12px + var(--sa-r)); gap: 8px; }
   html.mobile .profile-chip{ padding: 5px; }
   html.mobile .profile-name{ display: none; }
   html.mobile .toast{ max-width: 90vw; }
@@ -566,47 +572,76 @@
   html.mobile .lyr-btn{ width: 40px; height: 40px; }
   html.mobile .lyr-btn svg{ width: 19px; height: 19px; }
 
-  /* ---------- lyrics hidden by choice (icon button, all devices): the player fills the screen ---------- */
-  html.lyrics-off .lyrics-col{ display: none; }
-  html.lyrics-off .stage{ max-width: none; padding: 80px 5vw 4vh; }
-  html.lyrics-off .layout{ justify-content: center; align-items: center; }
-  html.lyrics-off .main-col{ flex: none; width: 100%; max-width: min(92vw, 760px); margin: 0 auto; text-align: center; }
-  html.lyrics-off .art-card{
+  /* ---------- lyrics hidden by choice (icon button) OR song has no moving lyrics: the player fills the screen on every device ---------- */
+  html.lyrics-off .lyrics-col,
+  html.lyrics-static .lyrics-col{ display: none; }
+  html.lyrics-off .stage,
+  html.lyrics-static .stage{ max-width: none; padding: 80px 5vw 4vh; }
+  html.lyrics-off .layout,
+  html.lyrics-static .layout{ justify-content: center; align-items: center; }
+  html.lyrics-off .main-col,
+  html.lyrics-static .main-col{ flex: none; width: 100%; max-width: min(92vw, 760px); margin: 0 auto; text-align: center; }
+  html.lyrics-off .art-card,
+  html.lyrics-static .art-card{
     width: min(86vw, 46vh); height: min(86vw, 46vh);
     margin: 0 auto 4vh; border-radius: clamp(24px, 5vw, 44px);
   }
-  html.lyrics-off .track-title{ font-size: clamp(28px, 6.5vw, 64px); }
-  html.lyrics-off .track-artist{ font-size: clamp(17px, 3vw, 28px); margin-bottom: 3.5vh; }
+  html.lyrics-off .track-title,
+  html.lyrics-static .track-title{ font-size: clamp(28px, 6.5vw, 64px); }
+  html.lyrics-off .track-artist,
+  html.lyrics-static .track-artist{ font-size: clamp(17px, 3vw, 28px); margin-bottom: 3.5vh; }
   html.lyrics-off .progress,
-  html.lyrics-off .time-row{ max-width: none; }
-  html.lyrics-off .progress-track{ height: 8px; }
-  html.lyrics-off .time-row{ font-size: clamp(12px, 2vw, 18px); margin-bottom: 3vh; }
-  html.lyrics-off .controls{ gap: clamp(16px, 3vw, 32px); justify-content: center; margin-bottom: 3vh; }
-  html.lyrics-off .state-label{ justify-content: center; }
-  html.lyrics-off .ctrl-btn{ width: clamp(56px, 9vw, 84px); height: clamp(56px, 9vw, 84px); }
-  html.lyrics-off .ctrl-btn.main{ width: clamp(68px, 11vw, 104px); height: clamp(68px, 11vw, 104px); }
-  html.lyrics-off .ctrl-btn svg{ width: 36%; height: 36%; }
-  html.lyrics-off .ctrl-btn.main svg{ width: 40%; height: 40%; }
+  html.lyrics-static .progress,
+  html.lyrics-off .time-row,
+  html.lyrics-static .time-row{ max-width: none; }
+  html.lyrics-off .progress-track,
+  html.lyrics-static .progress-track{ height: 8px; }
+  html.lyrics-off .time-row,
+  html.lyrics-static .time-row{ font-size: clamp(12px, 2vw, 18px); margin-bottom: 3vh; }
+  html.lyrics-off .controls,
+  html.lyrics-static .controls{ gap: clamp(16px, 3vw, 32px); justify-content: center; margin-bottom: 3vh; }
+  html.lyrics-off .state-label,
+  html.lyrics-static .state-label{ justify-content: center; }
+  html.lyrics-off .ctrl-btn,
+  html.lyrics-static .ctrl-btn{ width: clamp(56px, 9vw, 84px); height: clamp(56px, 9vw, 84px); }
+  html.lyrics-off .ctrl-btn.main,
+  html.lyrics-static .ctrl-btn.main{ width: clamp(68px, 11vw, 104px); height: clamp(68px, 11vw, 104px); }
+  html.lyrics-off .ctrl-btn svg,
+  html.lyrics-static .ctrl-btn svg{ width: 36%; height: 36%; }
+  html.lyrics-off .ctrl-btn.main svg,
+  html.lyrics-static .ctrl-btn.main svg{ width: 40%; height: 40%; }
 
   /* Tablets, laptops and desktops sideways: big art on the left, everything else beside it. */
   @media (orientation: landscape) and (min-height: 521px){
-    html.lyrics-off .stage{ padding: 80px 6vw 5vh; }
-    html.lyrics-off .layout{ height: calc(100dvh - 80px - 5vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
-    html.lyrics-off .main-col{
+    html.lyrics-off .stage,
+  html.lyrics-static .stage{ padding: 80px 6vw 5vh; }
+    html.lyrics-off .layout,
+  html.lyrics-static .layout{ height: calc(100dvh - 80px - 5vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+    html.lyrics-off .main-col,
+  html.lyrics-static .main-col{
       max-width: none; margin: 0; width: 100%;
       display: grid; grid-template-columns: auto minmax(0, 1fr);
       column-gap: 5vw; align-content: center; text-align: left;
     }
-    html.lyrics-off .main-col > *{ grid-column: 2; }
-    html.lyrics-off .art-card{
+    html.lyrics-off .main-col > *,
+  html.lyrics-static .main-col > *{ grid-column: 2; }
+    html.lyrics-off .art-card,
+  html.lyrics-static .art-card{
       grid-column: 1; grid-row: 1 / span 8; align-self: center;
       width: min(66vh, 42vw); height: min(66vh, 42vw); margin: 0;
     }
-    html.lyrics-off .track-title{ font-size: clamp(30px, 4.6vw, 76px); }
-    html.lyrics-off .track-artist{ font-size: clamp(18px, 2vw, 32px); }
+    html.lyrics-off .track-title,
+  html.lyrics-static .track-title{ font-size: clamp(30px, 4.6vw, 76px); }
+    html.lyrics-off .track-artist,
+  html.lyrics-static .track-artist{ font-size: clamp(18px, 2vw, 32px); }
     html.lyrics-off .controls,
-    html.lyrics-off .state-label{ justify-content: flex-start; }
+  html.lyrics-static .controls,
+    html.lyrics-off .state-label,
+  html.lyrics-static .state-label{ justify-content: flex-start; }
   }
+
+  /* nothing to toggle when the song has no moving lyrics */
+  html.lyrics-static .lyr-btn{ display: none; }
 
   /* ---------- phone in landscape: playback left, lyrics right ---------- */
   @media (orientation: landscape) and (max-height: 520px){
@@ -620,7 +655,7 @@
     .track-artist{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lyrics-box{ height: calc(100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
     .lyric-line{ font-size: 22px; }
-    .topbar{ top: calc(10px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); gap: 8px; }
+    .topbar{ top: calc(10px + env(safe-area-inset-top)); right: calc(12px + var(--sa-r)); gap: 8px; }
     .track-artist{ font-size: 14px; margin-bottom: 10px; }
     .time-row{ margin-bottom: 8px; }
     .controls{ margin-bottom: 8px; gap: 10px; }
@@ -644,7 +679,8 @@
   /* Landscape phone + lyrics that don't scroll (plain/unsynced or none, or hidden by choice): the player
      takes over the whole screen, art on the left, everything else beside it. */
   @media (orientation: landscape) and (max-height: 520px){
-    html.lyrics-off .stage{ padding: 56px 20px 12px; }
+    html.lyrics-off .stage,
+    html.lyrics-static .stage{ padding: 56px 20px 12px; }
     html.lyrics-static .lyrics-col,
     html.lyrics-off .lyrics-col{ display: none; }
     html.lyrics-static .main-col,
@@ -1769,6 +1805,21 @@ function stopPolling(){
   if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
   stopLyricsLoop();
 }
+
+/* ---------- landscape phones: use the free side next to the notch ---------- */
+function updateIslandSide(){
+  const root = document.documentElement;
+  let o = window.orientation;
+  if(typeof o !== 'number' && screen.orientation && typeof screen.orientation.angle === 'number'){
+    o = screen.orientation.angle === 270 ? -90 : screen.orientation.angle;
+  }
+  // rotated counter-clockwise (90): notch/Dynamic Island on the left, free space on the right
+  root.classList.toggle('island-left', o === 90);
+  root.classList.toggle('island-right', o === -90);
+}
+updateIslandSide();
+window.addEventListener('orientationchange', () => setTimeout(updateIslandSide, 60));
+window.addEventListener('resize', updateIslandSide);
 
 /* ---------- hide the mouse cursor when it stops moving (PC, opt-in) ---------- */
 let cursorTimer = null;
