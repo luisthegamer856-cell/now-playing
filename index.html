@@ -492,7 +492,8 @@
   /* ---------- manual mobile layout (View button) ---------- */
   .view-btn,
   .lyr-btn,
-  .cur-btn{
+  .cur-btn,
+  .bg-btn{
     background: rgba(255,255,255,.14);
     color: var(--paper);
     border: none;
@@ -506,7 +507,8 @@
   }
   .view-btn:hover,
   .lyr-btn:hover,
-  .cur-btn:hover{ background: rgba(255,255,255,.26); }
+  .cur-btn:hover,
+  .bg-btn:hover{ background: rgba(255,255,255,.26); }
   @media (max-width: 900px){
     html:not(.mobile) .view-btn{ display: none; }
   }
@@ -557,6 +559,21 @@
   html.mobile .view-btn{ width: 40px; height: 40px; }
   html.mobile .logout-btn svg,
   html.mobile .view-btn svg{ width: 19px; height: 19px; }
+
+  /* ---------- animated background on/off ---------- */
+  .bg-btn{
+    width: 46px; height: 46px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  .bg-btn svg{ width: 22px; height: 22px; }
+  .bg-slash{ display: none; }
+  html.bg-still .bg-slash{ display: inline; }
+  html:not(.bg-still) .bg-btn{ background: rgba(255,255,255,.9); color: #14101F; }
+  html:not(.bg-still) .bg-btn:hover{ background: #fff; }
+  html.bg-still .blob{ animation: none !important; }
+  html.mobile .bg-btn{ width: 40px; height: 40px; }
+  html.mobile .bg-btn svg{ width: 19px; height: 19px; }
 
   /* ---------- lyrics on/off icon button ---------- */
   .lyr-btn{
@@ -670,8 +687,8 @@
     .up-next-artist{ font-size: 11px; flex: 1 1 0; min-width: 0; }
     .up-next-placeholder{ font-size: 11px; }
     .state-label{ font-size: 12px; }
-    .logout-btn, .view-btn, .cur-btn, .lyr-btn{ width: 36px; height: 36px; }
-    .logout-btn svg, .view-btn svg, .cur-btn svg, .lyr-btn svg{ width: 17px; height: 17px; }
+    .logout-btn, .view-btn, .cur-btn, .lyr-btn, .bg-btn{ width: 36px; height: 36px; }
+    .logout-btn svg, .view-btn svg, .cur-btn svg, .lyr-btn svg, .bg-btn svg{ width: 17px; height: 17px; }
     .profile-chip{ padding: 4px; }
     .profile-name{ display: none; }
   }
@@ -764,7 +781,7 @@
   .pl{ display: block; min-height: 1.8em; }
   .pl .lyric-tr{ font-size: 15px; font-weight: 500; opacity: .6; margin: 0 0 6px; }
 </style>
-<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}</script>
+<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}</script>
 </head>
 <body>
 
@@ -1736,6 +1753,7 @@ function startPolling(){
   stage.innerHTML = `
     <div class="topbar">
       <a class="profile-chip" id="profileChip" href="#" target="_blank" rel="noopener"></a>
+      <button class="bg-btn" id="bgBtn" type="button" aria-label="Turn off moving background" title="Turn off moving background"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/><line class="bg-slash" x1="3" y1="21" x2="21" y2="3"/></svg></button>
       <button class="cur-btn" id="cursorBtn" type="button" aria-label="Hide mouse when idle" title="Hide mouse when idle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l14 7.5-6.2 1.9L10.5 19z"/><line class="cur-slash" x1="3" y1="21" x2="21" y2="3"/></svg></button>
       <button class="lyr-btn" id="lyricsBtn" type="button" aria-label="Hide lyrics" title="Hide lyrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6l-4.5 3.5V17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h5.5"/><line class="lyr-slash" x1="3" y1="21" x2="21" y2="3"/></svg></button>
       <button class="view-btn" id="viewBtn" type="button"></button>
@@ -1757,6 +1775,20 @@ function startPolling(){
     viewBtn.title = label;
     viewBtn.setAttribute('aria-label', label);
   };
+  const bgBtn = document.getElementById('bgBtn');
+  const syncBgBtn = () => {
+    const still = document.documentElement.classList.contains('bg-still');
+    const label = still ? 'Turn on moving background' : 'Turn off moving background';
+    bgBtn.title = label;
+    bgBtn.setAttribute('aria-label', label);
+    bgBtn.setAttribute('aria-pressed', still ? 'false' : 'true');
+  };
+  syncBgBtn();
+  bgBtn.addEventListener('click', () => {
+    const still = document.documentElement.classList.toggle('bg-still');
+    try{ localStorage.setItem('np_bgstill', still ? '1' : '0'); } catch(e){}
+    syncBgBtn();
+  });
   const cursorBtn = document.getElementById('cursorBtn');
   const syncCursorBtn = () => {
     const on = document.documentElement.classList.contains('hide-cursor');
