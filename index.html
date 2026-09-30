@@ -576,8 +576,13 @@
     html.lyrics-static .ctrl-btn.main{ width: 64px; height: 64px; }
     html.lyrics-static .state-label{ font-size: 13px; }
   }
+
+  /* ---------- free (non-Premium) accounts: hide what Spotify won't allow ---------- */
+  html.no-premium .controls{ display: none; }
+  html.no-premium .progress-track{ pointer-events: none; cursor: default; }
+  html.no-premium .lyric-line{ cursor: default; }
 </style>
-<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}</script>
+<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}</script>
 </head>
 <body>
 
@@ -1017,6 +1022,7 @@ function renderLyricsBox(data){
     box.onclick = (e) => {
       const lineEl = e.target.closest('.lyric-line');
       if(!lineEl || !lyricsMeta.lines) return;
+      if(document.documentElement.classList.contains('no-premium')) return;
       const line = lyricsMeta.lines[Number(lineEl.dataset.i)];
       if(!line) return;
       // ceil so float rounding can never land a hair before the line's timestamp
@@ -1145,6 +1151,12 @@ async function fetchProfile(){
     });
     if(!res.ok) return;
     const data = await res.json();
+    // Play/pause/skip/seek are Premium-only on Spotify's side, so hide them for free accounts.
+    if(data.product){
+      const free = data.product !== 'premium';
+      document.documentElement.classList.toggle('no-premium', free);
+      try{ localStorage.setItem('np_free', free ? '1' : '0'); } catch(e){}
+    }
     const chip = document.getElementById('profileChip');
     if(!chip) return;
     const avatar = data.images?.[0]?.url;
