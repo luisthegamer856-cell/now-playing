@@ -1779,7 +1779,16 @@ function wakeCursor(){
   if(!root.classList.contains('hide-cursor')) return;
   cursorTimer = setTimeout(() => root.classList.add('cursor-idle'), 2000);
 }
-document.addEventListener('mousemove', wakeCursor, { passive: true });
+// Browsers fire "fake" mousemove events when things move under a still cursor
+// (the scrolling lyrics and animated background do), which used to reset the
+// timer forever. Only count moves where the pointer actually changed position.
+let lastMX = -100, lastMY = -100;
+document.addEventListener('mousemove', (e) => {
+  if(Math.abs(e.clientX - lastMX) < 2 && Math.abs(e.clientY - lastMY) < 2) return;
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+  wakeCursor();
+}, { passive: true });
 document.addEventListener('mousedown', wakeCursor, { passive: true });
 
 /* ---------- keep the screen awake while viewing ---------- */
