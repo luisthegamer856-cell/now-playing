@@ -14,7 +14,6 @@
     --ink: #14101F;
     --paper: #FFF9F0;
     --lime: #C6FF3D;
-    --cyan: #2FE6FF;
   }
   *{ box-sizing: border-box; margin: 0; padding: 0; }
   html{ height: 100%; }
@@ -710,6 +709,7 @@ function renderTrack(data){
   lyricsMeta.startMs = progress;
   lyricsMeta.startWallClock = Date.now();
   lyricsMeta.playing = playing;
+  if(playing && !wakeLock) requestWakeLock();
 }
 
 /* Swaps the browser tab icon to the currently playing track's album art. */
@@ -1096,32 +1096,6 @@ function pickVibrant(pixelData){
   return [Math.round(fallbackR/n), Math.round(fallbackG/n), Math.round(fallbackB/n)];
 }
 
-/* Standard relative-luminance formula (WCAG) — tells us how bright a color
-   actually reads as, not just how "colorful" it is. Pure yellow, for
-   instance, comes out very high here even though it isn't literally white. */
-function relativeLuminance(r, g, b){
-  const [rs, gs, bs] = [r, g, b].map(c => {
-    c /= 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-}
-
-/* The lyrics highlight defaults to cyan, which reads great on the usual
-   dark/moody backgrounds. But against a bright background (a pale yellow
-   album cover, for instance) light cyan text can wash out. So: check how
-   bright the current background colors actually are, and if it's bright
-   enough that light text would struggle, swap to a deep, dark accent
-   instead — that's the one combination that stays readable regardless of
-   which color the background leans toward. */
-function pickLyricsAccent(colors){
-  const avg = colors.reduce((sum, c) => [sum[0]+c[0], sum[1]+c[1], sum[2]+c[2]], [0,0,0])
-    .map(v => v / colors.length);
-  const lum = relativeLuminance(avg[0], avg[1], avg[2]);
-  const BRIGHT_THRESHOLD = 0.55;
-  return lum > BRIGHT_THRESHOLD ? '#1B0F3D' : '#2FE6FF';
-}
-
 function extractGradient(imgUrl){
   if(!imgUrl) return;
   const img = new Image();
@@ -1141,7 +1115,6 @@ function extractGradient(imgUrl){
       document.documentElement.style.setProperty('--c1', `rgb(${c1[0]},${c1[1]},${c1[2]})`);
       document.documentElement.style.setProperty('--c2', `rgb(${c2[0]},${c2[1]},${c2[2]})`);
       document.documentElement.style.setProperty('--c3', `rgb(${c3[0]},${c3[1]},${c3[2]})`);
-      document.documentElement.style.setProperty('--cyan', pickLyricsAccent([c1, c2, c3]));
     } catch(e){ /* CORS-tainted canvas - keep the current colors */ }
   };
   img.src = imgUrl;
@@ -1167,15 +1140,44 @@ async function tick(){
   } catch(e){ /* transient network hiccup - keep current view, retry next tick */ }
 }
 
+let queueForTrackId = null;
+let lastQueueFetch = 0;
+let queueRetryTimer = null;
 async function fetchQueue(){
+  // Fetch right away on a new song (and once more shortly after, since Spotify's
+  // queue often lags a track change); otherwise only refresh every 15s.
+  const isNewSong = queueForTrackId !== currentTrackId;
+  if(!isNewSong && Date.now() - lastQueueFetch < 15000) return;
+  queueForTrackId = currentTrackId;
+  lastQueueFetch = Date.now();
+  if(isNewSong){
+    clearTimeout(queueRetryTimer);
+    queueRetryTimer = setTimeout(() => { lastQueueFetch = 0; fetchQueue(); }, 2500);
+  }
   try{
-    const res = await fetch('https://api.spotify.com/v1/me/player/queue', {
+    let res = await fetch('https://api.spotify.com/v1/me/player/queue', {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
-    if(!res.ok) return;
+    if(res.status === 401){
+      const stored = localStorage.getItem(REFRESH_KEY);
+      if(stored && await refreshAccessToken(stored)){
+        res = await fetch('https://api.spotify.com/v1/me/player/queue', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+      }
+    }
+    if(!res.ok){
+      showUpNextMessage(res.status === 403 ? 'Queue needs Premium' : `Queue unavailable (${res.status})`);
+      return;
+    }
     const data = await res.json();
     renderUpNext(data.queue && data.queue[0]);
   } catch(e){ /* leave whatever was showing */ }
+}
+
+function showUpNextMessage(msg){
+  const box = document.getElementById('upNextContent');
+  if(box) box.innerHTML = `<p class="up-next-placeholder">${escapeHtml(msg)}</p>`;
 }
 
 function renderUpNext(track){
@@ -1225,40 +1227,87 @@ function stopPolling(){
 
 /* ---------- keep the screen awake while viewing ---------- */
 let wakeLock = null;
+let wakeLockPending = false;
+let userInteracted = false;
+let fallbackVideo = null;
+let fallbackTimer = null;
 
 async function requestWakeLock(){
-  if(!('wakeLock' in navigator)) return; // unsupported browser - fail silently
+  if(document.visibilityState !== 'visible') return;
+  if(wakeLock || wakeLockPending) return;
+  if(!('wakeLock' in navigator)){ startFallbackWake(); return; }
+  wakeLockPending = true;
   try{
-    wakeLock = await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release', () => { wakeLock = null; });
+    const lock = await navigator.wakeLock.request('screen');
+    wakeLock = lock;
+    lock.addEventListener('release', () => { if(wakeLock === lock) wakeLock = null; });
+    stopFallbackWake();
   } catch(e){
-    // Denied or unavailable (e.g. low battery mode on some devices) - fine,
-    // the page just behaves normally without it.
+    // Denied or unavailable (battery saver, ChromeOS policy, etc.) - use the
+    // hidden-video fallback instead.
+    console.warn('Wake Lock request failed:', e && e.name, e && e.message);
+    startFallbackWake();
+  } finally {
+    wakeLockPending = false;
   }
 }
 
-// Safety net: some platforms (e.g. ChromeOS idle/screensaver) don't reliably
-// fire visibilitychange before releasing the lock, so periodically make sure
-// it's still held while the tab is visible and re-acquire it if not.
-setInterval(() => {
-  if(document.visibilityState === 'visible' && !wakeLock){
-    requestWakeLock();
+/* Fallback for browsers/devices where the Wake Lock API is missing or refuses:
+   a tiny muted video playing from a canvas stream. Browsers keep the screen on
+   while a video is playing. Needs one tap/keypress on the page to be allowed
+   to start. */
+function startFallbackWake(){
+  if(fallbackVideo || !userInteracted) return;
+  try{
+    const c = document.createElement('canvas');
+    c.width = c.height = 2;
+    const ctx = c.getContext('2d');
+    let flip = false;
+    const paint = () => { ctx.fillStyle = flip ? '#000' : '#010101'; ctx.fillRect(0, 0, 2, 2); flip = !flip; };
+    paint();
+    fallbackTimer = setInterval(paint, 1000);
+    const v = document.createElement('video');
+    v.muted = true;
+    v.setAttribute('playsinline', '');
+    v.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;';
+    v.srcObject = c.captureStream(5);
+    document.body.appendChild(v);
+    fallbackVideo = v;
+    v.play().catch(() => stopFallbackWake());
+  } catch(e){
+    console.warn('Wake fallback failed:', e && e.name, e && e.message);
+    stopFallbackWake();
   }
+}
+
+function stopFallbackWake(){
+  if(fallbackTimer){ clearInterval(fallbackTimer); fallbackTimer = null; }
+  if(fallbackVideo){ fallbackVideo.pause(); fallbackVideo.remove(); fallbackVideo = null; }
+}
+
+// The first tap/click/keypress unlocks the fallback (and retries the real lock).
+['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    if(userInteracted) return;
+    userInteracted = true;
+    if(!wakeLock) requestWakeLock();
+  }, { passive: true });
+});
+
+// Safety net: re-acquire every 10s if the lock silently dropped while visible.
+setInterval(() => {
+  if(document.visibilityState === 'visible' && !wakeLock) requestWakeLock();
 }, 10000);
 
-// The browser automatically releases the lock when the tab is hidden
-// (switching apps, locking the screen), so it needs to be re-requested
-// once the tab is visible again — it won't resume on its own.
+// The browser releases the lock when the tab is hidden; re-request on return.
 document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible' && !wakeLock){
-    requestWakeLock();
-  }
+  if(document.visibilityState === 'visible') requestWakeLock();
 });
 
 /* ---------- init ---------- */
 (async function init(){
   requestWakeLock();
-  if(CLIENT_ID.includes('PASTE_YOUR')){
+  if(CLIENT_ID.includes('f8ae9b8233d44779be5fa82f8351bbf9')){
     renderLogin("Add your Spotify Client ID in the code before this will work.");
     return;
   }
