@@ -521,7 +521,7 @@
     .main-col{ flex: 0 0 36%; max-width: none; width: auto; overflow-y: auto; scrollbar-width: none; }
     .main-col::-webkit-scrollbar{ display: none; }
     .lyrics-col{ flex: 1 1 auto; width: auto; position: static; min-width: 0; }
-    .art-card{ width: min(22vh, 100px); height: min(22vh, 100px); border-radius: 18px; margin: 0 0 10px; }
+    .art-card{ width: min(20vh, 90px); height: min(20vh, 90px); border-radius: 16px; margin: 0 0 8px; }
     .track-title{ font-size: clamp(18px, 3.4vw, 24px); margin-bottom: 4px; }
     .lyrics-box{ height: calc(100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
     .lyric-line{ font-size: 22px; }
@@ -531,7 +531,15 @@
     .controls{ margin-bottom: 8px; gap: 10px; }
     .ctrl-btn{ width: 42px; height: 42px; }
     .ctrl-btn.main{ width: 50px; height: 50px; }
-    .up-next{ margin-top: 14px; }
+    .up-next{ margin-top: 6px; display: flex; align-items: center; gap: 8px; }
+    .up-next-label{ margin: 0; font-size: 11px; white-space: nowrap; }
+    .up-next-content{ flex: 1; min-width: 0; padding: 5px 8px; min-height: 0; border-radius: 10px; gap: 8px; }
+    .up-next-art{ width: 28px; height: 28px; border-radius: 6px; }
+    .up-next-info{ display: flex; align-items: baseline; gap: 6px; flex: 1; }
+    .up-next-title{ font-size: 12px; flex: 0 1 auto; min-width: 0; }
+    .up-next-artist{ font-size: 11px; flex: 1 1 0; min-width: 0; }
+    .up-next-placeholder{ font-size: 11px; }
+    .state-label{ font-size: 12px; }
     .logout-btn, .view-btn{ padding: 8px 14px; font-size: 13px; }
     .profile-chip{ padding: 4px; }
     .profile-name{ display: none; }
