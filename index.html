@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Now Playing">
+<meta name="theme-color" content="#14101F">
 <title>Now Playing</title>
 <link rel="icon" type="image/jpeg" href="Sky.jpeg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,13 +21,17 @@
     --lime: #C6FF3D;
   }
   *{ box-sizing: border-box; margin: 0; padding: 0; }
-  html{ height: 100%; }
+  html{ height: 100%; background: var(--ink); }
   body{
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--paper);
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     background: var(--ink);
+    /* keep content out of the notch / home-indicator areas while the
+       background still fills the whole screen (viewport-fit=cover) */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     overflow-x: hidden;
     position: relative;
   }
@@ -392,8 +401,8 @@
   /* ---------- top bar: profile + logout ---------- */
   .topbar{
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: calc(20px + env(safe-area-inset-top));
+    right: calc(20px + env(safe-area-inset-right));
     display: flex;
     align-items: center;
     gap: 10px;
@@ -498,7 +507,7 @@
   html.mobile .art-card{ width: min(64vw, 240px); height: min(64vw, 240px); margin-left: auto; margin-right: auto; }
   html.mobile .lyric-line{ font-size: 24px; }
   html.mobile .lyrics-box{ height: 52vh; }
-  html.mobile .topbar{ top: 12px; right: 12px; gap: 8px; }
+  html.mobile .topbar{ top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); gap: 8px; }
   html.mobile .logout-btn,
   html.mobile .view-btn{ padding: 10px 16px; font-size: 14px; }
   html.mobile .profile-chip{ padding: 5px; }
@@ -508,15 +517,21 @@
   /* ---------- phone in landscape: playback left, lyrics right ---------- */
   @media (orientation: landscape) and (max-height: 520px){
     .stage{ max-width: none; padding: 56px 20px 12px; justify-content: flex-start; }
-    .layout{ flex-direction: row; align-items: stretch; gap: 24px; height: calc(100dvh - 68px); }
+    .layout{ flex-direction: row; align-items: stretch; gap: 24px; height: calc(100dvh - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
     .main-col{ flex: 1 1 50%; max-width: none; width: auto; overflow-y: auto; scrollbar-width: none; }
     .main-col::-webkit-scrollbar{ display: none; }
     .lyrics-col{ flex: 1 1 50%; width: auto; position: static; min-width: 0; }
     .art-card{ width: min(26vh, 120px); height: min(26vh, 120px); border-radius: 20px; margin: 0 0 12px; }
     .track-title{ font-size: clamp(20px, 4vw, 28px); }
-    .lyrics-box{ height: calc(100dvh - 116px); }
+    .lyrics-box{ height: calc(100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
     .lyric-line{ font-size: 22px; }
-    .topbar{ top: 10px; right: 12px; gap: 8px; }
+    .topbar{ top: calc(10px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); gap: 8px; }
+    .track-artist{ margin-bottom: 12px; }
+    .time-row{ margin-bottom: 10px; }
+    .controls{ margin-bottom: 8px; gap: 12px; }
+    .ctrl-btn{ width: 48px; height: 48px; }
+    .ctrl-btn.main{ width: 56px; height: 56px; }
+    .up-next{ margin-top: 14px; }
     .logout-btn, .view-btn{ padding: 8px 14px; font-size: 13px; }
     .profile-chip{ padding: 4px; }
     .profile-name{ display: none; }
