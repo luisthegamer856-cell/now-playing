@@ -518,19 +518,19 @@
   @media (orientation: landscape) and (max-height: 520px){
     .stage{ max-width: none; padding: 56px 20px 12px; justify-content: flex-start; }
     .layout{ flex-direction: row; align-items: stretch; gap: 24px; height: calc(100dvh - 68px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
-    .main-col{ flex: 1 1 50%; max-width: none; width: auto; overflow-y: auto; scrollbar-width: none; }
+    .main-col{ flex: 0 0 36%; max-width: none; width: auto; overflow-y: auto; scrollbar-width: none; }
     .main-col::-webkit-scrollbar{ display: none; }
-    .lyrics-col{ flex: 1 1 50%; width: auto; position: static; min-width: 0; }
-    .art-card{ width: min(26vh, 120px); height: min(26vh, 120px); border-radius: 20px; margin: 0 0 12px; }
-    .track-title{ font-size: clamp(20px, 4vw, 28px); }
+    .lyrics-col{ flex: 1 1 auto; width: auto; position: static; min-width: 0; }
+    .art-card{ width: min(22vh, 100px); height: min(22vh, 100px); border-radius: 18px; margin: 0 0 10px; }
+    .track-title{ font-size: clamp(18px, 3.4vw, 24px); margin-bottom: 4px; }
     .lyrics-box{ height: calc(100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
     .lyric-line{ font-size: 22px; }
     .topbar{ top: calc(10px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); gap: 8px; }
-    .track-artist{ margin-bottom: 12px; }
-    .time-row{ margin-bottom: 10px; }
-    .controls{ margin-bottom: 8px; gap: 12px; }
-    .ctrl-btn{ width: 48px; height: 48px; }
-    .ctrl-btn.main{ width: 56px; height: 56px; }
+    .track-artist{ font-size: 14px; margin-bottom: 10px; }
+    .time-row{ margin-bottom: 8px; }
+    .controls{ margin-bottom: 8px; gap: 10px; }
+    .ctrl-btn{ width: 42px; height: 42px; }
+    .ctrl-btn.main{ width: 50px; height: 50px; }
     .up-next{ margin-top: 14px; }
     .logout-btn, .view-btn{ padding: 8px 14px; font-size: 13px; }
     .profile-chip{ padding: 4px; }
