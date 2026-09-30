@@ -583,8 +583,39 @@
   html.no-premium .controls{ display: none; }
   html.no-premium .progress-track{ pointer-events: none; cursor: default; }
   html.no-premium .lyric-line{ cursor: default; }
+
+  /* ---------- lyric translation (toggle) ---------- */
+  .lyrics-head{ display: flex; align-items: center; gap: 12px; margin: 0 0 16px; }
+  .lyrics-head .section-label{ margin: 0; }
+  .tr-btn{
+    background: rgba(255,255,255,.14);
+    color: var(--paper);
+    border: none;
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .tr-btn:hover{ background: rgba(255,255,255,.26); }
+  .tr-btn.on{ background: rgba(255,255,255,.9); color: #14101F; }
+  .lyric-tr{
+    display: none;
+    margin-top: 2px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: inherit;
+    opacity: .75;
+    text-shadow: none;
+  }
+  html.tr-on .lyric-tr:not(:empty){ display: block; }
+  .pl{ display: block; min-height: 1.8em; }
+  .pl .lyric-tr{ font-size: 15px; font-weight: 500; opacity: .6; margin: 0 0 6px; }
 </style>
-<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}</script>
+<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}</script>
 </head>
 <body>
 
@@ -806,9 +837,14 @@ function renderTrack(data){
     document.documentElement.classList.remove('lyrics-static');
     if(lyricsColEl){
       lyricsColEl.innerHTML = `
-        <p class="section-label">Lyrics</p>
+        <div class="lyrics-head">
+          <p class="section-label">Lyrics</p>
+          <button class="tr-btn" id="trBtn" type="button" aria-pressed="false" title="Show an English translation under each line">Translate</button>
+        </div>
         <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
       `;
+      const trBtn = document.getElementById('trBtn');
+      if(trBtn){ trBtn.onclick = toggleTranslate; syncTrBtn(); }
     }
     loadLyricsFor(track, duration);
   } else {
@@ -1017,7 +1053,7 @@ function renderLyricsBox(data){
   if(data.synced && data.synced.length){
     const lines = data.synced.map((l, i) => {
       const text = escapeHtml(l.text) || '\u266A';
-      return `<p class="lyric-line" data-i="${i}">${text}</p>`;
+      return `<p class="lyric-line" data-i="${i}">${text}<span class="lyric-tr"></span></p>`;
     }).join('');
     box.innerHTML = `<div class="lyrics-track" id="lyricsTrack">${lines}</div>`;
     // One delegated handler (assigned, not added, so re-renders never stack listeners).
@@ -1035,7 +1071,8 @@ function renderLyricsBox(data){
       playerAction('PUT', `/seek?position_ms=${ms}`, `Jumped to ${msToClock(ms)}`);
     };
   } else if(data.plain){
-    box.innerHTML = `<pre class="lyrics-text">${escapeHtml(data.plain)}</pre>`;
+    const plainLines = data.plain.split('\n').map(l => `<span class="pl">${escapeHtml(l)}<span class="lyric-tr"></span></span>`).join('');
+    box.innerHTML = `<div class="lyrics-text">${plainLines}</div>`;
   } else {
     box.innerHTML = '<p class="lyrics-status">Lyrics not found for this track.</p>';
   }
@@ -1052,6 +1089,125 @@ function applyLyricsData(data){
   // phone in landscape the player takes over the whole screen (CSS below).
   const isStatic = !(prepared && prepared.length);
   document.documentElement.classList.toggle('lyrics-static', isStatic);
+  ensureTranslations();
+}
+
+/* ---------- lyric translation (any language -> English) ----------
+   Uses Google Translate's free public endpoint with auto language detection,
+   so it works for every language it supports. English songs are skipped, and
+   lines that come back identical (names, "yeah", etc.) show nothing. */
+const trCache = {};
+
+function lyricLinesFor(id){
+  const d = lyricsCache[id];
+  if(!d) return null;
+  if(d.synced && d.synced.length) return d.synced.map(l => l.text);
+  if(d.plain) return d.plain.split('\n');
+  return null;
+}
+const hasLetters = (t) => /\p{L}/u.test(t);
+const normTr = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+async function gtx(q){
+  const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=' + encodeURIComponent(q);
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('translate ' + res.status);
+  const data = await res.json();
+  const text = (data[0] || []).map(seg => (seg && seg[0]) || '').join('');
+  return { text, lang: data[2] || '' };
+}
+
+async function translateChunk(texts){
+  try{
+    const r = await gtx(texts.join('\n'));
+    const parts = r.text.split('\n');
+    if(parts.length === texts.length + 1 && parts[parts.length - 1] === '') parts.pop();
+    if(parts.length === texts.length) return { out: parts, lang: r.lang };
+  } catch(e){ /* fall through to line-by-line */ }
+  const out = [];
+  let lang = '';
+  let fails = 0;
+  for(const t of texts){
+    try{ const r = await gtx(t); out.push(r.text.trim()); lang = lang || r.lang; }
+    catch(e){ out.push(''); if(++fails >= 3) throw e; }
+  }
+  return { out, lang };
+}
+
+async function buildTranslations(lines){
+  const idxs = [];
+  lines.forEach((t, i) => { if(hasLetters(t)) idxs.push(i); });
+  const tr = new Array(lines.length).fill('');
+  // batch lines so each request URL stays a safe length
+  const chunks = [];
+  let chunk = [];
+  let size = 0;
+  for(const i of idxs){
+    const len = encodeURIComponent(lines[i]).length + 3;
+    if(size + len > 1500 && chunk.length){ chunks.push(chunk); chunk = []; size = 0; }
+    chunk.push(i);
+    size += len;
+  }
+  if(chunk.length) chunks.push(chunk);
+  let lang = '';
+  for(let c = 0; c < chunks.length; c++){
+    const r = await translateChunk(chunks[c].map(i => lines[i]));
+    if(c === 0){
+      lang = r.lang;
+      if(lang === 'en') return { english: true, tr };
+    }
+    chunks[c].forEach((i, k) => {
+      const t = (r.out[k] || '').trim();
+      if(t && normTr(t) !== normTr(lines[i])) tr[i] = t;
+    });
+  }
+  return { english: false, lang, tr };
+}
+
+function applyTranslations(entry){
+  document.querySelectorAll('#lyricsBox .lyric-tr').forEach((el, i) => {
+    el.textContent = entry.tr[i] || '';
+  });
+}
+
+async function ensureTranslations(fromToggle){
+  const id = currentTrackId;
+  if(!id || !document.documentElement.classList.contains('tr-on')) return;
+  const lines = lyricLinesFor(id);
+  if(!lines) return;
+  const btn = document.getElementById('trBtn');
+  if(!trCache[id]){
+    if(btn) btn.textContent = 'Translating…';
+    try{
+      trCache[id] = await buildTranslations(lines);
+    } catch(e){
+      if(currentTrackId === id){
+        if(btn) btn.textContent = 'Translate';
+        showToast("Translation isn't available right now.");
+      }
+      return;
+    }
+  }
+  if(currentTrackId !== id) return;
+  const b2 = document.getElementById('trBtn');
+  if(b2) b2.textContent = 'Translate';
+  applyTranslations(trCache[id]);
+  if(fromToggle === true && trCache[id].english) showToast('These lyrics are already in English.');
+}
+
+function syncTrBtn(){
+  const b = document.getElementById('trBtn');
+  if(!b) return;
+  const on = document.documentElement.classList.contains('tr-on');
+  b.classList.toggle('on', on);
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+
+function toggleTranslate(){
+  const on = document.documentElement.classList.toggle('tr-on');
+  try{ localStorage.setItem('np_translate', on ? '1' : '0'); } catch(e){}
+  syncTrBtn();
+  if(on) ensureTranslations(true);
 }
 
 async function loadLyricsFor(track, durationMs){
