@@ -484,7 +484,8 @@
   }
 
   /* ---------- manual mobile layout (View button) ---------- */
-  .view-btn{
+  .view-btn,
+  .lyr-btn{
     background: rgba(255,255,255,.14);
     color: var(--paper);
     border: none;
@@ -496,7 +497,8 @@
     cursor: pointer;
     transition: background .15s ease;
   }
-  .view-btn:hover{ background: rgba(255,255,255,.26); }
+  .view-btn:hover,
+  .lyr-btn:hover{ background: rgba(255,255,255,.26); }
   @media (max-width: 900px){
     html:not(.mobile) .view-btn{ display: none; }
   }
@@ -509,10 +511,19 @@
   html.mobile .lyrics-box{ height: 52vh; }
   html.mobile .topbar{ top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); gap: 8px; }
   html.mobile .logout-btn,
-  html.mobile .view-btn{ padding: 10px 16px; font-size: 14px; }
+  html.mobile .view-btn,
+  html.mobile .lyr-btn{ padding: 10px 16px; font-size: 14px; }
   html.mobile .profile-chip{ padding: 5px; }
   html.mobile .profile-name{ display: none; }
   html.mobile .toast{ max-width: 90vw; }
+
+  /* ---------- lyrics hidden by choice (Hide lyrics button, all devices) ---------- */
+  html.lyrics-off .lyrics-col{ display: none; }
+  html.lyrics-off .layout{ justify-content: center; }
+  html.lyrics-off .main-col{ flex: none; width: 100%; max-width: 460px; margin: 0 auto; text-align: center; }
+  html.lyrics-off .art-card{ width: min(78vw, 340px); height: min(78vw, 340px); margin-left: auto; margin-right: auto; }
+  html.lyrics-off .controls,
+  html.lyrics-off .state-label{ justify-content: center; }
 
   /* ---------- phone in landscape: playback left, lyrics right ---------- */
   @media (orientation: landscape) and (max-height: 520px){
@@ -541,25 +552,32 @@
     .up-next-artist{ font-size: 11px; flex: 1 1 0; min-width: 0; }
     .up-next-placeholder{ font-size: 11px; }
     .state-label{ font-size: 12px; }
-    .logout-btn, .view-btn{ padding: 8px 14px; font-size: 13px; }
+    .logout-btn, .view-btn, .lyr-btn{ padding: 8px 14px; font-size: 13px; }
     .profile-chip{ padding: 4px; }
     .profile-name{ display: none; }
   }
 
-  /* Landscape phone + lyrics that don't scroll (plain/unsynced or none): the player
+  /* Landscape phone + lyrics that don't scroll (plain/unsynced or none, or hidden by choice): the player
      takes over the whole screen, art on the left, everything else beside it. */
   @media (orientation: landscape) and (max-height: 520px){
-    html.lyrics-static .lyrics-col{ display: none; }
-    html.lyrics-static .main-col{
+    html.lyrics-static .lyrics-col,
+    html.lyrics-off .lyrics-col{ display: none; }
+    html.lyrics-static .main-col,
+    html.lyrics-off .main-col{
       flex: 1 1 100%;
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       column-gap: 32px;
       align-content: center;
       overflow: hidden;
+      text-align: left;
+      max-width: none;
+      margin: 0;
     }
-    html.lyrics-static .main-col > *{ grid-column: 2; }
-    html.lyrics-static .art-card{
+    html.lyrics-static .main-col > *,
+    html.lyrics-off .main-col > *{ grid-column: 2; }
+    html.lyrics-static .art-card,
+    html.lyrics-off .art-card{
       grid-column: 1;
       grid-row: 1 / span 8;
       align-self: center;
@@ -568,15 +586,25 @@
       margin: 0;
       border-radius: 26px;
     }
-    html.lyrics-static .track-title{ font-size: clamp(24px, 5vw, 38px); white-space: normal; }
-    html.lyrics-static .track-artist{ white-space: normal; }
-    html.lyrics-static .track-artist{ font-size: 17px; margin-bottom: 18px; }
+    html.lyrics-static .track-title,
+    html.lyrics-off .track-title{ font-size: clamp(24px, 5vw, 38px); white-space: normal; }
+    html.lyrics-static .track-artist,
+    html.lyrics-off .track-artist{ white-space: normal; }
+    html.lyrics-static .track-artist,
+    html.lyrics-off .track-artist{ font-size: 17px; margin-bottom: 18px; }
     html.lyrics-static .progress,
-    html.lyrics-static .time-row{ max-width: none; }
-    html.lyrics-static .controls{ gap: 16px; margin-bottom: 12px; }
-    html.lyrics-static .ctrl-btn{ width: 54px; height: 54px; }
-    html.lyrics-static .ctrl-btn.main{ width: 64px; height: 64px; }
-    html.lyrics-static .state-label{ font-size: 13px; }
+    html.lyrics-off .progress,
+    html.lyrics-static .time-row,
+    html.lyrics-off .time-row{ max-width: none; }
+    html.lyrics-static .controls,
+    html.lyrics-off .controls{ gap: 16px; margin-bottom: 12px; justify-content: flex-start; }
+    html.lyrics-off .state-label{ justify-content: flex-start; }
+    html.lyrics-static .ctrl-btn,
+    html.lyrics-off .ctrl-btn{ width: 54px; height: 54px; }
+    html.lyrics-static .ctrl-btn.main,
+    html.lyrics-off .ctrl-btn.main{ width: 64px; height: 64px; }
+    html.lyrics-static .state-label,
+    html.lyrics-off .state-label{ font-size: 13px; }
   }
 
   /* ---------- free (non-Premium) accounts: hide what Spotify won't allow ---------- */
@@ -615,7 +643,7 @@
   .pl{ display: block; min-height: 1.8em; }
   .pl .lyric-tr{ font-size: 15px; font-weight: 500; opacity: .6; margin: 0 0 6px; }
 </style>
-<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}</script>
+<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}</script>
 </head>
 <body>
 
@@ -1108,30 +1136,59 @@ function lyricLinesFor(id){
 const hasLetters = (t) => /\p{L}/u.test(t);
 const normTr = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 
+let trBlockedUntil = 0;
+
 async function gtx(q){
   const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=' + encodeURIComponent(q);
   const res = await fetch(url);
-  if(!res.ok) throw new Error('translate ' + res.status);
+  if(!res.ok){ const err = new Error('translate ' + res.status); err.status = res.status; throw err; }
   const data = await res.json();
-  const text = (data[0] || []).map(seg => (seg && seg[0]) || '').join('');
-  return { text, lang: data[2] || '' };
+  const segs = (data[0] || []).filter(sg => sg && sg[0] != null).map(sg => ({ t: sg[0] || '', src: sg[1] || '' }));
+  return { segs, lang: data[2] || '' };
 }
 
-async function translateChunk(texts){
-  try{
-    const r = await gtx(texts.join('\n'));
-    const parts = r.text.split('\n');
-    if(parts.length === texts.length + 1 && parts[parts.length - 1] === '') parts.pop();
-    if(parts.length === texts.length) return { out: parts, lang: r.lang };
-  } catch(e){ /* fall through to line-by-line */ }
-  const out = [];
-  let lang = '';
-  let fails = 0;
-  for(const t of texts){
-    try{ const r = await gtx(t); out.push(r.text.trim()); lang = lang || r.lang; }
-    catch(e){ out.push(''); if(++fails >= 3) throw e; }
+/* Rebuild one translation per input line from Google's segments. Each source
+   line ends in a newline, so a segment whose source ends in one closes a line. */
+function alignToLines(segs, n){
+  const a = [];
+  let cur = '';
+  for(const sg of segs){
+    cur += sg.t;
+    if(/\n\s*$/.test(sg.src)){ a.push(cur.trim()); cur = ''; }
   }
-  return { out, lang };
+  if(cur.trim() !== '') a.push(cur.trim());
+  if(a.length === n) return a;
+  const b = segs.map(sg => sg.t).join('').split('\n').map(x => x.trim());
+  while(b.length > n && b[b.length - 1] === '') b.pop();
+  return b.length === n ? b : null;
+}
+
+async function translateLines(texts, depth = 0){
+  const r = await gtx(texts.join('\n'));
+  const out = alignToLines(r.segs, texts.length);
+  if(out) return { out, lang: r.lang };
+  if(texts.length > 1 && depth < 3){
+    // lines didn't line up: split the batch in half and retry (bounded)
+    const mid = Math.ceil(texts.length / 2);
+    const first = await translateLines(texts.slice(0, mid), depth + 1);
+    const second = await translateLines(texts.slice(mid), depth + 1);
+    return { out: first.out.concat(second.out), lang: r.lang || first.lang };
+  }
+  return { out: texts.map(() => ''), lang: r.lang };
+}
+
+/* Cheap offline check so English songs never touch the network. */
+const EN_WORDS = new Set(['the','you','and','it','that','is','in','on','my','with','for','of','this','but','got','just','like','your','all','be','we','what','was','are','not','they','when','have','can','if','she','up','out','get','know','now','her','him','i','to','im','dont','aint','yeah']);
+function looksEnglish(lines){
+  let words = 0, hits = 0;
+  for(const l of lines){
+    for(const w of l.toLowerCase().split(/[^\p{L}']+/u)){
+      if(!w) continue;
+      words++;
+      if(EN_WORDS.has(w.replace(/'/g, ''))) hits++;
+    }
+  }
+  return words > 0 && hits / words > 0.14;
 }
 
 async function buildTranslations(lines){
@@ -1151,7 +1208,7 @@ async function buildTranslations(lines){
   if(chunk.length) chunks.push(chunk);
   let lang = '';
   for(let c = 0; c < chunks.length; c++){
-    const r = await translateChunk(chunks[c].map(i => lines[i]));
+    const r = await translateLines(chunks[c].map(i => lines[i]));
     if(c === 0){
       lang = r.lang;
       if(lang === 'en') return { english: true, tr };
@@ -1164,6 +1221,24 @@ async function buildTranslations(lines){
   return { english: false, lang, tr };
 }
 
+/* Finished translations are kept in the browser (last 40 songs) so each song
+   only ever needs to be translated once. */
+function loadStoredTr(id, n){
+  try{
+    const all = JSON.parse(localStorage.getItem('np_trc') || '[]');
+    const hit = all.find(e => e[0] === id);
+    return hit && hit[1] && hit[1].tr && hit[1].tr.length === n ? hit[1] : null;
+  } catch(e){ return null; }
+}
+function saveStoredTr(id, entry){
+  try{
+    let all = JSON.parse(localStorage.getItem('np_trc') || '[]').filter(e => e[0] !== id);
+    all.push([id, entry]);
+    if(all.length > 40) all = all.slice(-40);
+    localStorage.setItem('np_trc', JSON.stringify(all));
+  } catch(e){ /* storage full or blocked - fine */ }
+}
+
 function applyTranslations(entry){
   document.querySelectorAll('#lyricsBox .lyric-tr').forEach((el, i) => {
     el.textContent = entry.tr[i] || '';
@@ -1173,17 +1248,32 @@ function applyTranslations(entry){
 async function ensureTranslations(fromToggle){
   const id = currentTrackId;
   if(!id || !document.documentElement.classList.contains('tr-on')) return;
+  if(document.documentElement.classList.contains('lyrics-off')) return;
   const lines = lyricLinesFor(id);
   if(!lines) return;
   const btn = document.getElementById('trBtn');
   if(!trCache[id]){
+    const stored = loadStoredTr(id, lines.length);
+    if(stored) trCache[id] = stored;
+    else if(looksEnglish(lines)) trCache[id] = { english: true, tr: new Array(lines.length).fill('') };
+  }
+  if(!trCache[id]){
+    if(Date.now() < trBlockedUntil){
+      showToast('Translation is busy - try again in a couple of minutes.');
+      return;
+    }
     if(btn) btn.textContent = 'Translating…';
     try{
-      trCache[id] = await buildTranslations(lines);
+      const entry = await buildTranslations(lines);
+      trCache[id] = entry;
+      saveStoredTr(id, entry);
     } catch(e){
+      const limited = e && (e.status === 429 || e.status === 403);
+      if(limited) trBlockedUntil = Date.now() + 120000;
       if(currentTrackId === id){
-        if(btn) btn.textContent = 'Translate';
-        showToast("Translation isn't available right now.");
+        const b1 = document.getElementById('trBtn');
+        if(b1) b1.textContent = 'Translate';
+        showToast(limited ? 'Translation is busy - try again in a couple of minutes.' : "Translation isn't available right now.");
       }
       return;
     }
@@ -1335,7 +1425,14 @@ async function playerAction(method, path, okMessage){
       method,
       headers: { Authorization: `Bearer ${accessToken}` }
     });
-    if(res.status === 403){ showToast("That needs Spotify Premium."); return; }
+    if(res.status === 403){
+      try{
+        const j = await res.json();
+        if(j && j.error && j.error.reason === 'PREMIUM_REQUIRED') setFreeAccount(true);
+      } catch(e){}
+      showToast("That needs Spotify Premium.");
+      return;
+    }
     if(res.status === 401){
       const stored = localStorage.getItem(REFRESH_KEY);
       if(stored && await refreshAccessToken(stored)){ setTimeout(tick, 300); return; }
@@ -1417,12 +1514,45 @@ async function tick(){
     if(!data || !data.item){ renderIdle(); return; }
     renderTrack(data);
     fetchQueue();
+    probePremium();
   } catch(e){ /* transient network hiccup - keep current view, retry next tick */ }
 }
 
 let queueForTrackId = null;
 let lastQueueFetch = 0;
 let queueRetryTimer = null;
+/* Spotify no longer includes the account type (free/Premium) in the profile for
+   Development Mode apps, so detect it another way: send a "set shuffle to what
+   it already is" command. It changes nothing, but Spotify rejects it with
+   PREMIUM_REQUIRED on free accounts. Runs once per page load. */
+function setFreeAccount(free){
+  document.documentElement.classList.toggle('no-premium', free);
+  try{ localStorage.setItem('np_free', free ? '1' : '0'); } catch(e){}
+}
+let premiumProbed = false;
+let probing = false;
+let probeTries = 0;
+async function probePremium(){
+  if(premiumProbed || probing || probeTries >= 4) return;
+  probing = true;
+  probeTries++;
+  try{
+    const headers = { Authorization: `Bearer ${accessToken}` };
+    const st = await fetch('https://api.spotify.com/v1/me/player', { headers });
+    if(st.status !== 200) return;
+    const state = await st.json();
+    if(!state || typeof state.shuffle_state !== 'boolean') return;
+    const r = await fetch(`https://api.spotify.com/v1/me/player/shuffle?state=${state.shuffle_state}`, { method: 'PUT', headers });
+    if(r.status === 200 || r.status === 204){ setFreeAccount(false); premiumProbed = true; }
+    else if(r.status === 403){
+      let reason = '';
+      try{ const j = await r.json(); reason = (j && j.error && j.error.reason) || ''; } catch(e){}
+      if(reason === 'PREMIUM_REQUIRED'){ setFreeAccount(true); premiumProbed = true; }
+    }
+  } catch(e){ /* try again on a later tick */ }
+  finally { probing = false; }
+}
+
 async function fetchQueue(){
   // Fetch right away on a new song (and once more shortly after, since Spotify's
   // queue often lags a track change); otherwise only refresh every 15s.
@@ -1485,6 +1615,7 @@ function startPolling(){
   stage.innerHTML = `
     <div class="topbar">
       <a class="profile-chip" id="profileChip" href="#" target="_blank" rel="noopener"></a>
+      <button class="lyr-btn" id="lyricsBtn"></button>
       <button class="view-btn" id="viewBtn"></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
@@ -1498,6 +1629,17 @@ function startPolling(){
   const syncViewBtn = () => {
     viewBtn.textContent = document.documentElement.classList.contains('mobile') ? 'Desktop view' : 'Mobile view';
   };
+  const lyricsBtn = document.getElementById('lyricsBtn');
+  const syncLyricsBtn = () => {
+    lyricsBtn.textContent = document.documentElement.classList.contains('lyrics-off') ? 'Show lyrics' : 'Hide lyrics';
+  };
+  syncLyricsBtn();
+  lyricsBtn.addEventListener('click', () => {
+    const off = document.documentElement.classList.toggle('lyrics-off');
+    try{ localStorage.setItem('np_lyrics', off ? '0' : '1'); } catch(e){}
+    syncLyricsBtn();
+    if(!off) ensureTranslations();
+  });
   syncViewBtn();
   viewBtn.addEventListener('click', () => {
     const on = document.documentElement.classList.toggle('mobile');
@@ -1543,28 +1685,27 @@ async function requestWakeLock(){
   }
 }
 
-/* Fallback for browsers/devices where the Wake Lock API is missing or refuses:
-   a tiny muted video playing from a canvas stream. Browsers keep the screen on
-   while a video is playing. Needs one tap/keypress on the page to be allowed
-   to start. */
+/* Fallback for browsers/devices where the Wake Lock API is missing or refuses
+   (older iPad/iPhone Home Screen apps, some Chromebooks): a tiny muted, looping
+   video. Browsers keep the screen on while a video is playing. Tries to start
+   right away; if the browser wants a tap first, the first tap starts it. */
+const WAKE_VIDEO = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAM2bW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAmB0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAEAAAABAAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHYbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABg21pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAUNzdGJsAAAAu3N0c2QAAAAAAAAAAQAAAKthdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAEAAQABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAAMWF2Y0MBQsAe/+EAGGdCwB6mERCbARAAAAMAEAAAAwBA8WLhGAEABmjIQgRLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAArAAAAKwAAAABhzdHRzAAAAAAAAAAEAAAAEAAAgAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAAEAAAAAQAAACRzdHN6AAAAAAAAAAAAAAAEAAACkAAAAAoAAAALAAAACwAAABRzdGNvAAAAAAAAAAEAAANmAAAAYnVkdGEAAABabWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAtaWxzdAAAACWpdG9vAAAAHWRhdGEAAAABAAAAAExhdmY2MC4xNi4xMDAAAAAIZnJlZQAAArhtZGF0AAACcgYF//9u3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2NCByMzEwOCAzMWUxOWY5IC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyMyAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTAgcmVmPTE2IGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMzEgbWU9dW1oIHN1Ym1lPTEwIHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTEgbWVfcmFuZ2U9MjQgY2hyb21hX21lPTEgdHJlbGxpcz0yIDh4OGRjdD0wIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PS0yIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTAgd2VpZ2h0cD0wIGtleWludD0yNTAga2V5aW50X21pbj0yIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NjAgcmM9Y3JmIG1idHJlZT0xIGNyZj0zMC4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAFmWIggKeTFAAFt++++uuuuuuuuuuuvAAAAAGQZocBTwjAAAAB0GaKgFPCMAAAAAHQZo7AS8IwA==';
+
 function startFallbackWake(){
-  if(fallbackVideo || !userInteracted) return;
+  if(fallbackVideo) return;
   try{
-    const c = document.createElement('canvas');
-    c.width = c.height = 2;
-    const ctx = c.getContext('2d');
-    let flip = false;
-    const paint = () => { ctx.fillStyle = flip ? '#000' : '#010101'; ctx.fillRect(0, 0, 2, 2); flip = !flip; };
-    paint();
-    fallbackTimer = setInterval(paint, 1000);
     const v = document.createElement('video');
     v.muted = true;
+    v.loop = true;
+    v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
     v.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;';
-    v.srcObject = c.captureStream(5);
+    v.src = WAKE_VIDEO;
     document.body.appendChild(v);
     fallbackVideo = v;
-    v.play().catch(() => stopFallbackWake());
+    const p = v.play();
+    if(p && p.catch) p.catch(() => stopFallbackWake()); // needs a tap first; retried after one
   } catch(e){
     console.warn('Wake fallback failed:', e && e.name, e && e.message);
     stopFallbackWake();
@@ -1588,11 +1729,15 @@ function stopFallbackWake(){
 // Safety net: re-acquire every 10s if the lock silently dropped while visible.
 setInterval(() => {
   if(document.visibilityState === 'visible' && !wakeLock) requestWakeLock();
+  if(fallbackVideo && fallbackVideo.paused && document.visibilityState === 'visible'){ fallbackVideo.play().catch(() => {}); }
 }, 10000);
 
 // The browser releases the lock when the tab is hidden; re-request on return.
 document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible') requestWakeLock();
+  if(document.visibilityState === 'visible'){
+    requestWakeLock();
+    if(fallbackVideo && fallbackVideo.paused){ fallbackVideo.play().catch(() => {}); }
+  }
 });
 
 /* ---------- init ---------- */
