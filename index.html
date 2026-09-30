@@ -522,7 +522,8 @@
     .main-col::-webkit-scrollbar{ display: none; }
     .lyrics-col{ flex: 1 1 auto; width: auto; position: static; min-width: 0; }
     .art-card{ width: min(20vh, 90px); height: min(20vh, 90px); border-radius: 16px; margin: 0 0 8px; }
-    .track-title{ font-size: clamp(18px, 3.4vw, 24px); margin-bottom: 4px; }
+    .track-title{ font-size: clamp(18px, 3.4vw, 24px); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-artist{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lyrics-box{ height: calc(100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
     .lyric-line{ font-size: 22px; }
     .topbar{ top: calc(10px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); gap: 8px; }
@@ -567,7 +568,8 @@
       margin: 0;
       border-radius: 26px;
     }
-    html.lyrics-static .track-title{ font-size: clamp(24px, 5vw, 38px); }
+    html.lyrics-static .track-title{ font-size: clamp(24px, 5vw, 38px); white-space: normal; }
+    html.lyrics-static .track-artist{ white-space: normal; }
     html.lyrics-static .track-artist{ font-size: 17px; margin-bottom: 18px; }
     html.lyrics-static .progress,
     html.lyrics-static .time-row{ max-width: none; }
