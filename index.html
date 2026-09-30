@@ -473,7 +473,56 @@
     .art-card{ width: 160px; height: 160px; }
     .lyric-line{ font-size: 24px; }
   }
+
+  /* ---------- manual mobile layout (View button) ---------- */
+  .view-btn{
+    background: rgba(255,255,255,.14);
+    color: var(--paper);
+    border: none;
+    padding: 13px 22px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .view-btn:hover{ background: rgba(255,255,255,.26); }
+  @media (max-width: 900px){
+    html:not(.mobile) .view-btn{ display: none; }
+  }
+  html.mobile .stage{ max-width: 460px; padding: 72px 20px 44px; justify-content: flex-start; }
+  html.mobile .layout{ flex-direction: column; align-items: stretch; gap: 28px; }
+  html.mobile .main-col{ flex: none; max-width: none; width: 100%; }
+  html.mobile .lyrics-col{ width: 100%; position: static; }
+  html.mobile .art-card{ width: min(64vw, 240px); height: min(64vw, 240px); margin-left: auto; margin-right: auto; }
+  html.mobile .lyric-line{ font-size: 24px; }
+  html.mobile .lyrics-box{ height: 52vh; }
+  html.mobile .topbar{ top: 12px; right: 12px; gap: 8px; }
+  html.mobile .logout-btn,
+  html.mobile .view-btn{ padding: 10px 16px; font-size: 14px; }
+  html.mobile .profile-chip{ padding: 5px; }
+  html.mobile .profile-name{ display: none; }
+  html.mobile .toast{ max-width: 90vw; }
+
+  /* ---------- phone in landscape: playback left, lyrics right ---------- */
+  @media (orientation: landscape) and (max-height: 520px){
+    .stage{ max-width: none; padding: 56px 20px 12px; justify-content: flex-start; }
+    .layout{ flex-direction: row; align-items: stretch; gap: 24px; height: calc(100dvh - 68px); }
+    .main-col{ flex: 1 1 50%; max-width: none; width: auto; overflow-y: auto; scrollbar-width: none; }
+    .main-col::-webkit-scrollbar{ display: none; }
+    .lyrics-col{ flex: 1 1 50%; width: auto; position: static; min-width: 0; }
+    .art-card{ width: min(26vh, 120px); height: min(26vh, 120px); border-radius: 20px; margin: 0 0 12px; }
+    .track-title{ font-size: clamp(20px, 4vw, 28px); }
+    .lyrics-box{ height: calc(100dvh - 116px); }
+    .lyric-line{ font-size: 22px; }
+    .topbar{ top: 10px; right: 12px; gap: 8px; }
+    .logout-btn, .view-btn{ padding: 8px 14px; font-size: 13px; }
+    .profile-chip{ padding: 4px; }
+    .profile-name{ display: none; }
+  }
 </style>
+<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}</script>
 </head>
 <body>
 
@@ -1205,6 +1254,7 @@ function startPolling(){
   stage.innerHTML = `
     <div class="topbar">
       <a class="profile-chip" id="profileChip" href="#" target="_blank" rel="noopener"></a>
+      <button class="view-btn" id="viewBtn"></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
     <div class="layout">
@@ -1213,6 +1263,16 @@ function startPolling(){
     </div>
   `;
   document.getElementById('logoutBtn').addEventListener('click', logout);
+  const viewBtn = document.getElementById('viewBtn');
+  const syncViewBtn = () => {
+    viewBtn.textContent = document.documentElement.classList.contains('mobile') ? 'Desktop view' : 'Mobile view';
+  };
+  syncViewBtn();
+  viewBtn.addEventListener('click', () => {
+    const on = document.documentElement.classList.toggle('mobile');
+    try{ localStorage.setItem('np_mobile', on ? '1' : '0'); } catch(e){}
+    syncViewBtn();
+  });
   fetchProfile();
   nowPlayingEl = document.getElementById('nowPlaying');
   lyricsColEl = document.getElementById('lyricsCol');
