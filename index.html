@@ -485,7 +485,8 @@
 
   /* ---------- manual mobile layout (View button) ---------- */
   .view-btn,
-  .lyr-btn{
+  .lyr-btn,
+  .cur-btn{
     background: rgba(255,255,255,.14);
     color: var(--paper);
     border: none;
@@ -498,7 +499,8 @@
     transition: background .15s ease;
   }
   .view-btn:hover,
-  .lyr-btn:hover{ background: rgba(255,255,255,.26); }
+  .lyr-btn:hover,
+  .cur-btn:hover{ background: rgba(255,255,255,.26); }
   @media (max-width: 900px){
     html:not(.mobile) .view-btn{ display: none; }
   }
@@ -510,12 +512,45 @@
   html.mobile .lyric-line{ font-size: 24px; }
   html.mobile .lyrics-box{ height: 52vh; }
   html.mobile .topbar{ top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); gap: 8px; }
-  html.mobile .logout-btn,
-  html.mobile .view-btn{ padding: 10px 16px; font-size: 14px; }
   html.mobile .profile-chip{ padding: 5px; }
   html.mobile .profile-name{ display: none; }
   html.mobile .toast{ max-width: 90vw; }
 
+
+
+  /* ---------- hide-mouse (PC only): cursor disappears when it stops moving ---------- */
+  .cur-btn{
+    display: none;
+    width: 46px; height: 46px; padding: 0;
+    align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  @media (hover: hover) and (pointer: fine){
+    .cur-btn{ display: inline-flex; }
+  }
+  .cur-btn svg{ width: 22px; height: 22px; }
+  .cur-slash{ display: none; }
+  html.hide-cursor .cur-slash{ display: inline; }
+  html.hide-cursor .cur-btn{ background: rgba(255,255,255,.9); color: #14101F; }
+  html.hide-cursor .cur-btn:hover{ background: #fff; }
+  html.mobile .cur-btn{ width: 40px; height: 40px; }
+  html.mobile .cur-btn svg{ width: 19px; height: 19px; }
+  html.cursor-idle,
+  html.cursor-idle *{ cursor: none !important; }
+
+  /* ---------- log out / view: round icon buttons like the others ---------- */
+  .logout-btn,
+  .view-btn{
+    width: 46px; height: 46px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  .logout-btn svg,
+  .view-btn svg{ width: 22px; height: 22px; }
+  html.mobile .logout-btn,
+  html.mobile .view-btn{ width: 40px; height: 40px; }
+  html.mobile .logout-btn svg,
+  html.mobile .view-btn svg{ width: 19px; height: 19px; }
 
   /* ---------- lyrics on/off icon button ---------- */
   .lyr-btn{
@@ -600,9 +635,8 @@
     .up-next-artist{ font-size: 11px; flex: 1 1 0; min-width: 0; }
     .up-next-placeholder{ font-size: 11px; }
     .state-label{ font-size: 12px; }
-    .logout-btn, .view-btn{ padding: 8px 14px; font-size: 13px; }
-    .lyr-btn{ width: 36px; height: 36px; }
-    .lyr-btn svg{ width: 17px; height: 17px; }
+    .logout-btn, .view-btn, .cur-btn, .lyr-btn{ width: 36px; height: 36px; }
+    .logout-btn svg, .view-btn svg, .cur-btn svg, .lyr-btn svg{ width: 17px; height: 17px; }
     .profile-chip{ padding: 4px; }
     .profile-name{ display: none; }
   }
@@ -694,7 +728,7 @@
   .pl{ display: block; min-height: 1.8em; }
   .pl .lyric-tr{ font-size: 15px; font-weight: 500; opacity: .6; margin: 0 0 6px; }
 </style>
-<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}</script>
+<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}</script>
 </head>
 <body>
 
@@ -1666,9 +1700,10 @@ function startPolling(){
   stage.innerHTML = `
     <div class="topbar">
       <a class="profile-chip" id="profileChip" href="#" target="_blank" rel="noopener"></a>
+      <button class="cur-btn" id="cursorBtn" type="button" aria-label="Hide mouse when idle" title="Hide mouse when idle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l14 7.5-6.2 1.9L10.5 19z"/><line class="cur-slash" x1="3" y1="21" x2="21" y2="3"/></svg></button>
       <button class="lyr-btn" id="lyricsBtn" type="button" aria-label="Hide lyrics" title="Hide lyrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6l-4.5 3.5V17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h5.5"/><line class="lyr-slash" x1="3" y1="21" x2="21" y2="3"/></svg></button>
-      <button class="view-btn" id="viewBtn"></button>
-      <button class="logout-btn" id="logoutBtn">Log out</button>
+      <button class="view-btn" id="viewBtn" type="button"></button>
+      <button class="logout-btn" id="logoutBtn" type="button" aria-label="Log out" title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button>
     </div>
     <div class="layout">
       <div class="main-col" id="nowPlaying"></div>
@@ -1677,9 +1712,31 @@ function startPolling(){
   `;
   document.getElementById('logoutBtn').addEventListener('click', logout);
   const viewBtn = document.getElementById('viewBtn');
+  const PHONE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg>';
+  const DESKTOP_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>';
   const syncViewBtn = () => {
-    viewBtn.textContent = document.documentElement.classList.contains('mobile') ? 'Desktop view' : 'Mobile view';
+    const mobile = document.documentElement.classList.contains('mobile');
+    const label = mobile ? 'Desktop view' : 'Mobile view';
+    viewBtn.innerHTML = mobile ? DESKTOP_ICON : PHONE_ICON;
+    viewBtn.title = label;
+    viewBtn.setAttribute('aria-label', label);
   };
+  const cursorBtn = document.getElementById('cursorBtn');
+  const syncCursorBtn = () => {
+    const on = document.documentElement.classList.contains('hide-cursor');
+    const label = on ? 'Mouse hides when idle (click to turn off)' : 'Hide mouse when idle';
+    cursorBtn.title = label;
+    cursorBtn.setAttribute('aria-label', label);
+    cursorBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  };
+  syncCursorBtn();
+  cursorBtn.addEventListener('click', () => {
+    const on = document.documentElement.classList.toggle('hide-cursor');
+    try{ localStorage.setItem('np_cursor', on ? '1' : '0'); } catch(e){}
+    syncCursorBtn();
+    wakeCursor();
+  });
+  wakeCursor();
   const lyricsBtn = document.getElementById('lyricsBtn');
   const syncLyricsBtn = () => {
     const off = document.documentElement.classList.contains('lyrics-off');
@@ -1712,6 +1769,18 @@ function stopPolling(){
   if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
   stopLyricsLoop();
 }
+
+/* ---------- hide the mouse cursor when it stops moving (PC, opt-in) ---------- */
+let cursorTimer = null;
+function wakeCursor(){
+  const root = document.documentElement;
+  root.classList.remove('cursor-idle');
+  clearTimeout(cursorTimer);
+  if(!root.classList.contains('hide-cursor')) return;
+  cursorTimer = setTimeout(() => root.classList.add('cursor-idle'), 2000);
+}
+document.addEventListener('mousemove', wakeCursor, { passive: true });
+document.addEventListener('mousedown', wakeCursor, { passive: true });
 
 /* ---------- keep the screen awake while viewing ---------- */
 let wakeLock = null;
