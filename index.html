@@ -446,19 +446,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .logout-btn{
-    background: rgba(255,255,255,.14);
-    color: var(--paper);
-    border: none;
-    padding: 13px 22px;
-    border-radius: 999px;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s ease;
-  }
-  .logout-btn:hover{ background: rgba(255,255,255,.26); }
 
   .toast{
     position: fixed;
@@ -490,28 +477,6 @@
   }
 
   /* ---------- manual mobile layout (View button) ---------- */
-  .view-btn,
-  .lyr-btn,
-  .cur-btn,
-  .bg-btn{
-    background: rgba(255,255,255,.14);
-    color: var(--paper);
-    border: none;
-    padding: 13px 22px;
-    border-radius: 999px;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s ease;
-  }
-  .view-btn:hover,
-  .lyr-btn:hover,
-  .cur-btn:hover,
-  .bg-btn:hover{ background: rgba(255,255,255,.26); }
-  @media (max-width: 900px){
-    html:not(.mobile) .view-btn{ display: none; }
-  }
   html.mobile .stage{ max-width: 460px; padding: 72px 20px 44px; justify-content: flex-start; }
   html.mobile .layout{ flex-direction: column; align-items: stretch; gap: 28px; }
   html.mobile .main-col{ flex: none; max-width: none; width: 100%; }
@@ -526,68 +491,93 @@
 
 
 
-  /* ---------- hide-mouse (PC only): cursor disappears when it stops moving ---------- */
-  .cur-btn{
-    display: none;
-    width: 46px; height: 46px; padding: 0;
-    align-items: center; justify-content: center;
-    border-radius: 50%;
-  }
-  @media (hover: hover) and (pointer: fine){
-    .cur-btn{ display: inline-flex; }
-  }
-  .cur-btn svg{ width: 22px; height: 22px; }
-  .cur-slash{ display: none; }
-  html.hide-cursor .cur-slash{ display: inline; }
-  html.hide-cursor .cur-btn{ background: rgba(255,255,255,.9); color: #14101F; }
-  html.hide-cursor .cur-btn:hover{ background: #fff; }
-  html.mobile .cur-btn{ width: 40px; height: 40px; }
-  html.mobile .cur-btn svg{ width: 19px; height: 19px; }
+  /* ---------- behaviour classes used by the settings ---------- */
   html.cursor-idle,
   html.cursor-idle *{ cursor: none !important; }
-
-  /* ---------- log out / view: round icon buttons like the others ---------- */
-  .logout-btn,
-  .view-btn{
-    width: 46px; height: 46px; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-  }
-  .logout-btn svg,
-  .view-btn svg{ width: 22px; height: 22px; }
-  html.mobile .logout-btn,
-  html.mobile .view-btn{ width: 40px; height: 40px; }
-  html.mobile .logout-btn svg,
-  html.mobile .view-btn svg{ width: 19px; height: 19px; }
-
-  /* ---------- animated background on/off ---------- */
-  .bg-btn{
-    width: 46px; height: 46px; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-  }
-  .bg-btn svg{ width: 22px; height: 22px; }
-  .bg-slash{ display: none; }
-  html.bg-still .bg-slash{ display: inline; }
-  html:not(.bg-still) .bg-btn{ background: rgba(255,255,255,.9); color: #14101F; }
-  html:not(.bg-still) .bg-btn:hover{ background: #fff; }
   html.bg-still .blob{ animation: none !important; }
-  html.mobile .bg-btn{ width: 40px; height: 40px; }
-  html.mobile .bg-btn svg{ width: 19px; height: 19px; }
 
-  /* ---------- lyrics on/off icon button ---------- */
-  .lyr-btn{
-    width: 46px; height: 46px; padding: 0;
+  /* ---------- settings flyout (glass) ---------- */
+  .gear-btn{
+    width: 46px; height: 46px; padding: 0; border: none; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 50%;
+    color: var(--paper); background: rgba(255,255,255,.14);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    cursor: pointer; transition: background .15s ease, color .15s ease;
+    -webkit-tap-highlight-color: transparent;
   }
-  .lyr-btn svg{ width: 22px; height: 22px; }
-  .lyr-slash{ display: none; }
-  html.lyrics-off .lyr-slash{ display: inline; }
-  html:not(.lyrics-off) .lyr-btn{ background: rgba(255,255,255,.9); color: #14101F; }
-  html:not(.lyrics-off) .lyr-btn:hover{ background: #fff; }
-  html.mobile .lyr-btn{ width: 40px; height: 40px; }
-  html.mobile .lyr-btn svg{ width: 19px; height: 19px; }
+  .gear-btn:hover{ background: rgba(255,255,255,.26); }
+  .gear-btn svg{ width: 22px; height: 22px; transition: transform .55s cubic-bezier(.2,.8,.2,1); }
+  .gear-btn[aria-expanded="true"]{ background: rgba(255,255,255,.92); color: #14101F; }
+  .gear-btn[aria-expanded="true"] svg{ transform: rotate(75deg); }
+
+  .settings-panel{
+    --row-h: 52px; --name-fs: 15.5px; --sub-fs: 12px; --ico: 34px; --sw-w: 46px; --sw-h: 28px; --knob: 24px;
+    position: absolute; top: calc(100% + 12px); right: 0;
+    width: 340px; max-width: calc(100vw - 24px);
+    padding: 8px; border-radius: 30px;
+    background:
+      linear-gradient(155deg, rgba(255,255,255,.26) 0%, rgba(255,255,255,.07) 45%, rgba(255,255,255,.15) 100%),
+      rgba(24,17,36,.34);
+    -webkit-backdrop-filter: blur(44px) saturate(190%);
+    backdrop-filter: blur(44px) saturate(190%);
+    border: 1px solid rgba(255,255,255,.3);
+    box-shadow: 0 26px 70px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(255,255,255,.08);
+    color: var(--paper);
+    transform-origin: top right;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: scale(.84) translateY(-10px);
+    transition: opacity .2s ease, transform .34s cubic-bezier(.2,.9,.25,1.12), visibility 0s linear .34s;
+  }
+  .settings-panel.open{
+    opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+    transition: opacity .2s ease, transform .34s cubic-bezier(.2,.9,.25,1.12), visibility 0s;
+  }
+  .sp-list{ display: flex; flex-direction: column; gap: 2px; }
+  .sp-row{
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; min-height: var(--row-h); padding: 6px 12px 6px 8px;
+    border: none; background: transparent; color: inherit; font: inherit; text-align: left;
+    border-radius: 22px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background .15s ease, opacity .15s ease;
+  }
+  .sp-row:hover{ background: rgba(255,255,255,.13); }
+  .sp-row:active{ background: rgba(255,255,255,.2); }
+  .sp-ico{
+    width: var(--ico); height: var(--ico); border-radius: 12px; flex: none;
+    display: grid; place-items: center; background: rgba(255,255,255,.16);
+  }
+  .sp-ico svg{ width: 55%; height: 55%; }
+  .sp-txt{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .sp-name{ font-size: var(--name-fs); font-weight: 600; line-height: 1.2; }
+  .sp-sub{ font-size: var(--sub-fs); opacity: .68; line-height: 1.25; margin-top: 1px; }
+  .sp-sub:empty{ display: none; }
+  .sp-switch{
+    flex: none; position: relative; width: var(--sw-w); height: var(--sw-h); border-radius: 999px;
+    background: rgba(255,255,255,.24); transition: background .22s ease;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  .sp-switch i{
+    position: absolute; top: calc((var(--sw-h) - var(--knob)) / 2); left: calc((var(--sw-h) - var(--knob)) / 2);
+    width: var(--knob); height: var(--knob); border-radius: 50%; background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3); transition: transform .26s cubic-bezier(.3,1.4,.5,1);
+  }
+  .sp-row[aria-checked="true"] .sp-switch{ background: #34C759; }
+  .sp-row[aria-checked="true"] .sp-switch i{ transform: translateX(calc(var(--sw-w) - var(--sw-h))); }
+  .sp-row[aria-disabled="true"]{ opacity: .45; pointer-events: none; }
+  .sp-sep{ height: 1px; margin: 6px 14px; background: rgba(255,255,255,.18); }
+  .sp-row.danger .sp-name{ color: #ffc4c4; }
+  .sp-row.danger .sp-ico{ background: rgba(255,90,90,.22); }
+  #spCursor{ display: none; }
+  @media (hover: hover) and (pointer: fine){ #spCursor{ display: flex; } }
+  @media (max-width: 900px){ html:not(.mobile) #spMobile{ display: none; } }
+
+  /* touch screens (iPad, phones) and forced Mobile layout: bigger tap targets */
+  @media (pointer: coarse){
+    .settings-panel{ --row-h: 58px; --name-fs: 17px; --sub-fs: 13px; --ico: 38px; --sw-w: 51px; --sw-h: 31px; --knob: 27px; width: min(380px, calc(100vw - 24px)); }
+  }
+  html.mobile .settings-panel{ --row-h: 58px; --name-fs: 17px; --sub-fs: 13px; --ico: 38px; --sw-w: 51px; --sw-h: 31px; --knob: 27px; width: min(380px, calc(100vw - 24px)); }
+  html.mobile .gear-btn{ width: 40px; height: 40px; }
+  html.mobile .gear-btn svg{ width: 19px; height: 19px; }
 
   /* ---------- lyrics hidden by choice (icon button) OR song has no moving lyrics: the player fills the screen on every device ---------- */
   html.lyrics-off .lyrics-col,
@@ -657,9 +647,6 @@
   html.lyrics-static .state-label{ justify-content: flex-start; }
   }
 
-  /* nothing to toggle when the song has no moving lyrics */
-  html.lyrics-static .lyr-btn{ display: none; }
-
   /* ---------- phone in landscape: playback left, lyrics right ---------- */
   @media (orientation: landscape) and (max-height: 520px){
     .stage{ max-width: none; padding: 56px 20px 12px; justify-content: flex-start; }
@@ -687,8 +674,17 @@
     .up-next-artist{ font-size: 11px; flex: 1 1 0; min-width: 0; }
     .up-next-placeholder{ font-size: 11px; }
     .state-label{ font-size: 12px; }
-    .logout-btn, .view-btn, .cur-btn, .lyr-btn, .bg-btn{ width: 36px; height: 36px; }
-    .logout-btn svg, .view-btn svg, .cur-btn svg, .lyr-btn svg, .bg-btn svg{ width: 17px; height: 17px; }
+    .gear-btn{ width: 36px; height: 36px; }
+    .gear-btn svg{ width: 17px; height: 17px; }
+    .settings-panel{
+      --row-h: 46px; --name-fs: 15px; --sub-fs: 11.5px; --ico: 32px; --sw-w: 46px; --sw-h: 28px; --knob: 24px;
+      width: min(600px, calc(100vw - 24px - var(--sa-l) - var(--sa-r)));
+      max-height: calc(100dvh - 72px - env(safe-area-inset-bottom)); overflow-y: auto; border-radius: 26px;
+    }
+    html.mobile .settings-panel{ --row-h: 46px; --name-fs: 15px; --sub-fs: 11.5px; --ico: 32px; --sw-w: 46px; --sw-h: 28px; --knob: 24px; }
+    .sp-list{ display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
+    .sp-sep{ grid-column: 1 / -1; margin: 2px 14px; }
+    #spLogout{ grid-column: 1 / -1; }
     .profile-chip{ padding: 4px; }
     .profile-name{ display: none; }
   }
@@ -753,20 +749,6 @@
   /* ---------- lyric translation (toggle) ---------- */
   .lyrics-head{ display: flex; align-items: center; gap: 12px; margin: 0 0 16px; }
   .lyrics-head .section-label{ margin: 0; }
-  .tr-btn{
-    background: rgba(255,255,255,.14);
-    color: var(--paper);
-    border: none;
-    border-radius: 999px;
-    padding: 5px 12px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s ease, color .15s ease;
-  }
-  .tr-btn:hover{ background: rgba(255,255,255,.26); }
-  .tr-btn.on{ background: rgba(255,255,255,.9); color: #14101F; }
   .lyric-tr{
     display: none;
     margin-top: 2px;
@@ -780,6 +762,13 @@
   html.tr-on .lyric-tr:not(:empty){ display: block; }
   .pl{ display: block; min-height: 1.8em; }
   .pl .lyric-tr{ font-size: 15px; font-weight: 500; opacity: .6; margin: 0 0 6px; }
+
+  /* ---------- computers: smaller song title ---------- */
+  @media (hover: hover) and (pointer: fine){
+    .track-title{ font-size: clamp(22px, 2.3vw, 32px); }
+    html.lyrics-off .track-title,
+    html.lyrics-static .track-title{ font-size: clamp(26px, 3.2vw, 50px); }
+  }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}</script>
 </head>
@@ -1005,12 +994,9 @@ function renderTrack(data){
       lyricsColEl.innerHTML = `
         <div class="lyrics-head">
           <p class="section-label">Lyrics</p>
-          <button class="tr-btn" id="trBtn" type="button" aria-pressed="false" title="Show an English translation under each line">Translate</button>
         </div>
         <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
       `;
-      const trBtn = document.getElementById('trBtn');
-      if(trBtn){ trBtn.onclick = toggleTranslate; syncTrBtn(); }
     }
     loadLyricsFor(track, duration);
   } else {
@@ -1193,13 +1179,17 @@ async function fetchLyricsData(title, artist, album, durationSec){
     plain: data.plainLyrics || null,
     synced: data.syncedLyrics ? parseLRC(data.syncedLyrics) : null
   });
+  // 404 just means "not in the database". 5xx / 429 / network errors mean the
+  // service is having a moment, so those are reported as transient (not cached).
+  const isTransient = (res) => res.status >= 500 || res.status === 429;
+  let transient = false;
   try{
     const exact = new URLSearchParams({ track_name: title, artist_name: artist, album_name: album, duration: durationSec });
     let res = await fetch(`https://lrclib.net/api/get?${exact}`);
     if(res.ok){
       const data = await res.json();
       if(data.plainLyrics || data.syncedLyrics) return parse(data);
-    }
+    } else if(isTransient(res)) transient = true;
     const loose = new URLSearchParams({ track_name: title, artist_name: artist });
     res = await fetch(`https://lrclib.net/api/search?${loose}`);
     if(res.ok){
@@ -1208,9 +1198,9 @@ async function fetchLyricsData(title, artist, album, durationSec){
         const hit = results.find(r => r.plainLyrics || r.syncedLyrics);
         if(hit) return parse(hit);
       }
-    }
-  } catch(e){ /* treat as not found */ }
-  return { plain: null, synced: null };
+    } else if(isTransient(res)) transient = true;
+  } catch(e){ transient = true; }
+  return { plain: null, synced: null, transient };
 }
 
 function renderLyricsBox(data){
@@ -1383,13 +1373,15 @@ function applyTranslations(entry){
   });
 }
 
+let trBusy = false;
+function setTrBusy(v){ trBusy = v; if(typeof syncSettings === 'function') syncSettings(); }
+
 async function ensureTranslations(fromToggle){
   const id = currentTrackId;
   if(!id || !document.documentElement.classList.contains('tr-on')) return;
   if(document.documentElement.classList.contains('lyrics-off')) return;
   const lines = lyricLinesFor(id);
   if(!lines) return;
-  const btn = document.getElementById('trBtn');
   if(!trCache[id]){
     const stored = loadStoredTr(id, lines.length);
     if(stored) trCache[id] = stored;
@@ -1400,7 +1392,7 @@ async function ensureTranslations(fromToggle){
       showToast('Translation is busy - try again in a couple of minutes.');
       return;
     }
-    if(btn) btn.textContent = 'Translating…';
+    setTrBusy(true);
     try{
       const entry = await buildTranslations(lines);
       trCache[id] = entry;
@@ -1408,33 +1400,22 @@ async function ensureTranslations(fromToggle){
     } catch(e){
       const limited = e && (e.status === 429 || e.status === 403);
       if(limited) trBlockedUntil = Date.now() + 120000;
+      setTrBusy(false);
       if(currentTrackId === id){
-        const b1 = document.getElementById('trBtn');
-        if(b1) b1.textContent = 'Translate';
         showToast(limited ? 'Translation is busy - try again in a couple of minutes.' : "Translation isn't available right now.");
       }
       return;
     }
+    setTrBusy(false);
   }
   if(currentTrackId !== id) return;
-  const b2 = document.getElementById('trBtn');
-  if(b2) b2.textContent = 'Translate';
   applyTranslations(trCache[id]);
   if(fromToggle === true && trCache[id].english) showToast('These lyrics are already in English.');
-}
-
-function syncTrBtn(){
-  const b = document.getElementById('trBtn');
-  if(!b) return;
-  const on = document.documentElement.classList.contains('tr-on');
-  b.classList.toggle('on', on);
-  b.setAttribute('aria-pressed', on ? 'true' : 'false');
 }
 
 function toggleTranslate(){
   const on = document.documentElement.classList.toggle('tr-on');
   try{ localStorage.setItem('np_translate', on ? '1' : '0'); } catch(e){}
-  syncTrBtn();
   if(on) ensureTranslations(true);
 }
 
@@ -1443,9 +1424,25 @@ async function loadLyricsFor(track, durationMs){
   const durationSec = durationMs / 1000;
   if(lyricsCache[id] !== undefined){ applyLyricsData(lyricsCache[id]); return; }
   const artist = track.artists[0]?.name || '';
-  const data = await fetchLyricsData(track.name, artist, track.album.name, Math.round(durationSec));
-  lyricsCache[id] = data;
-  if(currentTrackId === id){ applyLyricsData(data); }
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  for(let attempt = 0; attempt < 3; attempt++){
+    const data = await fetchLyricsData(track.name, artist, track.album.name, Math.round(durationSec));
+    if(!data.transient){
+      lyricsCache[id] = data;
+      if(currentTrackId === id){ applyLyricsData(data); }
+      return;
+    }
+    if(currentTrackId !== id) return;
+    if(attempt < 2){
+      const box = document.getElementById('lyricsBox');
+      if(box) box.innerHTML = '<p class="lyrics-status">Lyrics service is busy - retrying…</p>';
+      await wait(attempt === 0 ? 3000 : 8000);
+      if(currentTrackId !== id) return;
+    } else {
+      // still down: show the no-lyrics layout for now, but don't cache it so the next load retries
+      applyLyricsData({ plain: null, synced: null });
+    }
+  }
 }
 
 /* Runs every animation frame (not tied to the 5s poll) for a continuously
@@ -1753,79 +1750,26 @@ function startPolling(){
   stage.innerHTML = `
     <div class="topbar">
       <a class="profile-chip" id="profileChip" href="#" target="_blank" rel="noopener"></a>
-      <button class="bg-btn" id="bgBtn" type="button" aria-label="Turn off moving background" title="Turn off moving background"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/><line class="bg-slash" x1="3" y1="21" x2="21" y2="3"/></svg></button>
-      <button class="cur-btn" id="cursorBtn" type="button" aria-label="Hide mouse when idle" title="Hide mouse when idle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l14 7.5-6.2 1.9L10.5 19z"/><line class="cur-slash" x1="3" y1="21" x2="21" y2="3"/></svg></button>
-      <button class="lyr-btn" id="lyricsBtn" type="button" aria-label="Hide lyrics" title="Hide lyrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6l-4.5 3.5V17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h5.5"/><line class="lyr-slash" x1="3" y1="21" x2="21" y2="3"/></svg></button>
-      <button class="view-btn" id="viewBtn" type="button"></button>
-      <button class="logout-btn" id="logoutBtn" type="button" aria-label="Log out" title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button>
+      <button class="gear-btn" id="gearBtn" type="button" aria-label="Settings" title="Settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="settingsPanel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <div class="settings-panel" id="settingsPanel" role="dialog" aria-label="Settings">
+        <div class="sp-list">
+          <button class="sp-row" id="spLyrics" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6l-4.5 3.5V17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h5.5"/></svg></span><span class="sp-txt"><span class="sp-name">Lyrics</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
+          <button class="sp-row" id="spTranslate" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></span><span class="sp-txt"><span class="sp-name">Translate to English</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
+          <button class="sp-row" id="spBg" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg></span><span class="sp-txt"><span class="sp-name">Moving background</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
+          <button class="sp-row" id="spCursor" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l14 7.5-6.2 1.9L10.5 19z"/></svg></span><span class="sp-txt"><span class="sp-name">Hide mouse when idle</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
+          <button class="sp-row" id="spMobile" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg></span><span class="sp-txt"><span class="sp-name">Mobile layout</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
+          <div class="sp-sep"></div>
+          <button class="sp-row danger" id="spLogout" type="button"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sp-txt"><span class="sp-name">Log out</span><span class="sp-sub"></span></span></button>
+        </div>
+      </div>
     </div>
     <div class="layout">
       <div class="main-col" id="nowPlaying"></div>
       <div class="lyrics-col" id="lyricsCol"></div>
     </div>
   `;
-  document.getElementById('logoutBtn').addEventListener('click', logout);
-  const viewBtn = document.getElementById('viewBtn');
-  const PHONE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg>';
-  const DESKTOP_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>';
-  const syncViewBtn = () => {
-    const mobile = document.documentElement.classList.contains('mobile');
-    const label = mobile ? 'Desktop view' : 'Mobile view';
-    viewBtn.innerHTML = mobile ? DESKTOP_ICON : PHONE_ICON;
-    viewBtn.title = label;
-    viewBtn.setAttribute('aria-label', label);
-  };
-  const bgBtn = document.getElementById('bgBtn');
-  const syncBgBtn = () => {
-    const still = document.documentElement.classList.contains('bg-still');
-    const label = still ? 'Turn on moving background' : 'Turn off moving background';
-    bgBtn.title = label;
-    bgBtn.setAttribute('aria-label', label);
-    bgBtn.setAttribute('aria-pressed', still ? 'false' : 'true');
-  };
-  syncBgBtn();
-  bgBtn.addEventListener('click', () => {
-    const still = document.documentElement.classList.toggle('bg-still');
-    try{ localStorage.setItem('np_bgstill', still ? '1' : '0'); } catch(e){}
-    syncBgBtn();
-  });
-  const cursorBtn = document.getElementById('cursorBtn');
-  const syncCursorBtn = () => {
-    const on = document.documentElement.classList.contains('hide-cursor');
-    const label = on ? 'Mouse hides when idle (click to turn off)' : 'Hide mouse when idle';
-    cursorBtn.title = label;
-    cursorBtn.setAttribute('aria-label', label);
-    cursorBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-  };
-  syncCursorBtn();
-  cursorBtn.addEventListener('click', () => {
-    const on = document.documentElement.classList.toggle('hide-cursor');
-    try{ localStorage.setItem('np_cursor', on ? '1' : '0'); } catch(e){}
-    syncCursorBtn();
-    wakeCursor();
-  });
+  setupSettings();
   wakeCursor();
-  const lyricsBtn = document.getElementById('lyricsBtn');
-  const syncLyricsBtn = () => {
-    const off = document.documentElement.classList.contains('lyrics-off');
-    const label = off ? 'Show lyrics' : 'Hide lyrics';
-    lyricsBtn.title = label;
-    lyricsBtn.setAttribute('aria-label', label);
-    lyricsBtn.setAttribute('aria-pressed', off ? 'false' : 'true');
-  };
-  syncLyricsBtn();
-  lyricsBtn.addEventListener('click', () => {
-    const off = document.documentElement.classList.toggle('lyrics-off');
-    try{ localStorage.setItem('np_lyrics', off ? '0' : '1'); } catch(e){}
-    syncLyricsBtn();
-    if(!off) ensureTranslations();
-  });
-  syncViewBtn();
-  viewBtn.addEventListener('click', () => {
-    const on = document.documentElement.classList.toggle('mobile');
-    try{ localStorage.setItem('np_mobile', on ? '1' : '0'); } catch(e){}
-    syncViewBtn();
-  });
   fetchProfile();
   nowPlayingEl = document.getElementById('nowPlaying');
   lyricsColEl = document.getElementById('lyricsCol');
@@ -1833,6 +1777,95 @@ function startPolling(){
   pollTimer = setInterval(tick, 5000);
   startLyricsLoop();
 }
+/* ---------- settings flyout ---------- */
+const SETTINGS = {
+  spLyrics(){
+    const root = document.documentElement;
+    if(root.classList.contains('lyrics-static')) return;
+    const off = root.classList.toggle('lyrics-off');
+    try{ localStorage.setItem('np_lyrics', off ? '0' : '1'); } catch(e){}
+    if(!off) ensureTranslations();
+  },
+  spTranslate(){ toggleTranslate(); },
+  spBg(){
+    const still = document.documentElement.classList.toggle('bg-still');
+    try{ localStorage.setItem('np_bgstill', still ? '1' : '0'); } catch(e){}
+  },
+  spCursor(){
+    const on = document.documentElement.classList.toggle('hide-cursor');
+    try{ localStorage.setItem('np_cursor', on ? '1' : '0'); } catch(e){}
+    wakeCursor();
+  },
+  spMobile(){
+    const on = document.documentElement.classList.toggle('mobile');
+    try{ localStorage.setItem('np_mobile', on ? '1' : '0'); } catch(e){}
+  },
+  spLogout(){ setSettingsOpen(false); logout(); }
+};
+
+function setSettingsOpen(open){
+  const panel = document.getElementById('settingsPanel');
+  const gear = document.getElementById('gearBtn');
+  if(!panel || !gear) return;
+  panel.classList.toggle('open', open);
+  gear.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function syncSettings(){
+  const root = document.documentElement;
+  const has = (c) => root.classList.contains(c);
+  const set = (id, checked, disabled, sub) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(checked !== null) el.setAttribute('aria-checked', checked ? 'true' : 'false');
+    el.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    const subEl = el.querySelector('.sp-sub');
+    if(subEl && subEl.textContent !== (sub || '')) subEl.textContent = sub || '';
+  };
+  const lyricsGone = has('lyrics-static');
+  set('spLyrics', !has('lyrics-off') && !lyricsGone, lyricsGone, lyricsGone ? 'Not available for this song' : '');
+  const noLyrics = has('lyrics-off') || lyricsGone;
+  set('spTranslate', has('tr-on'), noLyrics, trBusy ? 'Translating…' : (noLyrics ? 'Needs lyrics' : ''));
+  set('spBg', !has('bg-still'), false, '');
+  set('spCursor', has('hide-cursor'), false, '');
+  set('spMobile', has('mobile'), false, '');
+}
+
+let settingsWired = false;
+function setupSettings(){
+  const gear = document.getElementById('gearBtn');
+  const panel = document.getElementById('settingsPanel');
+  if(!gear || !panel) return;
+  gear.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setSettingsOpen(!panel.classList.contains('open'));
+  });
+  panel.addEventListener('click', (e) => {
+    const row = e.target.closest('.sp-row');
+    if(!row || row.getAttribute('aria-disabled') === 'true') return;
+    const fn = SETTINGS[row.id];
+    if(fn) fn();
+    syncSettings();
+  });
+  if(!settingsWired){
+    settingsWired = true;
+    document.addEventListener('click', (e) => {
+      const pn = document.getElementById('settingsPanel');
+      const g = document.getElementById('gearBtn');
+      if(pn && pn.classList.contains('open') && !pn.contains(e.target) && !(g && g.contains(e.target))) setSettingsOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape'){
+        const pn = document.getElementById('settingsPanel');
+        if(pn && pn.classList.contains('open')){ setSettingsOpen(false); const g = document.getElementById('gearBtn'); if(g) g.focus(); }
+      }
+    });
+    // keep the switches in step with any class change (song with no lyrics, etc.)
+    new MutationObserver(syncSettings).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  }
+  syncSettings();
+}
+
 function stopPolling(){
   if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
   stopLyricsLoop();
@@ -1867,6 +1900,7 @@ function wakeCursor(){
 // timer forever. Only count moves where the pointer actually changed position.
 let lastMX = -100, lastMY = -100;
 document.addEventListener('mousemove', (e) => {
+  if(e.isTrusted && e.movementX === 0 && e.movementY === 0) return;   // synthetic move, pointer didn't travel
   if(Math.abs(e.clientX - lastMX) < 2 && Math.abs(e.clientY - lastMY) < 2) return;
   lastMX = e.clientX;
   lastMY = e.clientY;
