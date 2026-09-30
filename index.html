@@ -544,6 +544,38 @@
     .profile-chip{ padding: 4px; }
     .profile-name{ display: none; }
   }
+
+  /* Landscape phone + lyrics that don't scroll (plain/unsynced or none): the player
+     takes over the whole screen, art on the left, everything else beside it. */
+  @media (orientation: landscape) and (max-height: 520px){
+    html.lyrics-static .lyrics-col{ display: none; }
+    html.lyrics-static .main-col{
+      flex: 1 1 100%;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 32px;
+      align-content: center;
+      overflow: hidden;
+    }
+    html.lyrics-static .main-col > *{ grid-column: 2; }
+    html.lyrics-static .art-card{
+      grid-column: 1;
+      grid-row: 1 / span 8;
+      align-self: center;
+      width: min(56vh, 220px);
+      height: min(56vh, 220px);
+      margin: 0;
+      border-radius: 26px;
+    }
+    html.lyrics-static .track-title{ font-size: clamp(24px, 5vw, 38px); }
+    html.lyrics-static .track-artist{ font-size: 17px; margin-bottom: 18px; }
+    html.lyrics-static .progress,
+    html.lyrics-static .time-row{ max-width: none; }
+    html.lyrics-static .controls{ gap: 16px; margin-bottom: 12px; }
+    html.lyrics-static .ctrl-btn{ width: 54px; height: 54px; }
+    html.lyrics-static .ctrl-btn.main{ width: 64px; height: 64px; }
+    html.lyrics-static .state-label{ font-size: 13px; }
+  }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}</script>
 </head>
@@ -724,6 +756,7 @@ function renderIdle(){
     lyricsColEl.innerHTML = '';
   }
   lyricsMeta.lines = null;
+  document.documentElement.classList.remove('lyrics-static');
   currentTrackId = null;
   currentTrackDurationMs = 0;
   updateFavicon(null);
@@ -763,6 +796,7 @@ function renderTrack(data){
     updateFavicon(track.album.images[0]?.url || '');
     updateTitle(track);
 
+    document.documentElement.classList.remove('lyrics-static');
     if(lyricsColEl){
       lyricsColEl.innerHTML = `
         <p class="section-label">Lyrics</p>
@@ -1006,6 +1040,10 @@ function applyLyricsData(data){
   lyricsMeta.lastWordIdx = -1;
   lyricsMeta.currentY = 0;
   renderLyricsBox({ plain: data.plain, synced: prepared });
+  // Lyrics that aren't timed (plain) or missing entirely can't scroll, so on a
+  // phone in landscape the player takes over the whole screen (CSS below).
+  const isStatic = !(prepared && prepared.length);
+  document.documentElement.classList.toggle('lyrics-static', isStatic);
 }
 
 async function loadLyricsFor(track, durationMs){
