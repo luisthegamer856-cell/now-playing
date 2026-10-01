@@ -540,7 +540,7 @@
     border-radius: 22px; cursor: pointer; -webkit-tap-highlight-color: transparent;
     transition: background .15s ease, opacity .15s ease;
   }
-  .sp-row:hover{ background: rgba(255,255,255,.13); }
+  .sp-row:hover{ background: rgba(255,255,255,.16); }
   .sp-row:active{ background: rgba(255,255,255,.2); }
   .sp-ico{
     width: var(--ico); height: var(--ico); border-radius: 12px; flex: none;
@@ -553,8 +553,8 @@
   .sp-sub:empty{ display: none; }
   .sp-switch{
     flex: none; position: relative; width: var(--sw-w); height: var(--sw-h); border-radius: 999px;
-    background: rgba(255,255,255,.24); transition: background .22s ease;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+    background: rgba(255,255,255,.22); transition: background .22s ease;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), inset 0 1px 2px rgba(0,0,0,.18);
   }
   .sp-switch i{
     position: absolute; top: calc((var(--sw-h) - var(--knob)) / 2); left: calc((var(--sw-h) - var(--knob)) / 2);
@@ -573,9 +573,9 @@
 
   /* touch screens (iPad, phones) and forced Mobile layout: bigger tap targets */
   @media (pointer: coarse){
-    .settings-panel{ --row-h: 58px; --name-fs: 17px; --sub-fs: 13px; --ico: 38px; --sw-w: 51px; --sw-h: 31px; --knob: 27px; width: min(380px, calc(100vw - 24px)); }
+    .settings-panel{ --row-h: 58px; --name-fs: 17px; --sub-fs: 13px; --ico: 38px; --sw-w: 51px; --sw-h: 31px; --knob: 27px; width: min(320px, calc(100vw - 24px)); }
   }
-  html.mobile .settings-panel{ --row-h: 58px; --name-fs: 17px; --sub-fs: 13px; --ico: 38px; --sw-w: 51px; --sw-h: 31px; --knob: 27px; width: min(380px, calc(100vw - 24px)); }
+  html.mobile .settings-panel{ --row-h: 58px; --name-fs: 17px; --sub-fs: 13px; --ico: 38px; --sw-w: 51px; --sw-h: 31px; --knob: 27px; width: min(320px, calc(100vw - 24px)); }
   html.mobile .gear-btn{ width: 40px; height: 40px; }
   html.mobile .gear-btn svg{ width: 19px; height: 19px; }
 
@@ -749,6 +749,22 @@
   /* ---------- lyric translation (toggle) ---------- */
   .lyrics-head{ display: flex; align-items: center; gap: 12px; margin: 0 0 16px; }
   .lyrics-head .section-label{ margin: 0; }
+  .tr-btn{
+    background: rgba(255,255,255,.14);
+    color: var(--paper);
+    border: none;
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tr-btn:hover{ background: rgba(255,255,255,.26); }
+  .tr-btn.on{ background: rgba(255,255,255,.9); color: #14101F; }
+  @media (pointer: coarse){ .tr-btn{ padding: 7px 14px; font-size: 13px; } }
   .lyric-tr{
     display: none;
     margin-top: 2px;
@@ -763,11 +779,29 @@
   .pl{ display: block; min-height: 1.8em; }
   .pl .lyric-tr{ font-size: 15px; font-weight: 500; opacity: .6; margin: 0 0 6px; }
 
-  /* ---------- computers: smaller song title ---------- */
+  /* ---------- computers: smaller song title; smaller text/controls in the full-screen player (art stays big) ---------- */
   @media (hover: hover) and (pointer: fine){
     .track-title{ font-size: clamp(22px, 2.3vw, 32px); }
     html.lyrics-off .track-title,
-    html.lyrics-static .track-title{ font-size: clamp(26px, 3.2vw, 50px); }
+    html.lyrics-static .track-title{ font-size: clamp(22px, 2.3vw, 34px); margin-bottom: 4px; }
+    html.lyrics-off .track-artist,
+    html.lyrics-static .track-artist{ font-size: clamp(15px, 1.35vw, 19px); margin-bottom: 2.4vh; }
+    html.lyrics-off .time-row,
+    html.lyrics-static .time-row{ font-size: 13px; margin-bottom: 2vh; }
+    html.lyrics-off .progress-track,
+    html.lyrics-static .progress-track{ height: 6px; }
+    html.lyrics-off .controls,
+    html.lyrics-static .controls{ gap: 14px; margin-bottom: 2vh; }
+    html.lyrics-off .ctrl-btn,
+    html.lyrics-static .ctrl-btn{ width: clamp(46px, 3.8vw, 56px); height: clamp(46px, 3.8vw, 56px); }
+    html.lyrics-off .ctrl-btn.main,
+    html.lyrics-static .ctrl-btn.main{ width: clamp(56px, 4.8vw, 68px); height: clamp(56px, 4.8vw, 68px); }
+    html.lyrics-off .state-label,
+    html.lyrics-static .state-label{ font-size: 12.5px; }
+    html.lyrics-off .up-next-title,
+    html.lyrics-static .up-next-title{ font-size: 14px; }
+    html.lyrics-off .up-next-artist,
+    html.lyrics-static .up-next-artist{ font-size: 12.5px; }
   }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}</script>
@@ -994,9 +1028,14 @@ function renderTrack(data){
       lyricsColEl.innerHTML = `
         <div class="lyrics-head">
           <p class="section-label">Lyrics</p>
+          <button class="tr-btn" id="trBtn" type="button" aria-pressed="false" title="Show an English translation under each line">Translate</button>
         </div>
+        
         <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
       `;
+      const trBtn = document.getElementById('trBtn');
+      if(trBtn) trBtn.onclick = toggleTranslate;
+      syncSettings();
     }
     loadLyricsFor(track, duration);
   } else {
@@ -1826,6 +1865,13 @@ function syncSettings(){
   set('spLyrics', !has('lyrics-off') && !lyricsGone, lyricsGone, lyricsGone ? 'Not available for this song' : '');
   const noLyrics = has('lyrics-off') || lyricsGone;
   set('spTranslate', has('tr-on'), noLyrics, trBusy ? 'Translating…' : (noLyrics ? 'Needs lyrics' : ''));
+  const tb = document.getElementById('trBtn');
+  if(tb){
+    tb.classList.toggle('on', has('tr-on'));
+    tb.setAttribute('aria-pressed', has('tr-on') ? 'true' : 'false');
+    const txt = trBusy ? 'Translating…' : 'Translate';
+    if(tb.textContent !== txt) tb.textContent = txt;
+  }
   set('spBg', !has('bg-still'), false, '');
   set('spCursor', has('hide-cursor'), false, '');
   set('spMobile', has('mobile'), false, '');
