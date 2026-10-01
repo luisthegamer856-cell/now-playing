@@ -194,6 +194,34 @@
     margin-bottom: 10px;
     word-break: break-word;
   }
+  .title-row{ display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+  .title-row .track-title{ flex: 1 1 auto; min-width: 0; margin-bottom: 0 !important; }
+  .like-btn{
+    flex: none; width: 36px; height: 36px; margin-top: -2px; padding: 0;
+    display: grid; place-items: center; border: none; border-radius: 50%;
+    background: transparent; color: var(--paper); opacity: .85; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .15s ease, opacity .15s ease, color .15s ease;
+  }
+  .like-btn[hidden]{ display: none; }
+  .like-btn:hover{ background: rgba(255,255,255,.16); opacity: 1; }
+  .like-btn svg{ width: 24px; height: 24px; transition: transform .25s cubic-bezier(.2,.9,.25,1.4); }
+  .like-btn.on{ color: #1ED760; opacity: 1; }
+  .like-btn.on svg{ fill: currentColor; }
+  .like-btn.pop svg{ transform: scale(1.35); }
+  .like-btn.busy{ pointer-events: none; }
+  html.lyrics-off .title-row, html.lyrics-static .title-row{ justify-content: center; }
+  html.lyrics-off .title-row .track-title, html.lyrics-static .title-row .track-title{ flex: 0 1 auto; }
+  @media (orientation: landscape) and (max-height: 520px){
+    .title-row{ margin-bottom: 4px; gap: 6px; }
+    .like-btn{ width: 30px; height: 30px; }
+    .like-btn svg{ width: 20px; height: 20px; }
+  }
+  @media (hover: hover) and (pointer: fine){
+    html.lyrics-off .title-row, html.lyrics-static .title-row{ margin-bottom: 4px; }
+    .like-btn{ width: 32px; height: 32px; }
+    .like-btn svg{ width: 22px; height: 22px; }
+  }
   .track-artist{
     font-size: 17px;
     font-weight: 500;
@@ -677,13 +705,12 @@
     .gear-btn{ width: 36px; height: 36px; }
     .gear-btn svg{ width: 17px; height: 17px; }
     .settings-panel{
-      --row-h: 46px; --name-fs: 15px; --sub-fs: 11.5px; --ico: 32px; --sw-w: 46px; --sw-h: 28px; --knob: 24px;
-      width: min(600px, calc(100vw - 24px - var(--sa-l) - var(--sa-r)));
-      max-height: calc(100dvh - 72px - env(safe-area-inset-bottom)); overflow-y: auto; border-radius: 26px;
+      --row-h: 40px; --name-fs: 14px; --sub-fs: 10.5px; --ico: 28px; --sw-w: 42px; --sw-h: 25px; --knob: 21px;
+      width: min(290px, calc(100vw - 24px - var(--sa-l) - var(--sa-r)));
+      max-height: calc(100dvh - 64px - env(safe-area-inset-bottom)); overflow-y: auto; border-radius: 24px; padding: 8px;
     }
-    html.mobile .settings-panel{ --row-h: 46px; --name-fs: 15px; --sub-fs: 11.5px; --ico: 32px; --sw-w: 46px; --sw-h: 28px; --knob: 24px; }
-    .sp-list{ display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
-    .sp-sep{ grid-column: 1 / -1; margin: 2px 14px; }
+    html.mobile .settings-panel{ --row-h: 40px; --name-fs: 14px; --sub-fs: 10.5px; --ico: 28px; --sw-w: 42px; --sw-h: 25px; --knob: 21px; }
+    .sp-sep{ margin: 3px 12px; }
     #spLogout{ grid-column: 1 / -1; }
     .profile-chip{ padding: 4px; }
     .profile-name{ display: none; }
@@ -825,7 +852,7 @@ const CLIENT_ID = "f8ae9b8233d44779be5fa82f8351bbf9";
 /* ========================================= */
 
 const REDIRECT_URI = window.location.origin + window.location.pathname;
-const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state user-read-private";
+const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state user-read-private user-library-read user-library-modify";
 const stage = document.getElementById('stage');
 const toastEl = document.getElementById('toast');
 
@@ -844,6 +871,7 @@ const ICON = {
   prev: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM19.5 5.5L9 12l10.5 6.5v-13z"/></svg>`,
   next: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4.5 5.5L15 12 4.5 18.5v-13z"/></svg>`,
   play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4.5v15l13-7.5z"/></svg>`,
+  heart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-9.4-9.2C1.2 8 3.1 4.8 6.4 4.6c2-.1 3.7 1 5.6 3.2 1.9-2.2 3.6-3.3 5.6-3.2 3.3.2 5.2 3.4 3.8 6.7-1.9 4.6-9.4 9.2-9.4 9.2z"/></svg>`,
   pause:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>`
 };
 
@@ -1076,7 +1104,10 @@ function buildTrackCard(track){
 
   nowPlayingEl.innerHTML = `
     <div class="art-card"><img src="${art}" alt=""></div>
-    <h1 class="track-title">${escapeHtml(track.name)}</h1>
+    <div class="title-row">
+      <h1 class="track-title">${escapeHtml(track.name)}</h1>
+      <button class="like-btn" id="likeBtn" type="button" aria-label="Add to Liked Songs" aria-pressed="false" hidden>${ICON.heart}</button>
+    </div>
     <p class="track-artist">${escapeHtml(artists)}</p>
     <div class="progress">
       <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div><div class="progress-thumb" id="progressThumb"></div></div>
@@ -1100,6 +1131,75 @@ function buildTrackCard(track){
     playerAction('PUT', lyricsMeta.playing ? '/pause' : '/play', lyricsMeta.playing ? 'Paused' : 'Playing');
   });
   setupSeeking();
+  setupLike(track);
+}
+
+/* ---------- Like / unlike (Liked Songs) ---------- */
+let likeState = { uri: null, liked: false, needsScope: false };
+function libHeaders(){ return { Authorization: `Bearer ${accessToken}` }; }
+async function libCall(method, path){
+  const url = `https://api.spotify.com/v1/me/library${path}`;
+  let res = await fetch(url, { method, headers: libHeaders() });
+  if(res.status === 401){
+    const stored = localStorage.getItem(REFRESH_KEY);
+    if(stored && await refreshAccessToken(stored)) res = await fetch(url, { method, headers: libHeaders() });
+  }
+  return res;
+}
+function paintLike(){
+  const b = document.getElementById('likeBtn');
+  if(!b) return;
+  b.classList.toggle('on', likeState.liked);
+  b.setAttribute('aria-pressed', likeState.liked ? 'true' : 'false');
+  b.setAttribute('aria-label', likeState.liked ? 'Remove from Liked Songs' : 'Add to Liked Songs');
+}
+async function setupLike(track){
+  const b = document.getElementById('likeBtn');
+  if(!b) return;
+  const uri = track.uri || (track.id ? `spotify:track:${track.id}` : null);
+  if(track.is_local || !uri){ return; }
+  likeState = { uri, liked: false, needsScope: false };
+  b.hidden = false;
+  paintLike();
+
+  b.addEventListener('click', async () => {
+    if(likeState.needsScope){
+      showToast("Reconnecting to Spotify to allow Likes…");
+      setTimeout(redirectToAuth, 1000);
+      return;
+    }
+    if(likeState.uri !== uri) return;
+    const want = !likeState.liked;
+    likeState.liked = want; paintLike();
+    b.classList.add('pop'); setTimeout(() => b.classList.remove('pop'), 250);
+    b.classList.add('busy');
+    try{
+      const res = await libCall(want ? 'PUT' : 'DELETE', `?uris=${encodeURIComponent(uri)}`);
+      if(res.status === 401 || res.status === 403){
+        likeState.liked = !want; likeState.needsScope = true; paintLike();
+        showToast("Tap the heart again to allow Likes.");
+      } else if(!res.ok){
+        likeState.liked = !want; paintLike();
+        showToast("Couldn't update Liked Songs.");
+      } else {
+        showToast(want ? "Added to Liked Songs" : "Removed from Liked Songs");
+      }
+    } catch(e){
+      likeState.liked = !want; paintLike();
+      showToast("Couldn't reach Spotify.");
+    }
+    b.classList.remove('busy');
+  });
+
+  try{
+    const res = await libCall('GET', `/contains?uris=${encodeURIComponent(uri)}`);
+    if(likeState.uri !== uri) return;
+    if(res.status === 403 || res.status === 401){ likeState.needsScope = true; return; }
+    if(!res.ok) return;
+    const arr = await res.json();
+    likeState.liked = !!(arr && arr[0]);
+    paintLike();
+  } catch(e){}
 }
 
 /* Click or drag the progress bar to jump to a spot in the song.
