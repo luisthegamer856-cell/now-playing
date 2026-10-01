@@ -98,7 +98,8 @@
   .bgs{ position: fixed; inset: 0; overflow: hidden; z-index: 0; display: none; pointer-events: none; }
   html[data-bg="flow"] .bgs-flow, html[data-bg="liquid"] .bgs-liquid, html[data-bg="beams"] .bgs-beams,
   html[data-bg="bokeh"] .bgs-bokeh, html[data-bg="stars"] .bgs-stars, html[data-bg="ripple"] .bgs-ripple,
-  html[data-bg="orbit"] .bgs-orbit{ display: block; }
+  html[data-bg="orbit"] .bgs-orbit, html[data-bg="waves"] .bgs-waves, html[data-bg="lights"] .bgs-lights,
+  html[data-bg="lava"] .bgs-lava, html[data-bg="grid"] .bgs-grid{ display: block; }
   html[data-bg] .bg-blobs{ display: none; }
   @keyframes bgSpin{ to{ transform: rotate(360deg); } }
 
@@ -165,6 +166,51 @@
     from{ transform: rotate(calc(var(--i) * 120deg)) translateX(var(--r)) rotate(calc(var(--i) * -120deg)); }
     to{ transform: rotate(calc(var(--i) * 120deg + 360deg)) translateX(var(--r)) rotate(calc(var(--i) * -120deg - 360deg)); }
   }
+
+
+  /* Waves: layered swells rolling sideways */
+  .bgs-waves::before{ content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, var(--c1), transparent 75%); opacity: .3; }
+  .bgs-waves svg{ position: absolute; left: 0; bottom: var(--b); width: 200%; height: var(--h); opacity: var(--op); animation: bgWave var(--t) linear infinite; }
+  .bgs-waves path{ fill: var(--wc); }
+  @keyframes bgWave{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
+
+  /* Lights: soft northern-lights curtains swaying */
+  .bgs-lights::before{ content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, var(--c2) 170%); opacity: .3; }
+  .bgs-lights i{
+    position: absolute; top: -12%; width: 38vmax; height: 100%; mix-blend-mode: screen; opacity: .85; filter: blur(26px);
+    background: linear-gradient(180deg, transparent 0%, var(--ac) 30%, var(--ac) 52%, transparent 100%);
+    transform-origin: 50% 0; animation: bgSway var(--t) ease-in-out infinite alternate;
+  }
+  @keyframes bgSway{ 0%{ transform: translateX(-7vw) skewX(-11deg) scaleY(.88); opacity: .5; } 100%{ transform: translateX(7vw) skewX(11deg) scaleY(1.12); opacity: .95; } }
+
+  /* Lava: big blobs slowly rising and sinking */
+  .bgs-lava{ filter: blur(34px); }
+  .bgs-lava i{
+    position: absolute; left: var(--x); top: 76%; width: var(--s); height: var(--s); margin-left: calc(var(--s) / -2);
+    border-radius: 50%; background: var(--lc); mix-blend-mode: screen; opacity: .72;
+    transform: translate(0, -30vh); animation: bgLava var(--d) ease-in-out infinite alternate; animation-delay: calc(var(--d) * -.45);
+  }
+  .bgs-lava i:nth-child(odd){ animation-delay: calc(var(--d) * -.15); }
+  .bgs-lava i:nth-child(3n){ animation-delay: calc(var(--d) * -.7); }
+  @keyframes bgLava{ 0%{ transform: translate(0, 4vh) scale(1); } 100%{ transform: translate(var(--dx), -88vh) scale(var(--sc)); } }
+
+  /* Grid: a glowing retro floor scrolling toward you */
+  .bgs-grid .sun{
+    position: absolute; left: 50%; top: 18%; width: 28vmax; height: 28vmax; margin-left: -14vmax; border-radius: 50%;
+    background: linear-gradient(180deg, var(--c3, var(--lime)), var(--c1)); opacity: .85; filter: blur(2px);
+  }
+  .bgs-grid .gd{
+    position: absolute; left: 0; right: 0; top: 52%; bottom: 0; background: #120D1D; overflow: hidden;
+    border-top: 2px solid var(--c1); box-shadow: 0 -6px 50px var(--c1);
+  }
+  .bgs-grid .gd i{
+    position: absolute; left: -70%; right: -70%; top: 0; bottom: -60%;
+    background-image: linear-gradient(var(--c2) 2px, transparent 2px), linear-gradient(90deg, var(--c2) 2px, transparent 2px);
+    background-size: 64px 64px; opacity: .75;
+    transform: perspective(340px) rotateX(58deg); transform-origin: 50% 0; animation: bgGrid 2.2s linear infinite;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 38%); mask-image: linear-gradient(180deg, transparent 0%, #000 38%);
+  }
+  @keyframes bgGrid{ to{ background-position: 0 64px, 0 0; } }
 
   /* "Moving background" off, or reduced motion: freeze every style */
   html.bg-still .bgs, html.bg-still .bgs *, html.bg-still .bgs::before, html.bg-still .bgs::after{ animation: none !important; }
@@ -705,6 +751,10 @@
   .bg-tile[data-bg="stars"] i{ background: radial-gradient(1.5px 1.5px at 20% 30%, #fff 99%, transparent), radial-gradient(1px 1px at 45% 70%, #fff 99%, transparent), radial-gradient(1.5px 1.5px at 70% 25%, #fff 99%, transparent), radial-gradient(1px 1px at 85% 62%, #fff 99%, transparent), radial-gradient(80% 90% at 10% 0%, var(--c1), transparent 70%), #14101F; }
   .bg-tile[data-bg="ripple"] i{ background: repeating-radial-gradient(circle at 50% 50%, var(--c1) 0 2px, transparent 3px 9px), #14101F; }
   .bg-tile[data-bg="orbit"] i{ background: radial-gradient(circle at 26% 50%, var(--c1) 0 20%, transparent 23%), radial-gradient(circle at 74% 50%, var(--c2) 0 20%, transparent 23%), radial-gradient(circle at 50% 50%, var(--c3, var(--lime)) 0 12%, transparent 15%), #14101F; }
+  .bg-tile[data-bg="waves"] i{ background: radial-gradient(75% 65% at 22% 112%, var(--c1) 0 68%, transparent 71%), radial-gradient(75% 65% at 78% 118%, var(--c2) 0 68%, transparent 71%), #14101F; }
+  .bg-tile[data-bg="lights"] i{ background: linear-gradient(180deg, transparent 20%, #14101F 100%), linear-gradient(90deg, #14101F 4%, var(--c1) 22%, #14101F 38%, var(--c2) 54%, #14101F 70%, var(--c3, var(--lime)) 84%, #14101F 98%); }
+  .bg-tile[data-bg="lava"] i{ background: radial-gradient(ellipse 15% 42% at 26% 62%, var(--c1) 0 70%, transparent 76%), radial-gradient(ellipse 16% 46% at 58% 40%, var(--c2) 0 70%, transparent 76%), radial-gradient(ellipse 11% 30% at 82% 70%, var(--c3, var(--lime)) 0 70%, transparent 76%), #14101F; }
+  .bg-tile[data-bg="grid"] i{ background: radial-gradient(circle at 50% 36%, var(--c1) 0 17%, transparent 19%), linear-gradient(180deg, #14101F 0 52%, transparent 52%), repeating-linear-gradient(90deg, var(--c2) 0 1px, transparent 1px 7px), repeating-linear-gradient(0deg, var(--c2) 0 1px, transparent 1px 6px), #14101F; }
   .sp-sep{ height: 1px; margin: 6px 14px; background: rgba(255,255,255,.18); }
   .sp-row.danger .sp-name{ color: #ffc4c4; }
   .sp-row.danger .sp-ico{ background: rgba(255,90,90,.22); }
@@ -961,6 +1011,10 @@
 <div class="bgs bgs-ripple" aria-hidden="true"><i style="--i:0;--rc:var(--c1)"></i><i style="--i:1;--rc:var(--c2)"></i><i style="--i:2;--rc:var(--c3,var(--lime))"></i><i style="--i:3;--rc:var(--c1)"></i><i style="--i:4;--rc:var(--c2)"></i></div>
 <div class="bgs bgs-orbit" aria-hidden="true"><i style="--i:0;--oc:var(--c1);--t:42s;--r:24vmax"></i><i style="--i:1;--oc:var(--c2);--t:54s;--r:18vmax;animation-direction:reverse"></i><i style="--i:2;--oc:var(--c3,var(--lime));--t:34s;--r:28vmax"></i></div>
 
+<div class="bgs bgs-waves" aria-hidden="true"><svg style="--wc:var(--c2);--b:-4%;--h:44%;--t:30s;--op:.55" viewBox="0 0 1200 200" preserveAspectRatio="none"><path d="M0 100 C 100 40, 200 40, 300 100 S 500 160, 600 100 S 800 40, 900 100 S 1100 160, 1200 100 L1200 200 L0 200 Z"/></svg><svg style="--wc:var(--c3, var(--lime));--b:-8%;--h:36%;--t:22s;--op:.45;animation-direction:reverse" viewBox="0 0 1200 200" preserveAspectRatio="none"><path d="M0 100 C 100 40, 200 40, 300 100 S 500 160, 600 100 S 800 40, 900 100 S 1100 160, 1200 100 L1200 200 L0 200 Z"/></svg><svg style="--wc:var(--c1);--b:-10%;--h:30%;--t:16s;--op:.7" viewBox="0 0 1200 200" preserveAspectRatio="none"><path d="M0 100 C 100 40, 200 40, 300 100 S 500 160, 600 100 S 800 40, 900 100 S 1100 160, 1200 100 L1200 200 L0 200 Z"/></svg></div>
+<div class="bgs bgs-lights" aria-hidden="true"><i style="left:-6%;--ac:var(--c1);--t:16s"></i><i style="left:16%;--ac:var(--c2);--t:21s"></i><i style="left:38%;--ac:var(--c3, var(--lime));--t:18s"></i><i style="left:58%;--ac:var(--c2);--t:24s"></i><i style="left:78%;--ac:var(--c1);--t:19s"></i></div>
+<div class="bgs bgs-lava" aria-hidden="true"><i style="--x:8%;--s:34vmax;--lc:var(--c1);--d:26s;--dx:8vw;--sc:1.15"></i><i style="--x:30%;--s:26vmax;--lc:var(--c2);--d:32s;--dx:-6vw;--sc:.9"></i><i style="--x:52%;--s:38vmax;--lc:var(--c3, var(--lime));--d:38s;--dx:5vw;--sc:1.1"></i><i style="--x:70%;--s:28vmax;--lc:var(--c1);--d:29s;--dx:-9vw;--sc:1.2"></i><i style="--x:86%;--s:24vmax;--lc:var(--c2);--d:35s;--dx:4vw;--sc:.85"></i><i style="--x:44%;--s:20vmax;--lc:var(--c1);--d:23s;--dx:10vw;--sc:1.3"></i></div>
+<div class="bgs bgs-grid" aria-hidden="true"><div class="sun"></div><div class="gd"><i></i></div></div>
 <div class="stage" id="stage">
   <p class="kicker">Loading…</p>
 </div>
@@ -2075,7 +2129,7 @@ function startPolling(){
           <button class="sp-row" id="spLyrics" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6l-4.5 3.5V17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h5.5"/></svg></span><span class="sp-txt"><span class="sp-name">Lyrics</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <button class="sp-row" id="spTranslate" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></span><span class="sp-txt"><span class="sp-name">Translate to English</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <button class="sp-row" id="spBg" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg></span><span class="sp-txt"><span class="sp-name">Moving background</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
-          <div class="sp-bgpick" role="radiogroup" aria-label="Background style"><div class="sp-bglabel">Background style</div><div class="sp-bggrid"><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="aurora" title="Aurora"><i></i><span>Aurora</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="flow" title="Flow"><i></i><span>Flow</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="liquid" title="Liquid"><i></i><span>Liquid</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="beams" title="Beams"><i></i><span>Beams</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="bokeh" title="Bokeh"><i></i><span>Bokeh</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="stars" title="Stars"><i></i><span>Stars</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="ripple" title="Ripple"><i></i><span>Ripple</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="orbit" title="Orbit"><i></i><span>Orbit</span></button></div></div>
+          <div class="sp-bgpick" role="radiogroup" aria-label="Background style"><div class="sp-bglabel">Background style</div><div class="sp-bggrid"><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="aurora" title="Aurora"><i></i><span>Aurora</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="flow" title="Flow"><i></i><span>Flow</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="liquid" title="Liquid"><i></i><span>Liquid</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="beams" title="Beams"><i></i><span>Beams</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="bokeh" title="Bokeh"><i></i><span>Bokeh</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="stars" title="Stars"><i></i><span>Stars</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="ripple" title="Ripple"><i></i><span>Ripple</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="orbit" title="Orbit"><i></i><span>Orbit</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="waves" title="Waves"><i></i><span>Waves</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="lights" title="Lights"><i></i><span>Lights</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="lava" title="Lava"><i></i><span>Lava</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="grid" title="Grid"><i></i><span>Grid</span></button></div></div>
           <button class="sp-row" id="spCursor" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l14 7.5-6.2 1.9L10.5 19z"/></svg></span><span class="sp-txt"><span class="sp-name">Hide mouse when idle</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <button class="sp-row" id="spMobile" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg></span><span class="sp-txt"><span class="sp-name">Mobile layout</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <div class="sp-sep"></div>
@@ -2099,7 +2153,7 @@ function startPolling(){
 }
 
 /* ---------- background styles ---------- */
-const BG_STYLES = ['aurora','flow','liquid','beams','bokeh','stars','ripple','orbit'];
+const BG_STYLES = ['aurora','flow','liquid','beams','bokeh','stars','ripple','orbit','waves','lights','lava','grid'];
 let bgBuilt = {};
 function fillBokeh(){
   if(bgBuilt.bokeh) return; bgBuilt.bokeh = true;
