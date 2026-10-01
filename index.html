@@ -99,7 +99,8 @@
   html[data-bg="flow"] .bgs-flow, html[data-bg="liquid"] .bgs-liquid, html[data-bg="beams"] .bgs-beams,
   html[data-bg="bokeh"] .bgs-bokeh, html[data-bg="stars"] .bgs-stars, html[data-bg="ripple"] .bgs-ripple,
   html[data-bg="orbit"] .bgs-orbit, html[data-bg="waves"] .bgs-waves, html[data-bg="lights"] .bgs-lights,
-  html[data-bg="lava"] .bgs-lava, html[data-bg="grid"] .bgs-grid{ display: block; }
+  html[data-bg="lava"] .bgs-lava, html[data-bg="grid"] .bgs-grid,
+  html[data-bg="city"] .bgs-city, html[data-bg="tokyo"] .bgs-tokyo{ display: block; }
   html[data-bg] .bg-blobs{ display: none; }
   @keyframes bgSpin{ to{ transform: rotate(360deg); } }
 
@@ -211,6 +212,88 @@
     -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 38%); mask-image: linear-gradient(180deg, transparent 0%, #000 38%);
   }
   @keyframes bgGrid{ to{ background-position: 0 64px, 0 0; } }
+
+
+  /* ---------- City and Tokyo skylines (day / night, tinted by the album colours) ---------- */
+  :root{ --bf: rgba(255,255,255,.07); --bm: #1a1330; --bF: #0e0a1c; --wf: var(--c3, var(--lime)); --tc: var(--c3, var(--lime)); --td: var(--c3, var(--lime)); --fj: rgba(255,255,255,.06); --fs: rgba(255,255,255,.16); --carb: var(--c3, var(--lime)); --trn: #0e0a1c; }
+  html.ct-day{ --bf: rgba(255,255,255,.36); --bm: rgba(46,36,84,.44); --bF: rgba(24,18,44,.84); --wf: rgba(255,255,255,.4); --tc: rgba(255,255,255,.94); --td: var(--c1); --fj: rgba(60,50,110,.3); --fs: rgba(255,255,255,.88); --carb: rgba(24,18,44,.75); --trn: rgba(255,255,255,.85); }
+  .bgs-city, .bgs-tokyo{ background: #120d22; }
+  .ct-sky{ position: absolute; inset: 0; transition: opacity 1.2s ease; }
+  .ct-sky.d{
+    background:
+      radial-gradient(120% 55% at 50% 102%, rgba(255,255,255,.4), transparent 70%),
+      linear-gradient(180deg, rgba(16,12,30,.3), rgba(16,12,30,.04)),
+      linear-gradient(180deg, var(--c1), var(--c2));
+    opacity: 0;
+  }
+  .ct-sky.n{
+    background:
+      radial-gradient(130% 60% at 50% 108%, var(--c1), transparent 72%),
+      linear-gradient(180deg, #070511 0%, #100b22 60%, #170f2c 100%);
+    opacity: 1;
+  }
+  html.ct-day .ct-sky.d{ opacity: 1; }
+  html.ct-day .ct-sky.n{ opacity: 0; }
+
+  .ct-stars, .ct-clouds, .ct-orb{ transition: opacity 1.2s ease; }
+  .ct-stars{ position: absolute; inset: 0 0 40% 0; opacity: 1; }
+  html.ct-day .ct-stars{ opacity: 0; }
+  .ct-stars i{ position: absolute; border-radius: 50%; background: #fff; opacity: .6; animation: bgTwinkle var(--t) ease-in-out infinite; animation-delay: var(--dl); }
+  .ct-clouds{ position: absolute; inset: 0; opacity: 0; }
+  html.ct-day .ct-clouds{ opacity: 1; }
+  .ct-clouds svg{ position: absolute; left: var(--l); top: var(--y); width: var(--w); fill: #fff; opacity: .3; animation: ctCloud var(--t) ease-in-out infinite alternate; animation-delay: var(--dl); }
+  @keyframes ctCloud{ from{ transform: translateX(-26vw); } to{ transform: translateX(26vw); } }
+  .ct-orb{ position: absolute; left: 40%; top: 13%; border-radius: 50%; animation: ctOrb 70s ease-in-out infinite alternate; }
+  @keyframes ctOrb{ from{ transform: translate(-3vw, 1vh); } to{ transform: translate(5vw, -1vh); } }
+  .ct-orb.sun{ width: 9vmax; height: 9vmax; margin: -4.5vmax; background: radial-gradient(circle, #fff 0 38%, rgba(255,255,255,.6) 40% 54%, rgba(255,255,255,0) 72%); box-shadow: 0 0 80px 24px var(--c3, #ffd27a); opacity: 0; }
+  .ct-orb.moon{ width: 6.5vmax; height: 6.5vmax; margin: -3.25vmax; background: #f4f1ff; box-shadow: 0 0 60px 10px rgba(255,255,255,.2), inset -1.3vmax -.5vmax 0 0 rgba(120,110,170,.38); opacity: 1; }
+  html.ct-day .ct-orb.sun{ opacity: 1; }
+  html.ct-day .ct-orb.moon{ opacity: 0; }
+
+  .ct-svg{ position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(210px, 42vh, 520px); }
+  .ct-svg rect, .ct-svg path, .ct-svg line, .ct-svg circle{ transition: fill 1.2s ease, stroke 1.2s ease, opacity 1.2s ease; }
+  .ct-svg .ly-far rect{ fill: var(--bf); }
+  .ct-svg .ly-mid rect{ fill: var(--bm); }
+  .ct-svg .ly-front rect{ fill: var(--bF); }
+  .ct-svg .win{ fill: var(--wf); }
+  .ct-svg .wg{ --wm: .8; animation: winFlick var(--d) ease-in-out infinite; }
+  .ct-svg .ly-mid .wg{ --wm: .38; }
+  @keyframes winFlick{ 0%,100%{ opacity: calc(var(--wm) * .62); } 50%{ opacity: var(--wm); } }
+  .ct-svg .road{ fill: var(--bF); }
+  .ct-svg .cb{ fill: var(--carb); }
+  .ct-svg .cg{ fill: var(--c3, var(--lime)); opacity: 0; }
+  html.ct-night .ct-svg .cg{ opacity: .35; }
+  .ct-svg .car{ animation: ctCar var(--d) linear infinite; }
+  @keyframes ctCar{ from{ transform: translateX(var(--a)); } to{ transform: translateX(var(--b)); } }
+  /* Tokyo only */
+  .ct-svg .fj{ fill: var(--fj); }
+  .ct-svg .fs{ fill: var(--fs); }
+  .ct-svg .tw-l{ stroke: var(--tc); stroke-width: 2.6; fill: none; stroke-linecap: round; }
+  .ct-svg .tw-d{ fill: var(--td); }
+  .ct-svg .tw-b{ fill: #fff; animation: ctBlink 2.4s ease-in-out infinite; }
+  @keyframes ctBlink{ 0%,100%{ opacity: .15; } 50%{ opacity: 1; } }
+  .ct-svg .sk-t{ fill: rgba(255,255,255,.72); }
+  html.ct-night .ct-svg .sk-t{ fill: #1a1330; }
+  .ct-svg .sk-led{ stroke: var(--c2); stroke-width: 2; opacity: 0; }
+  html.ct-night .ct-svg .sk-led{ opacity: .9; }
+  .ct-svg .ng{ fill: var(--nc); opacity: 0; }
+  html.ct-night .ct-svg .ng{ opacity: .26; }
+  .ct-svg .ns{ fill: var(--nc); opacity: .55; }
+  html.ct-night .ct-svg .ns{ opacity: 1; }
+  html.ct-night .ct-svg .ns.f{ animation: ctNeon 7s ease-in-out infinite; animation-delay: var(--dl); }
+  @keyframes ctNeon{ 0%,46%,52%,100%{ opacity: 1; } 49%{ opacity: .35; } }
+  .ct-svg .rail{ fill: var(--bF); }
+  .ct-svg .pil{ fill: var(--bF); opacity: .7; }
+  .ct-svg .trn{ animation: ctCar 24s linear infinite; --a: -330px; --b: 1800px; }
+  .ct-svg .tb{ fill: var(--trn); }
+  .ct-svg .tw{ fill: var(--wf); }
+  .ct-petals i{
+    position: absolute; left: var(--x); top: var(--y); width: var(--s); height: calc(var(--s) * .62); border-radius: 80% 0 80% 0;
+    background: linear-gradient(135deg, #fff, var(--c1)); opacity: .8;
+    animation: ctPetal var(--t) linear infinite; animation-delay: var(--dl);
+  }
+  html.ct-night .ct-petals i{ opacity: .45; }
+  @keyframes ctPetal{ 0%{ transform: translate(0,-14vh) rotate(0); opacity: 0; } 10%{ opacity: .85; } 90%{ opacity: .85; } 100%{ transform: translate(-22vw,112vh) rotate(540deg); opacity: 0; } }
 
   /* "Moving background" off, or reduced motion: freeze every style */
   html.bg-still .bgs, html.bg-still .bgs *, html.bg-still .bgs::before, html.bg-still .bgs::after{ animation: none !important; }
@@ -755,6 +838,23 @@
   .bg-tile[data-bg="lights"] i{ background: linear-gradient(180deg, transparent 20%, #14101F 100%), linear-gradient(90deg, #14101F 4%, var(--c1) 22%, #14101F 38%, var(--c2) 54%, #14101F 70%, var(--c3, var(--lime)) 84%, #14101F 98%); }
   .bg-tile[data-bg="lava"] i{ background: radial-gradient(ellipse 15% 42% at 26% 62%, var(--c1) 0 70%, transparent 76%), radial-gradient(ellipse 16% 46% at 58% 40%, var(--c2) 0 70%, transparent 76%), radial-gradient(ellipse 11% 30% at 82% 70%, var(--c3, var(--lime)) 0 70%, transparent 76%), #14101F; }
   .bg-tile[data-bg="grid"] i{ background: radial-gradient(circle at 50% 36%, var(--c1) 0 17%, transparent 19%), linear-gradient(180deg, #14101F 0 52%, transparent 52%), repeating-linear-gradient(90deg, var(--c2) 0 1px, transparent 1px 7px), repeating-linear-gradient(0deg, var(--c2) 0 1px, transparent 1px 6px), #14101F; }
+  .bg-tile[data-bg="city"] i{ background:
+      linear-gradient(#14101F,#14101F) 4% 100% / 13% 52% no-repeat, linear-gradient(#14101F,#14101F) 20% 100% / 12% 78% no-repeat,
+      linear-gradient(#14101F,#14101F) 35% 100% / 15% 44% no-repeat, linear-gradient(#14101F,#14101F) 52% 100% / 12% 66% no-repeat,
+      linear-gradient(#14101F,#14101F) 67% 100% / 15% 50% no-repeat, linear-gradient(#14101F,#14101F) 85% 100% / 13% 70% no-repeat,
+      linear-gradient(180deg, var(--c1), var(--c2)); }
+  .bg-tile[data-bg="tokyo"] i{ background:
+      linear-gradient(var(--c3, var(--lime)),var(--c3, var(--lime))) 38% 100% / 5% 88% no-repeat,
+      linear-gradient(#14101F,#14101F) 6% 100% / 14% 40% no-repeat, linear-gradient(#14101F,#14101F) 20% 100% / 14% 62% no-repeat,
+      linear-gradient(#14101F,#14101F) 55% 100% / 15% 55% no-repeat, linear-gradient(#14101F,#14101F) 70% 100% / 14% 74% no-repeat,
+      linear-gradient(#14101F,#14101F) 86% 100% / 14% 48% no-repeat,
+      radial-gradient(circle at 80% 24%, #fff 0 9%, transparent 11%),
+      linear-gradient(180deg, var(--c2), var(--c1)); }
+  .sp-cityrow{ display: none; margin-top: 8px; }
+  html[data-bg="city"] .sp-cityrow, html[data-bg="tokyo"] .sp-cityrow{ display: block; }
+  .ct-seg{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.12); }
+  .ct-b{ border: none; background: transparent; color: inherit; font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 4px; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background .15s ease, color .15s ease; }
+  .ct-b[aria-checked="true"]{ background: rgba(255,255,255,.92); color: #14101F; }
   .sp-sep{ height: 1px; margin: 6px 14px; background: rgba(255,255,255,.18); }
   .sp-row.danger .sp-name{ color: #ffc4c4; }
   .sp-row.danger .sp-ico{ background: rgba(255,90,90,.22); }
@@ -994,7 +1094,7 @@
     html.lyrics-static .up-next-artist{ font-size: 12.5px; }
   }
 </style>
-<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
+<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
 <body>
 
@@ -1015,13 +1115,17 @@
 <div class="bgs bgs-lights" aria-hidden="true"><i style="left:-6%;--ac:var(--c1);--t:16s"></i><i style="left:16%;--ac:var(--c2);--t:21s"></i><i style="left:38%;--ac:var(--c3, var(--lime));--t:18s"></i><i style="left:58%;--ac:var(--c2);--t:24s"></i><i style="left:78%;--ac:var(--c1);--t:19s"></i></div>
 <div class="bgs bgs-lava" aria-hidden="true"><i style="--x:8%;--s:34vmax;--lc:var(--c1);--d:26s;--dx:8vw;--sc:1.15"></i><i style="--x:30%;--s:26vmax;--lc:var(--c2);--d:32s;--dx:-6vw;--sc:.9"></i><i style="--x:52%;--s:38vmax;--lc:var(--c3, var(--lime));--d:38s;--dx:5vw;--sc:1.1"></i><i style="--x:70%;--s:28vmax;--lc:var(--c1);--d:29s;--dx:-9vw;--sc:1.2"></i><i style="--x:86%;--s:24vmax;--lc:var(--c2);--d:35s;--dx:4vw;--sc:.85"></i><i style="--x:44%;--s:20vmax;--lc:var(--c1);--d:23s;--dx:10vw;--sc:1.3"></i></div>
 <div class="bgs bgs-grid" aria-hidden="true"><div class="sun"></div><div class="gd"><i></i></div></div>
+<div class="bgs bgs-city" id="bgsCity" aria-hidden="true"></div>
+<div class="bgs bgs-tokyo" id="bgsTokyo" aria-hidden="true"></div>
 <div class="stage" id="stage">
   <p class="kicker">Loading…</p>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
+/* ============ CONFIGURE THIS ============ */
 const CLIENT_ID = "f8ae9b8233d44779be5fa82f8351bbf9";
+/* ========================================= */
 
 const REDIRECT_URI = window.location.origin + window.location.pathname;
 const SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state user-read-private user-library-read user-library-modify";
@@ -2127,7 +2231,7 @@ function startPolling(){
           <button class="sp-row" id="spLyrics" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6l-4.5 3.5V17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7.5 9h9M7.5 12.5h5.5"/></svg></span><span class="sp-txt"><span class="sp-name">Lyrics</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <button class="sp-row" id="spTranslate" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></span><span class="sp-txt"><span class="sp-name">Translate to English</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <button class="sp-row" id="spBg" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg></span><span class="sp-txt"><span class="sp-name">Moving background</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
-          <div class="sp-bgpick" role="radiogroup" aria-label="Background style"><div class="sp-bglabel">Background style</div><div class="sp-bggrid"><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="aurora" title="Aurora"><i></i><span>Aurora</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="flow" title="Flow"><i></i><span>Flow</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="liquid" title="Liquid"><i></i><span>Liquid</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="beams" title="Beams"><i></i><span>Beams</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="bokeh" title="Bokeh"><i></i><span>Bokeh</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="stars" title="Stars"><i></i><span>Stars</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="ripple" title="Ripple"><i></i><span>Ripple</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="orbit" title="Orbit"><i></i><span>Orbit</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="waves" title="Waves"><i></i><span>Waves</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="lights" title="Lights"><i></i><span>Lights</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="lava" title="Lava"><i></i><span>Lava</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="grid" title="Grid"><i></i><span>Grid</span></button></div></div>
+          <div class="sp-bgpick" role="radiogroup" aria-label="Background style"><div class="sp-bglabel">Background style</div><div class="sp-bggrid"><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="aurora" title="Aurora"><i></i><span>Aurora</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="flow" title="Flow"><i></i><span>Flow</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="liquid" title="Liquid"><i></i><span>Liquid</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="beams" title="Beams"><i></i><span>Beams</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="bokeh" title="Bokeh"><i></i><span>Bokeh</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="stars" title="Stars"><i></i><span>Stars</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="ripple" title="Ripple"><i></i><span>Ripple</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="orbit" title="Orbit"><i></i><span>Orbit</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="waves" title="Waves"><i></i><span>Waves</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="lights" title="Lights"><i></i><span>Lights</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="lava" title="Lava"><i></i><span>Lava</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="grid" title="Grid"><i></i><span>Grid</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="city" title="City"><i></i><span>City</span></button><button type="button" class="bg-tile" role="radio" aria-checked="false" data-bg="tokyo" title="Tokyo"><i></i><span>Tokyo</span></button></div><div class="sp-cityrow" role="radiogroup" aria-label="City time"><div class="sp-bglabel">City time</div><div class="ct-seg"><button type="button" class="ct-b" role="radio" aria-checked="false" data-ct="auto">Auto</button><button type="button" class="ct-b" role="radio" aria-checked="false" data-ct="day">Day</button><button type="button" class="ct-b" role="radio" aria-checked="false" data-ct="night">Night</button></div></div></div>
           <button class="sp-row" id="spCursor" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l14 7.5-6.2 1.9L10.5 19z"/></svg></span><span class="sp-txt"><span class="sp-name">Hide mouse when idle</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <button class="sp-row" id="spMobile" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg></span><span class="sp-txt"><span class="sp-name">Mobile layout</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <div class="sp-sep"></div>
@@ -2151,7 +2255,7 @@ function startPolling(){
 }
 
 /* ---------- background styles ---------- */
-const BG_STYLES = ['aurora','flow','liquid','beams','bokeh','stars','ripple','orbit','waves','lights','lava','grid'];
+const BG_STYLES = ['aurora','flow','liquid','beams','bokeh','stars','ripple','orbit','waves','lights','lava','grid','city','tokyo'];
 let bgBuilt = {};
 function fillBokeh(){
   if(bgBuilt.bokeh) return; bgBuilt.bokeh = true;
@@ -2182,9 +2286,109 @@ function applyBgStyle(name, save){
   if(save){ try{ localStorage.setItem('np_bgstyle', name); } catch(e){} }
   if(name === 'bokeh') fillBokeh();
   if(name === 'stars') fillStars();
+  if(name === 'city' || name === 'tokyo') buildCityScene(name);
 }
 function currentBgStyle(){ return document.documentElement.getAttribute('data-bg') || 'aurora'; }
 try{ applyBgStyle(localStorage.getItem('np_bgstyle') || 'aurora', false); } catch(e){ applyBgStyle('aurora', false); }
+
+/* ---------- City / Tokyo scenes ---------- */
+function mulberry(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function buildSkyline(kind){
+  const T = kind === 'tokyo', Y = 420, r = mulberry(T ? 11 : 5);
+  let o = `<defs><pattern id="${kind}A" width="24" height="30" patternUnits="userSpaceOnUse"><rect class="win" x="4" y="5" width="7" height="10" rx="1.5"/><rect class="win" x="14" y="5" width="7" height="10" rx="1.5"/><rect class="win" x="4" y="18" width="7" height="8" rx="1.5"/></pattern><pattern id="${kind}B" width="20" height="26" patternUnits="userSpaceOnUse"><rect class="win" x="3" y="4" width="6" height="9" rx="1.5"/><rect class="win" x="11" y="4" width="6" height="9" rx="1.5"/><rect class="win" x="11" y="15" width="6" height="8" rx="1.5"/></pattern></defs>`;
+  const reserved = T ? [[500, 640, 120], [1120, 1240, 120], [700, 1020, 165]] : [];
+  const neonCols = ['var(--c1)', 'var(--c2)', 'var(--c3, var(--lime))'];
+  let neon = '', nIdx = 0;
+  const layer = (cls, minW, maxW, minH, maxH, gap, win, signs) => {
+    let x = -30, g = `<g class="${cls}">`;
+    while(x < 1640){
+      const w = Math.round(minW + r() * (maxW - minW));
+      let h = Math.round(minH + r() * (maxH - minH));
+      const cx = x + w / 2;
+      const zone = reserved.find(z => cx > z[0] && cx < z[1]); if(zone) h = Math.min(h, zone[2]);
+      g += `<rect x="${x}" y="${Y - h}" width="${w}" height="${h + 2}"/>`;
+      if(r() < .35 && w > 34){
+        const w2 = Math.round(w * .55), h2 = Math.round(14 + r() * 30);
+        g += `<rect x="${x + Math.round((w - w2) / 2)}" y="${Y - h - h2}" width="${w2}" height="${h2 + 2}"/>`;
+        if(T && r() < .5) g += `<rect x="${x + w / 2 - 1}" y="${Y - h - h2 - 22}" width="2" height="24"/>`;
+      }
+      if(win && w >= 30){
+        g += `<rect class="wg" x="${x + 5}" y="${Y - h + 8}" width="${w - 10}" height="${Math.max(10, h - 16)}" style="fill:url(#${kind}${r() < .5 ? 'A' : 'B'});--d:${(5 + r() * 5).toFixed(1)}s;animation-delay:-${(r() * 8).toFixed(1)}s"/>`;
+      }
+      if(signs && T && w >= 52 && h > 140 && r() < .55){
+        const col = neonCols[nIdx++ % 3], sh = Math.round(34 + r() * 34), sy = Y - h + 26;
+        neon += `<g style="--nc:${col}"><rect class="ng" x="${x + w - 15}" y="${sy - 6}" width="16" height="${sh + 12}" rx="8"/><rect class="ns${r() < .5 ? ' f' : ''}" x="${x + w - 11}" y="${sy}" width="7" height="${sh}" rx="3.5" style="--dl:-${(r() * 7).toFixed(1)}s"/></g>`;
+      }
+      x += w + Math.round(r() * gap);
+    }
+    return g + '</g>';
+  };
+  if(T){
+    const fx = 860;
+    o += `<path class="fj" d="M${fx - 360} ${Y} Q ${fx - 130} ${Y - 150} ${fx - 54} ${Y - 232} Q ${fx} ${Y - 248} ${fx + 54} ${Y - 232} Q ${fx + 130} ${Y - 150} ${fx + 360} ${Y} Z"/>`;
+    o += `<path class="fs" d="M${fx - 62} ${Y - 226} Q ${fx} ${Y - 250} ${fx + 62} ${Y - 226} L ${fx + 46} ${Y - 206} L ${fx + 31} ${Y - 219} L ${fx + 15} ${Y - 198} L ${fx} ${Y - 217} L ${fx - 16} ${Y - 196} L ${fx - 31} ${Y - 217} L ${fx - 47} ${Y - 204} Z"/>`;
+  }
+  o += layer('ly-far', 40, 90, 70, T ? 200 : 170, 10, false, false);
+  o += layer('ly-mid', T ? 38 : 44, T ? 84 : 100, 110, T ? 290 : 250, 12, true, false);
+  if(T){
+    // Tokyo-Tower-style lattice tower
+    const tx = 560, legX = (y) => { const pts = [[420, 46], [236, 9], [168, 6], [62, 0]]; for(let i = 0; i < pts.length - 1; i++){ const a = pts[i], b = pts[i + 1]; if(y <= a[0] && y >= b[0]) return a[1] + (b[1] - a[1]) * (a[0] - y) / (a[0] - b[0]); } return 0; };
+    let tw = `<g class="tower"><path class="tw-l" d="M${tx - 46} ${Y} L${tx - 9} 236 L${tx - 6} 168 L${tx} 62 L${tx + 6} 168 L${tx + 9} 236 L${tx + 46} ${Y}"/>`;
+    const lv = [420, 340, 276, 220, 170, 120];
+    for(let i = 0; i < lv.length - 1; i++){
+      const y1 = lv[i], y2 = lv[i + 1], a = legX(y1), b = legX(y2);
+      tw += `<path class="tw-l" style="stroke-width:1.6" d="M${tx - a} ${y1} L${tx + b} ${y2} M${tx + a} ${y1} L${tx - b} ${y2}"/>`;
+    }
+    tw += `<rect class="tw-d" x="${tx - 24}" y="288" width="48" height="8" rx="2"/><rect class="tw-d" x="${tx - 14}" y="214" width="28" height="7" rx="2"/><path class="tw-l" style="stroke-width:1.6" d="M${tx} 62 L${tx} 38"/><circle class="tw-b" cx="${tx}" cy="36" r="3"/></g>`;
+    // Skytree-style spire
+    const sx = 1180;
+    tw += `<g class="skytree"><path class="sk-t" d="M${sx - 17} ${Y} L${sx - 6} 210 L${sx - 5} 150 L${sx - 2.5} 118 L${sx - 1} 36 L${sx + 1} 36 L${sx + 2.5} 118 L${sx + 5} 150 L${sx + 6} 210 L${sx + 17} ${Y} Z"/><rect class="sk-t" x="${sx - 13}" y="168" width="26" height="11" rx="4"/><rect class="sk-t" x="${sx - 9}" y="138" width="18" height="7" rx="3"/><line class="sk-led" x1="${sx}" y1="190" x2="${sx}" y2="${Y}"/></g>`;
+    o += tw;
+  }
+  o += layer('ly-front', T ? 40 : 54, T ? 92 : 120, T ? 170 : 150, T ? 360 : 330, T ? 6 : 14, true, true);
+  o += neon;
+  if(T){
+    let pil = '';
+    for(let x = 10; x < 1620; x += 70) pil += `<rect class="pil" x="${x}" y="392" width="4" height="14"/>`;
+    o += `<g class="viaduct">${pil}<rect class="rail" x="-10" y="388" width="1620" height="5"/><g class="trn"><rect class="tb" x="40" y="374" width="250" height="13" rx="5"/>${[0,1,2,3,4,5,6,7,8].map(i => `<rect class="tw" x="${54 + i * 26}" y="377" width="16" height="5" rx="1.5"/>`).join('')}</g></g>`;
+  }
+  o += `<rect class="road" x="-10" y="404" width="1620" height="20"/>`;
+  const nCars = T ? 5 : 8;
+  for(let i = 0; i < nCars; i++){
+    const x0 = Math.round(r() * 1500), y = i % 2 ? 413 : 408, rev = i % 3 === 0 ? 'animation-direction:reverse;' : '';
+    o += `<g class="car" style="--a:${-x0 - 90}px;--b:${1700 - x0}px;--d:${(12 + r() * 10).toFixed(1)}s;animation-delay:-${(r() * 20).toFixed(1)}s;${rev}"><rect class="cg" x="${x0 - 5}" y="${y - 3}" width="34" height="9" rx="4.5"/><rect class="cb" x="${x0}" y="${y}" width="22" height="4.5" rx="2.2"/></g>`;
+  }
+  return o;
+}
+function buildCityScene(kind){
+  const el = document.getElementById(kind === 'tokyo' ? 'bgsTokyo' : 'bgsCity');
+  if(!el || el.dataset.built) return; el.dataset.built = '1';
+  const r = mulberry(kind === 'tokyo' ? 21 : 9);
+  let stars = '';
+  for(let i = 0; i < 46; i++){
+    const sz = (1 + r() * 2).toFixed(1);
+    stars += `<i style="left:${(r() * 100).toFixed(1)}%;top:${(r() * 100).toFixed(1)}%;width:${sz}px;height:${sz}px;--t:${(2.5 + r() * 4).toFixed(1)}s;--dl:${(-r() * 6).toFixed(1)}s"></i>`;
+  }
+  const cloudSvg = '<svg viewBox="0 0 120 44"><circle cx="34" cy="26" r="14"/><circle cx="58" cy="19" r="18"/><circle cx="84" cy="26" r="13"/><rect x="22" y="26" width="76" height="14" rx="7"/></svg>';
+  let clouds = '';
+  for(let i = 0; i < 5; i++){
+    clouds += cloudSvg.replace('<svg ', `<svg style="--l:${(r() * 80).toFixed(0)}%;--y:${(6 + r() * 34).toFixed(0)}%;--w:${(10 + r() * 12).toFixed(0)}vmax;--t:${(70 + r() * 70).toFixed(0)}s;--dl:-${(r() * 60).toFixed(0)}s" `);
+  }
+  let petals = '';
+  if(kind === 'tokyo'){
+    for(let i = 0; i < 16; i++) petals += `<i style="--x:${(r() * 100).toFixed(0)}%;--y:${(r() * 30 - 10).toFixed(0)}%;--s:${(8 + r() * 6).toFixed(0)}px;--t:${(14 + r() * 12).toFixed(0)}s;--dl:-${(r() * 24).toFixed(0)}s"></i>`;
+  }
+  el.innerHTML = `<div class="ct-sky d"></div><div class="ct-sky n"></div><div class="ct-stars">${stars}</div><div class="ct-orb sun"></div><div class="ct-orb moon"></div><div class="ct-clouds">${clouds}</div>${kind === 'tokyo' ? `<div class="ct-petals" style="position:absolute;inset:0">${petals}</div>` : ''}<svg class="ct-svg" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax slice">${buildSkyline(kind)}</svg>`;
+}
+function cityTimeMode(){ try{ return localStorage.getItem('np_citytime') || 'auto'; } catch(e){ return 'auto'; } }
+function applyCityTime(mode){
+  if(mode){ try{ localStorage.setItem('np_citytime', mode); } catch(e){} }
+  const m = mode || cityTimeMode(), h = new Date().getHours();
+  const day = m === 'day' || (m === 'auto' && h >= 6 && h < 18);
+  document.documentElement.classList.toggle('ct-day', day);
+  document.documentElement.classList.toggle('ct-night', !day);
+}
+setInterval(() => { if(cityTimeMode() === 'auto') applyCityTime(); }, 60000);
 
 /* ---------- settings flyout ---------- */
 const SETTINGS = {
@@ -2244,6 +2448,8 @@ function syncSettings(){
   }
   const curBg = currentBgStyle();
   document.querySelectorAll('.bg-tile').forEach(t => t.setAttribute('aria-checked', t.dataset.bg === curBg ? 'true' : 'false'));
+  const curCt = cityTimeMode();
+  document.querySelectorAll('.ct-b').forEach(t => t.setAttribute('aria-checked', t.dataset.ct === curCt ? 'true' : 'false'));
   set('spBg', !has('bg-still'), false, '');
   set('spCursor', has('hide-cursor'), false, '');
   set('spMobile', has('mobile'), false, '');
@@ -2261,6 +2467,8 @@ function setupSettings(){
   panel.addEventListener('click', (e) => {
     const tile = e.target.closest('.bg-tile');
     if(tile){ applyBgStyle(tile.dataset.bg, true); syncSettings(); return; }
+    const ctb = e.target.closest('.ct-b');
+    if(ctb){ applyCityTime(ctb.dataset.ct); syncSettings(); return; }
     const row = e.target.closest('.sp-row');
     if(!row || row.getAttribute('aria-disabled') === 'true') return;
     const fn = SETTINGS[row.id];
