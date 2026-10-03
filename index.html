@@ -1112,6 +1112,39 @@
     html.lyrics-off .up-next-artist,
     html.lyrics-static .up-next-artist{ font-size: 12.5px; }
   }
+
+  /* ---------- typography polish ---------- */
+  body{ -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; font-kerning: normal; }
+  .track-title{
+    font-weight: 800; letter-spacing: -0.028em; line-height: 1.06;
+    text-wrap: balance;
+    text-shadow: 0 2px 20px rgba(0,0,0,.38), 0 1px 3px rgba(0,0,0,.22);
+  }
+  .track-artist{
+    font-weight: 600; letter-spacing: .004em; opacity: .88;
+    text-shadow: 0 1px 12px rgba(0,0,0,.4);
+  }
+  .time-row{
+    font-weight: 600; letter-spacing: .03em; opacity: .8;
+    text-shadow: 0 1px 8px rgba(0,0,0,.35);
+  }
+  .state-label{ font-weight: 600; letter-spacing: .025em; opacity: .82; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+  .up-next-label{
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .72;
+    text-shadow: 0 1px 8px rgba(0,0,0,.35);
+  }
+  .up-next-title{ font-weight: 650; letter-spacing: -0.005em; }
+  .up-next-artist{ opacity: .74; letter-spacing: .005em; }
+  .section-label{ font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 12px; opacity: .72; }
+  .lyric-line{ letter-spacing: -0.014em; text-wrap: pretty; }
+  .lyrics-text{ letter-spacing: .005em; }
+
+  /* In the side-by-side (art left) layouts the title was centered while the artist,
+     time and controls were left-aligned. Line them all up on the left edge. */
+  @media (orientation: landscape){
+    html.lyrics-off .title-row,
+    html.lyrics-static .title-row{ justify-content: flex-start; }
+  }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
