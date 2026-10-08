@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>Accessibility Statement · Now Playing</title>
+<style>
+:root{color-scheme:light dark;--bg:#fff;--fg:#17131f;--mut:#5b5568;--link:#5b2bd9;--line:#e3dfec;--card:#f6f3fb}
+@media (prefers-color-scheme:dark){:root{--bg:#120d1c;--fg:#f4f1fa;--mut:#b7b0c6;--link:#b9a2ff;--line:#2d2640;--card:#1b1429}}
+*{box-sizing:border-box}html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:1rem/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+h1{font-size:2rem;line-height:1.2;margin:.5rem 0 .25rem}h2{font-size:1.25rem;margin:2rem 0 .4rem}
+p,li{max-width:70ch}a{color:var(--link);text-underline-offset:3px}
+a:focus-visible{outline:3px solid currentColor;outline-offset:3px}
+.meta{color:var(--mut);margin:0 0 1.5rem}
+.note{background:var(--card);border:1px solid var(--line);border-radius:.75rem;padding:.9rem 1rem;margin:1rem 0}
+table{border-collapse:collapse;width:100%;font-size:.95rem}th,td{border:1px solid var(--line);padding:.55rem .6rem;text-align:left;vertical-align:top}th{background:var(--card)}
+nav a{margin-right:1rem}.skip{position:absolute;left:-999px}.skip:focus{left:1rem;top:1rem;background:var(--bg);padding:.5rem}
+</style>
+</head><body><a class="skip" href="#main">Skip to content</a>
+<main id="main"><nav aria-label="Pages"><a href="./">← Back to Now Playing</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="accessibility.html">Accessibility</a></nav>
+
+<h1>Accessibility Statement</h1>
+<p class="meta">Last updated: October 8, 2026</p>
+<p>The goal is for Now Playing to be usable by as many people as possible, and to meet <a href="https://www.w3.org/TR/WCAG22/">WCAG 2.2 level AA</a>. It has not yet been fully audited, so please read the known issues below.</p>
+
+<h2>What is built in</h2>
+<ul>
+<li><strong>Keyboard:</strong> every control works from the keyboard. Space plays or pauses, the left and right arrows seek 5 seconds, N and P go to the next or previous track, L likes the song, S turns shuffle on or off, R cycles repeat, M mutes, the up and down arrows change the volume, and Escape closes Settings or a menu. The progress bar is a keyboard slider (arrows, Page Up/Down, Home). On the lyrics, the up and down arrows jump to the previous or next line.</li>
+<li><strong>Screen readers:</strong> the progress bar reports its value, switches and buttons have names and states, new songs and messages are announced politely, and there is a "skip to now playing" link and a main landmark.</li>
+<li><strong>Visible focus:</strong> a high-contrast focus ring shows on every control, over any background.</li>
+<li><strong>Reduce motion:</strong> in Settings (and automatically if your device asks for reduced motion), backgrounds stop moving, video backgrounds pause, and lyrics scroll without easing.</li>
+<li><strong>High contrast:</strong> in Settings, a darker backdrop, solid panels and brighter text.</li>
+<li><strong>Readable text on changing colors:</strong> the backdrop is darkened automatically when an album cover is light, and you can dim your own photo or video background.</li>
+<li><strong>Zoom:</strong> zooming the page and larger touch targets are supported; nothing blocks zoom.</li>
+</ul>
+
+<h2>Known limitations</h2>
+<ul>
+<li>Text sizes are set in fixed units, so the site does not follow a browser's "larger text" setting. Zooming the page works.</li>
+<li>Lyrics are not tagged with their language, so a screen reader may read songs in other languages with the wrong accent.</li>
+<li>Colors come from album covers, so contrast cannot be guaranteed for every cover; use High contrast or the Dim slider if text is hard to read.</li>
+<li>Automatic checks and keyboard testing have been done. It has not yet been tested with a range of screen readers on real devices or reviewed by an accessibility specialist.</li>
+<li>Playback controls depend on Spotify Premium, which is outside our control.</li>
+</ul>
+
+<h2>Tell us what is not working</h2>
+<p>If you hit a barrier, please open an issue on <a href="https://github.com/luisthegamer856-cell/now-playing/issues">the project's GitHub issues page</a> and describe the device, browser and any assistive technology you use. Accessibility problems are treated as bugs.</p>
+
+</main></body></html>

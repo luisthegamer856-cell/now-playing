@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>Privacy Policy · Now Playing</title>
+<style>
+:root{color-scheme:light dark;--bg:#fff;--fg:#17131f;--mut:#5b5568;--link:#5b2bd9;--line:#e3dfec;--card:#f6f3fb}
+@media (prefers-color-scheme:dark){:root{--bg:#120d1c;--fg:#f4f1fa;--mut:#b7b0c6;--link:#b9a2ff;--line:#2d2640;--card:#1b1429}}
+*{box-sizing:border-box}html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:1rem/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+h1{font-size:2rem;line-height:1.2;margin:.5rem 0 .25rem}h2{font-size:1.25rem;margin:2rem 0 .4rem}
+p,li{max-width:70ch}a{color:var(--link);text-underline-offset:3px}
+a:focus-visible{outline:3px solid currentColor;outline-offset:3px}
+.meta{color:var(--mut);margin:0 0 1.5rem}
+.note{background:var(--card);border:1px solid var(--line);border-radius:.75rem;padding:.9rem 1rem;margin:1rem 0}
+table{border-collapse:collapse;width:100%;font-size:.95rem}th,td{border:1px solid var(--line);padding:.55rem .6rem;text-align:left;vertical-align:top}th{background:var(--card)}
+nav a{margin-right:1rem}.skip{position:absolute;left:-999px}.skip:focus{left:1rem;top:1rem;background:var(--bg);padding:.5rem}
+</style>
+</head><body><a class="skip" href="#main">Skip to content</a>
+<main id="main"><nav aria-label="Pages"><a href="./">← Back to Now Playing</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="accessibility.html">Accessibility</a></nav>
+
+<h1>Privacy Policy</h1>
+<p class="meta">Last updated: October 8, 2026 · Version 2</p>
+<div class="note"><strong>In short:</strong> this site has no server, no accounts of its own, no ads and no analytics. It reads what you are playing from Spotify and shows it. Your settings stay in your browser. To show lyrics, song details are sent to the lyrics services listed below. Your own photos and videos never leave your device.</div>
+
+<h2>Who runs this</h2>
+<p>Now Playing is a small personal project, not a company. It is <strong>not affiliated with, endorsed by or sponsored by Spotify</strong>. Contact: <a href="https://github.com/luisthegamer856-cell/now-playing/issues">the project's GitHub issues page</a>.</p>
+
+<h2>What the site reads from your Spotify account</h2>
+<p>After you log in with Spotify, the page asks Spotify for: your display name and profile picture; what is playing (title, artists, album, cover art, length, position); the next track in your queue; whether the current song is in your Liked Songs; the playback state, including shuffle, repeat and volume; and, only when you open the device picker, the names and types of the devices you can play on. When you press a control it sends the matching command (play, pause, skip, seek, shuffle, repeat, volume, or moving playback to another device). When you tap the heart it adds or removes the song from your Liked Songs. The Liked Songs permission is requested only the first time you use the heart.</p>
+
+<h2>What is stored on your device</h2>
+<p>Everything below stays in your own browser. We cannot see it.</p>
+<ul>
+<li><strong>Spotify login token</strong> (a "refresh token") so you stay logged in, plus short-lived values used during login.</li>
+<li><strong>Your settings</strong>: layout, background style and rotation, lyrics on/off, translation, the idle clock and 24-hour choice, motion and contrast options, city day/night choice, your agreement to these documents, and whether you turned on the backup lyrics source.</li>
+<li><strong>A saved copy of this site's own files</strong>, made by a "service worker" so the app opens quickly and can show its screen without a connection. It holds only the site's pages, icons and styles, never anything from your Spotify account.</li>
+<li><strong>Cached translations</strong> of recently viewed lyrics (about the last 40 songs).</li>
+<li><strong>Your own backgrounds</strong> (photos and videos you add) in your browser's IndexedDB storage. They are never uploaded. Photos are resized and their hidden location and camera data is removed; videos are kept as they are.</li>
+</ul>
+<p>The site sets no cookies and has no analytics, advertising or tracking.</p>
+
+<h2>Other services that receive data</h2>
+<table>
+<thead><tr><th scope="col">Service</th><th scope="col">When</th><th scope="col">What it receives</th></tr></thead>
+<tbody>
+<tr><td>Spotify (accounts.spotify.com, api.spotify.com and its image servers)</td><td>Always, to log in and show your music</td><td>Your login, your playback requests, and your IP address. Spotify's own <a href="https://www.spotify.com/legal/privacy-policy/">privacy policy</a> applies.</td></tr>
+<tr><td>lrclib.net</td><td>Each time a song starts, to find lyrics</td><td>Song title, artist, album, length, and your IP address.</td></tr>
+<tr><td>api.lyrics.ovh</td><td>Only if you turn on "Backup lyrics source"</td><td>Song title, artist and your IP address.</td></tr>
+<tr><td>Google Translate</td><td>Only when "Translate to English" is on</td><td>The lyric text and your IP address.</td></tr>
+<tr><td>Google Fonts</td><td>When the page loads</td><td>Your IP address and browser details, to deliver the typefaces.</td></tr>
+<tr><td>GitHub Pages (hosting)</td><td>When the page loads</td><td>Standard web server logs under GitHub's own policy.</td></tr>
+</tbody></table>
+<p>These services have their own privacy practices. Lyrics are provided by third parties and belong to their respective owners.</p>
+
+<h2>Deleting your data</h2>
+<ul>
+<li><strong>Log out</strong> (Settings) removes the login token and every setting, cache and agreement this site saved in your browser. The saved copy of the site's own files can be removed by clearing this site's data in your browser (or uninstalling the app).</li>
+<li><strong>Remove all my backgrounds</strong> (Settings, under Yours) deletes your photos and videos from the browser.</li>
+<li>Logging out does <strong>not</strong> remove this app's permission at Spotify. To do that, remove "Now Playing" at <a href="https://www.spotify.com/account/apps/">spotify.com/account/apps</a>.</li>
+<li>You can also clear this site's data in your browser settings at any time.</li>
+</ul>
+
+<h2>Children</h2>
+<p>This site is not directed at children. You must meet Spotify's minimum age to use a Spotify account. We do not knowingly collect information from children.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes in a meaningful way, the version number above will change and you will be asked to agree again.</p>
+
+<h2>Questions or requests</h2>
+<p>Open an issue on <a href="https://github.com/luisthegamer856-cell/now-playing/issues">the project's GitHub issues page</a>. Because nothing is stored on a server, most requests can be handled by logging out and clearing the data as described above.</p>
+
+</main></body></html>
