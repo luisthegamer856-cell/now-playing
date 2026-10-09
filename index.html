@@ -1263,6 +1263,49 @@
     html.lyrics-off .title-row,
     html.lyrics-static .title-row{ justify-content: flex-start; }
   }
+
+  /* ---------- final polish ---------- */
+  html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body{ -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+  ::selection{ background: rgba(255,255,255,.28); color: inherit; }
+
+  /* a thin light rim on the album art (and a hairline dark edge outside it) so it lifts off any background */
+  .art-card{ position: relative; box-shadow: 0 24px 48px -18px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.2); }
+  .art-card::after{
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.26), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.2);
+  }
+  .up-next-art, .profile-avatar{ outline: 1px solid rgba(255,255,255,.2); outline-offset: -1px; }
+
+  /* the heart no longer makes the title row taller (the tap area still grows on touch screens) */
+  .title-row{ align-items: center; }
+  .like-btn{ margin-top: -2px; margin-bottom: -2px; }
+  @media (pointer: coarse){ html .like-btn{ width: 44px; height: 44px; margin: -8px -6px -8px 0; } }
+
+  /* every control reacts to a press, and taps never wait for a double-tap zoom */
+  .ctrl-btn, .aux-btn, .like-btn, .tr-btn, .sp-link, .bg-tile, .cm-item, .cm-add, .cm-del, .pop-item, .sp-row, .ct-b, .gear-btn, .profile-chip, .cta{ touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .ctrl-btn, .aux-btn, .like-btn, .tr-btn, .sp-link, .bg-tile, .cm-item{ transition: transform .14s cubic-bezier(.2,.8,.3,1), background .15s ease, opacity .15s ease, color .15s ease, border-color .15s ease; }
+  .ctrl-btn:active, .aux-btn:active, .like-btn:active, .tr-btn:active, .sp-link:active{ transform: scale(.92); }
+  .bg-tile:active, .cm-item:active{ transform: scale(.95); }
+  .sp-row:active, .pop-item:active{ background: rgba(255,255,255,.2); }
+  html.reduce-motion .ctrl-btn:active, html.reduce-motion .aux-btn:active, html.reduce-motion .like-btn:active, html.reduce-motion .tr-btn:active, html.reduce-motion .sp-link:active, html.reduce-motion .bg-tile:active, html.reduce-motion .cm-item:active{ transform: none; }
+
+  /* quiet, thin scrollbars inside the panels */
+  .settings-panel, .pop{ scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.35) transparent; }
+  .settings-panel::-webkit-scrollbar, .pop::-webkit-scrollbar{ width: 10px; }
+  .settings-panel::-webkit-scrollbar-thumb, .pop::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.32); border-radius: 8px; border: 3px solid transparent; background-clip: content-box; }
+  .settings-panel::-webkit-scrollbar-track, .pop::-webkit-scrollbar-track{ background: transparent; }
+
+  /* "Open in Spotify" sits on the artist line instead of taking a row of its own */
+  .artist-row{ display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 12px; }
+  .artist-row .track-artist{ min-width: 0; }
+  .artist-row .sp-link{ margin: -1px 0 0 !important; padding: 3px 11px 3px 5px; font-size: 12px; gap: 6px; flex: none; }
+  .artist-row .sp-link svg{ width: 17px; height: 17px; }
+  html.lyrics-off .artist-row, html.lyrics-static .artist-row{ justify-content: center; }
+  @media (orientation: landscape) and (max-height: 520px){
+    .artist-row .sp-link{ padding: 3px; }
+    .artist-row .sp-link span{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
@@ -1663,8 +1706,8 @@ function buildTrackCard(track){
       <h1 class="track-title">${escapeHtml(track.name)}</h1>
       <button class="like-btn" id="likeBtn" type="button" aria-label="Add to Liked Songs" aria-pressed="false" hidden>${ICON.heart}</button>
     </div>
-    <p class="track-artist">${escapeHtml(artists)}</p>
-    <a class="sp-link" id="spLink" href="#" target="_blank" rel="noopener noreferrer" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1ED760"/><path d="M6.2 9.2c3.8-1.1 8.6-.8 11.9 1.2M6.9 12.4c3.2-.9 7-.6 9.8 1.1M7.6 15.4c2.5-.7 5.4-.4 7.6.9" fill="none" stroke="#0b0b0b" stroke-width="1.7" stroke-linecap="round"/></svg><span>Open in Spotify</span></a>
+    <div class="artist-row"><p class="track-artist">${escapeHtml(artists)}</p>
+    <a class="sp-link" id="spLink" href="#" target="_blank" rel="noopener noreferrer" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1ED760"/><path d="M6.2 9.2c3.8-1.1 8.6-.8 11.9 1.2M6.9 12.4c3.2-.9 7-.6 9.8 1.1M7.6 15.4c2.5-.7 5.4-.4 7.6.9" fill="none" stroke="#0b0b0b" stroke-width="1.7" stroke-linecap="round"/></svg><span>Open in Spotify</span></a></div>
     <div class="progress">
       <div class="progress-track" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuenow="0" aria-valuetext="0:00"><div class="progress-fill" id="progressFill" style="width:0%"></div><div class="progress-thumb" id="progressThumb"></div></div>
     </div>
@@ -2098,46 +2141,72 @@ async function translateLines(texts, depth = 0){
 
 /* Cheap offline check so English songs never touch the network. */
 const EN_WORDS = new Set(['the','you','and','it','that','is','in','on','my','with','for','of','this','but','got','just','like','your','all','be','we','what','was','are','not','they','when','have','can','if','she','up','out','get','know','now','her','him','i','to','im','dont','aint','yeah']);
-function looksEnglish(lines){
-  let words = 0, hits = 0;
-  for(const l of lines){
-    for(const w of l.toLowerCase().split(/[^\p{L}']+/u)){
-      if(!w) continue;
-      words++;
-      if(EN_WORDS.has(w.replace(/'/g, ''))) hits++;
-    }
+/* Per-line language check, so a song that mixes languages is never judged as a whole.
+   Returns 'foreign' (translate it), 'en' (leave it alone) or 'unknown' (let Google decide). */
+const NON_LATIN = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Thai}\p{Script=Devanagari}\p{Script=Greek}\p{Script=Bengali}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Georgian}\p{Script=Armenian}]/u;
+const ACCENTED = /[áéíóúñçãõàèìòùâêîôûäöüßœæ¿¡ğışłąęřžčš]/i;
+const FOREIGN_WORDS = new Set(('el los las del una uno unos unas que qué por para mi tu tus mis te se su sus lo les muy pero porque cuando como cómo donde dónde si eres soy estoy esta está estás tengo tienes quiero quieres amor corazón corazon vida noche fue ser nada todo todos siempre nunca ahora aquí aqui allí mundo cielo bailar besos contigo conmigo sin ti '
+  + 'eu você voce não nao meu minha seu sua ela ele uma isso também tambem mais coração saudade obrigado '
+  + 'je nous vous ils elle une avec dans mes tes qui quoi oui très tres être suis tout toi moi '
+  + 'ich wir ihr und nicht ist das ein eine mit auf für mein dein nein hab habe liebe '
+  + 'io lui lei noi voi della che sono ci gli tutto ancora sempre amore cuore '
+  + 'ik jij hij het een niet maar ook mijn zijn').split(' '));
+const FILLER = new Set('oh ooh ooo ohh ah aah uh mm mmm hmm hm yeah yea ya yo hey heyy ay ayy eh na nah da ba doo la lala sha woah whoa wo uh-huh huh ha haha ho hoo woo wow baby babe'.split(' '));
+function classifyLine(text){
+  if(!hasLetters(text)) return 'none';
+  if(NON_LATIN.test(text)) return 'foreign';
+  const words = text.toLowerCase().split(/[^\p{L}']+/u).filter(Boolean);
+  if(!words.length) return 'none';
+  let en = 0, fo = 0, filler = 0;
+  for(const w of words){
+    if(FILLER.has(w)){ filler++; continue; }
+    if(FOREIGN_WORDS.has(w)) fo++;
+    else if(EN_WORDS.has(w.replace(/'/g, ''))) en++;
   }
-  return words > 0 && hits / words > 0.14;
+  if(fo > 0) return 'foreign';                       // any clearly foreign word: let Google translate the line
+  if(ACCENTED.test(text) && en === 0) return 'foreign';
+  if(en > 0 || filler === words.length) return 'en';
+  return words.length <= 2 ? 'en' : 'unknown';       // two odd words are usually a name or a sound
 }
 
 async function buildTranslations(lines){
-  const idxs = [];
-  lines.forEach((t, i) => { if(hasLetters(t)) idxs.push(i); });
   const tr = new Array(lines.length).fill('');
-  // batch lines so each request URL stays a safe length
-  const chunks = [];
-  let chunk = [];
-  let size = 0;
-  for(const i of idxs){
-    const len = encodeURIComponent(lines[i]).length + 3;
-    if(size + len > 1500 && chunk.length){ chunks.push(chunk); chunk = []; size = 0; }
-    chunk.push(i);
-    size += len;
-  }
-  if(chunk.length) chunks.push(chunk);
-  let lang = '';
-  for(let c = 0; c < chunks.length; c++){
-    const r = await translateLines(chunks[c].map(i => lines[i]));
-    if(c === 0){
-      lang = r.lang;
-      if(lang === 'en') return { english: true, tr };
+  const cls = lines.map(classifyLine);
+  const send = [];
+  cls.forEach((c, i) => { if(c === 'foreign' || c === 'unknown') send.push(i); });
+  if(!send.length) return { english: true, tr, v: 2 };
+  // Non-Latin scripts and Latin-script languages go in separate requests, so one language
+  // never swamps the other when Google guesses the source language.
+  const groups = [send.filter(i => NON_LATIN.test(lines[i])), send.filter(i => !NON_LATIN.test(lines[i]))].filter(g => g.length);
+  let lang = '', any = false;
+  const apply = (i, text) => { const t = (text || '').trim(); if(t && normTr(t) !== normTr(lines[i])){ tr[i] = t; any = true; return true; } return false; };
+  for(const group of groups){
+    // batch lines so each request URL stays a safe length
+    const chunks = []; let chunk = [], size = 0;
+    for(const i of group){
+      const len = encodeURIComponent(lines[i]).length + 3;
+      if(size + len > 1500 && chunk.length){ chunks.push(chunk); chunk = []; size = 0; }
+      chunk.push(i); size += len;
     }
-    chunks[c].forEach((i, k) => {
-      const t = (r.out[k] || '').trim();
-      if(t && normTr(t) !== normTr(lines[i])) tr[i] = t;
-    });
+    if(chunk.length) chunks.push(chunk);
+    for(const c of chunks){
+      const r = await translateLines(c.map(i => lines[i]));
+      if(r.lang && r.lang !== 'en' && !lang) lang = r.lang;
+      c.forEach((i, k) => apply(i, r.out[k]));
+    }
   }
-  return { english: false, lang, tr };
+  // Lines that clearly were not English but came back unchanged (Google guessed "English" for a mixed
+  // batch): retry those on their own, a few at a time, so they get detected properly.
+  const missed = send.filter(i => cls[i] === 'foreign' && !tr[i]).slice(0, 14);
+  for(const i of missed){
+    try{
+      const one = await gtx(lines[i]);
+      if(one.lang && one.lang !== 'en' && !lang) lang = one.lang;
+      apply(i, one.segs.map(sg => sg.t).join(''));
+    }catch(e){ if(e && (e.status === 429 || e.status === 403)) throw e; }
+    await new Promise(r => setTimeout(r, 180));
+  }
+  return { english: !any, lang, tr, v: 2 };
 }
 
 /* Finished translations are kept in the browser (last 40 songs) so each song
@@ -2146,12 +2215,12 @@ function loadStoredTr(id, n){
   try{
     const all = JSON.parse(localStorage.getItem('np_trc') || '[]');
     const hit = all.find(e => e[0] === id);
-    return hit && hit[1] && hit[1].tr && hit[1].tr.length === n ? hit[1] : null;
+    return hit && hit[1] && hit[1].v === 2 && hit[1].tr && hit[1].tr.length === n ? hit[1] : null;
   } catch(e){ return null; }
 }
 function saveStoredTr(id, entry){
   try{
-    let all = JSON.parse(localStorage.getItem('np_trc') || '[]').filter(e => e[0] !== id);
+    let all = JSON.parse(localStorage.getItem('np_trc') || '[]').filter(e => e[0] !== id && e[1] && e[1].v === 2);
     all.push([id, entry]);
     if(all.length > 40) all = all.slice(-40);
     localStorage.setItem('np_trc', JSON.stringify(all));
@@ -2176,7 +2245,6 @@ async function ensureTranslations(fromToggle){
   if(!trCache[id]){
     const stored = loadStoredTr(id, lines.length);
     if(stored) trCache[id] = stored;
-    else if(looksEnglish(lines)) trCache[id] = { english: true, tr: new Array(lines.length).fill('') };
   }
   if(!trCache[id]){
     if(Date.now() < trBlockedUntil){
