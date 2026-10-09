@@ -535,7 +535,8 @@
   .ic-note{ margin: 2.2em auto 0; max-width: 34ch; font-size: 14px; line-height: 1.5; opacity: .75; text-shadow: 0 1px 10px rgba(0,0,0,.5); }
   @media (orientation: landscape) and (max-height: 520px){ .ic-time{ font-size: clamp(64px, 30vh, 220px); } .ic-note{ margin-top: 1.2em; } }
   html.hi-contrast .ic-note, html.hi-contrast .ic-date{ opacity: 1; }
-  .rot-seg{ grid-template-columns: repeat(4, 1fr); }
+  .ct-seg.rot-seg{ grid-template-columns: repeat(4, 1fr); }
+  .ct-seg.rot-seg .ct-b{ padding-left: 2px; padding-right: 2px; white-space: nowrap; }
   .sp-rot{ padding: 6px 10px 8px; }
   .title-row{ display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
   .title-row .track-title{ flex: 1 1 auto; min-width: 0; margin-bottom: 0 !important; }
@@ -1306,8 +1307,31 @@
     .artist-row .sp-link{ padding: 3px; }
     .artist-row .sp-link span{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   }
+
+  /* ---------- lyric timing + night dimming ---------- */
+  .tr-btn[hidden]{ display: none; }
+  .ls-pop{ width: 270px; }
+  .ls-pop .ls-hint{ font-size: 12.5px; line-height: 1.45; opacity: .85; margin: 0 8px 8px; }
+  .ls-row{ display: flex; align-items: center; gap: 6px; }
+  .ls-row button{ flex: none; min-width: 44px; height: 40px; padding: 0 10px; border: none; border-radius: 12px; background: rgba(255,255,255,.14); color: inherit; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+  .ls-row button:hover{ background: rgba(255,255,255,.24); }
+  .ls-row button:active{ transform: scale(.94); }
+  .ls-val{ flex: 1; text-align: center; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ls-reset{ display: block; margin: 8px auto 2px; padding: 4px 8px; background: none; border: none; color: inherit; font: inherit; font-size: 12.5px; text-decoration: underline; opacity: .85; cursor: pointer; }
+  .sp-night{ padding: 4px 14px 8px; }
+  .nd-times{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0 8px; }
+  .nd-times label{ display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
+  .nd-times input{ font: inherit; font-size: 15px; font-weight: 600; letter-spacing: 0; text-transform: none; color: inherit; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 7px 8px; color-scheme: dark; min-width: 0; }
+  .nd-block[hidden]{ display: none; }
+  html.nd-1{ --ndv: .32; --ndp: #efe3d6; --ndb: .88; }
+  html.nd-2{ --ndv: .52; --ndp: #d6c8b7; --ndb: .72; }
+  html.nd-3{ --ndv: .72; --ndp: #b8aa99; --ndb: .56; }
+  html.night-dim:not(.hi-contrast){ --paper: var(--ndp); }
+  html.night-dim:not(.hi-contrast) .bg-veil{ background: rgba(0,0,0,var(--ndv)); }
+  html.night-dim:not(.hi-contrast) .art-card, html.night-dim:not(.hi-contrast) .up-next-art{ filter: brightness(var(--ndb)); }
+  .art-card, .up-next-art{ transition: filter 1.2s ease; }
 </style>
-<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
+<script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{if(localStorage.getItem('np_nd')==='1'&&localStorage.getItem('np_hc')!=='1'){var _f=(localStorage.getItem('np_ndfrom')||'22:00').split(':'),_t=(localStorage.getItem('np_ndto')||'07:00').split(':'),_d=new Date(),_m=_d.getHours()*60+_d.getMinutes(),_a=+_f[0]*60+ +_f[1],_b=+_t[0]*60+ +_t[1];if(_a!==_b&&(_a<_b?(_m>=_a&&_m<_b):(_m>=_a||_m<_b)))document.documentElement.classList.add('night-dim','nd-'+(localStorage.getItem('np_ndlevel')||'2'));}}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
 <body>
 <a class="skip-link" href="#stage">Skip to now playing</a>
@@ -1489,12 +1513,13 @@ function clearAllAppData(){
 function logout(){
   stopPolling();
   accessToken = null;
+  lofs = {};
   clearAllAppData();
   const root = document.documentElement;
   root.className = '';
   root.removeAttribute('data-bg');
   root.style.cssText = '';
-  applyCityTime();
+  applyCityTime(); applyNight();
   if(cmReady) cmApply();
   renderLogin("You're logged out and this device's saved settings were cleared.", { loggedOut: true });
 }
@@ -1655,12 +1680,14 @@ function renderTrack(data){
         <div class="lyrics-head">
           <p class="section-label">Lyrics</p>
           <button class="tr-btn" id="trBtn" type="button" aria-pressed="false" title="Show an English translation under each line">Translate</button>
+          <button class="tr-btn" id="lsBtn" type="button" aria-haspopup="dialog" aria-expanded="false" title="Make the lyrics earlier or later for this song" hidden>Timing</button>
         </div>
         
         <div class="lyrics-box" id="lyricsBox"><p class="lyrics-status">Loading lyrics…</p></div>
       `;
       const trBtn = document.getElementById('trBtn');
       if(trBtn) trBtn.onclick = toggleTranslate;
+      closeLs(false); setupLyricsTiming();
       syncSettings();
     }
     loadLyricsFor(track, duration);
@@ -2041,7 +2068,7 @@ function renderLyricsBox(data){
         e.preventDefault();
         const cur = Math.max(0, lyricsMeta.lastActiveIdx);
         const idx = Math.max(0, Math.min(lyricsMeta.lines.length - 1, cur + (e.key === 'ArrowDown' ? 1 : -1)));
-        const ms = Math.max(0, Math.ceil(lyricsMeta.lines[idx].time * 1000));
+        const ms = Math.max(0, Math.ceil(lyricsMeta.lines[idx].time * 1000) + lyricOffsetMs());
         lyricsMeta.startMs = ms; lyricsMeta.startWallClock = Date.now();
         playerAction('PUT', `/seek?position_ms=${ms}`, `Jumped to ${msToClock(ms)}`);
       };
@@ -2054,7 +2081,7 @@ function renderLyricsBox(data){
       const line = lyricsMeta.lines[Number(lineEl.dataset.i)];
       if(!line) return;
       // ceil so float rounding can never land a hair before the line's timestamp
-      const ms = Math.max(0, Math.ceil(line.time * 1000));
+      const ms = Math.max(0, Math.ceil(line.time * 1000) + lyricOffsetMs());
       // optimistic local update so the lyrics + bar jump instantly
       lyricsMeta.startMs = ms;
       lyricsMeta.startWallClock = Date.now();
@@ -2079,6 +2106,8 @@ function applyLyricsData(data){
   // phone in landscape the player takes over the whole screen (CSS below).
   const isStatic = !(prepared && prepared.length);
   document.documentElement.classList.toggle('lyrics-static', isStatic);
+  const lsb = document.getElementById('lsBtn'); if(lsb){ lsb.hidden = isStatic; if(isStatic) closeLs(false); }
+  paintLs();
   ensureTranslations();
 }
 
@@ -2332,7 +2361,7 @@ function updateLyrics(){
   const track = document.getElementById('lyricsTrack');
   if(!box || !track) return;
 
-  let elapsedSec = lyricsMeta.startMs / 1000;
+  let elapsedSec = (lyricsMeta.startMs - lyricOffsetMs()) / 1000;   // the per-song timing nudge
   if(lyricsMeta.playing){
     elapsedSec += (Date.now() - lyricsMeta.startWallClock) / 1000;
   }
@@ -2613,6 +2642,8 @@ function startPolling(){
           <div class="sp-rot" role="group" aria-label="Rotate backgrounds"><div class="sp-bglabel">Rotate backgrounds</div><div class="ct-seg rot-seg"><button type="button" class="ct-b rot-b" aria-pressed="false" data-rot="0">Off</button><button type="button" class="ct-b rot-b" aria-pressed="false" data-rot="1">1 min</button><button type="button" class="ct-b rot-b" aria-pressed="false" data-rot="5">5 min</button><button type="button" class="ct-b rot-b" aria-pressed="false" data-rot="15">15 min</button></div></div>
           <button class="sp-row" id="spClock" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="sp-txt"><span class="sp-name">Clock when idle</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <button class="sp-row" id="spClock24" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 9v6M12 9v6M16 9v6" /></svg></span><span class="sp-txt"><span class="sp-name">24-hour clock</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
+          <button class="sp-row" id="spNight" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span><span class="sp-txt"><span class="sp-name">Dim at night</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
+          <div class="sp-night nd-block" id="ndBlock" role="group" aria-label="Night dimming" hidden><div class="nd-times"><label>From<input type="time" id="ndFrom" value="22:00"></label><label>To<input type="time" id="ndTo" value="07:00"></label></div><div class="sp-bglabel" style="margin:6px 0">Strength</div><div class="ct-seg"><button type="button" class="ct-b nd-b" aria-pressed="false" data-nd="1">Soft</button><button type="button" class="ct-b nd-b" aria-pressed="false" data-nd="2">Medium</button><button type="button" class="ct-b nd-b" aria-pressed="false" data-nd="3">Dark</button></div></div>
           <button class="sp-row" id="spCursor" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l14 7.5-6.2 1.9L10.5 19z"/></svg></span><span class="sp-txt"><span class="sp-name">Hide mouse when idle</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <button class="sp-row" id="spMobile" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg></span><span class="sp-txt"><span class="sp-name">Mobile layout</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <div class="sp-sectionlabel" id="spAccLabel">Accessibility</div>
@@ -2620,7 +2651,7 @@ function startPolling(){
           <button class="sp-row" id="spContrast" type="button" role="switch" aria-checked="false"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></span><span class="sp-txt"><span class="sp-name">High contrast</span><span class="sp-sub"></span></span><span class="sp-switch"><i></i></span></button>
           <div class="sp-sep"></div>
           <button class="sp-row danger" id="spLogout" type="button"><span class="sp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="sp-txt"><span class="sp-name">Log out</span><span class="sp-sub"></span></span></button>
-          <div class="sp-foot"><div><kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> seek · <kbd>N</kbd>/<kbd>P</kbd> next/previous · <kbd>L</kbd> like · <kbd>S</kbd> shuffle · <kbd>R</kbd> repeat · <kbd>M</kbd> mute · <kbd>↑</kbd><kbd>↓</kbd> volume · <kbd>Esc</kbd> close</div><div style="margin-top:6px"><a href="terms.html" target="_blank" rel="noopener">Terms</a> · <a href="privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="accessibility.html" target="_blank" rel="noopener">Accessibility</a> · <a href="https://www.spotify.com/account/apps/" target="_blank" rel="noopener noreferrer">Spotify app access</a></div></div>
+          <div class="sp-foot"><div><kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> seek · <kbd>N</kbd>/<kbd>P</kbd> next/previous · <kbd>L</kbd> like · <kbd>S</kbd> shuffle · <kbd>R</kbd> repeat · <kbd>M</kbd> mute · <kbd>[</kbd><kbd>]</kbd> lyric timing · <kbd>↑</kbd><kbd>↓</kbd> volume · <kbd>Esc</kbd> close</div><div style="margin-top:6px"><a href="terms.html" target="_blank" rel="noopener">Terms</a> · <a href="privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="accessibility.html" target="_blank" rel="noopener">Accessibility</a> · <a href="https://www.spotify.com/account/apps/" target="_blank" rel="noopener noreferrer">Spotify app access</a></div></div>
         </div>
       </div>
     </div>
@@ -2953,6 +2984,7 @@ async function cmMigrateOld(){
 cmReady = true;
 if(currentBgStyle() === 'custom') cmApply();
 function cmWire(){
+  ['ndFrom', 'ndTo'].forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener('change', () => { try{ localStorage.setItem(id === 'ndFrom' ? 'np_ndfrom' : 'np_ndto', el.value || (id === 'ndFrom' ? '22:00' : '07:00')); }catch(e){} syncSettings(); applyNight(); }); });
   setTimeout(cmMigrateOld, 1500);
   const panel = document.getElementById('settingsPanel'); if(!panel || panel.dataset.cmWired) return; panel.dataset.cmWired = '1';
   const file = document.getElementById('cmFile');
@@ -3167,6 +3199,94 @@ function setRotation(m){
 }
 setupRotation();
 
+/* ---------- lyric timing (saved per song) ---------- */
+let lofs = {};
+try{ lofs = Object.fromEntries(JSON.parse(localStorage.getItem('np_lofs') || '[]')); }catch(e){ lofs = {}; }
+function lyricOffsetMs(){ return (currentTrackId && lofs[currentTrackId]) || 0; }
+function saveLofs(){
+  try{
+    const entries = Object.entries(lofs).filter(e => e[1]).slice(-200);   // remember the most recent 200 songs
+    lofs = Object.fromEntries(entries);
+    localStorage.setItem('np_lofs', JSON.stringify(entries));
+  }catch(e){ console.warn('could not save lyric timing', e); }
+}
+function fmtOfs(ms){ const v = ms / 1000; return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(2) + ' s'; }
+function setLyricOffset(ms){
+  if(!currentTrackId) return;
+  ms = Math.max(-10000, Math.min(10000, Math.round(ms / 50) * 50));
+  if(ms) { delete lofs[currentTrackId]; lofs[currentTrackId] = ms; } else delete lofs[currentTrackId];
+  saveLofs(); lyricsMeta.lastActiveIdx = -1; paintLs(); updateLyrics();
+}
+function nudgeLyrics(d){
+  if(!lyricsMeta.lines) return;
+  setLyricOffset(lyricOffsetMs() + d);
+  const v = lyricOffsetMs();
+  showToast(v ? `Lyrics ${v > 0 ? 'later' : 'earlier'} by ${Math.abs(v / 1000).toFixed(2)} s` : 'Lyrics timing reset');
+  announce(v ? `Lyrics ${v > 0 ? 'later' : 'earlier'} by ${Math.abs(v / 1000).toFixed(2)} seconds` : 'Lyrics timing reset');
+}
+function paintLs(){
+  const b = document.getElementById('lsBtn'); if(b){ const v = lyricOffsetMs(); b.textContent = v ? `Timing ${v > 0 ? '+' : '−'}${Math.abs(v / 1000).toFixed(2).replace(/\.?0+$/, '')}s` : 'Timing'; b.classList.toggle('on', !!v); }
+  const l = document.getElementById('lsVal'); if(l) l.textContent = fmtOfs(lyricOffsetMs());
+}
+let lsOpen = false;
+function closeLs(returnFocus){
+  const pop = document.getElementById('lsPop'); if(!pop || pop.hidden) return;
+  pop.hidden = true; lsOpen = false;
+  const b = document.getElementById('lsBtn'); if(b){ b.setAttribute('aria-expanded', 'false'); if(returnFocus) b.focus({ preventScroll: true }); }
+}
+function openLs(){
+  const b = document.getElementById('lsBtn'); if(!b) return;
+  let pop = document.getElementById('lsPop');
+  if(!pop){
+    pop = document.createElement('div'); pop.id = 'lsPop'; pop.className = 'pop ls-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Lyrics timing'); pop.hidden = true;
+    pop.innerHTML = '<div class="pop-title">Lyrics timing</div><p class="ls-hint">Lyrics showing too early? Press Later. Too late? Press Earlier. Saved for this song only. Keys: [ and ].</p><div class="ls-row"><button type="button" id="lsEarlier" aria-label="Earlier by a quarter second">− Earlier</button><span class="ls-val" id="lsVal" aria-live="polite">0.00 s</span><button type="button" id="lsLater" aria-label="Later by a quarter second">Later +</button></div><button type="button" class="ls-reset" id="lsReset">Reset this song</button>';
+    document.body.appendChild(pop);
+    pop.querySelector('#lsEarlier').addEventListener('click', () => nudgeLyrics(-250));
+    pop.querySelector('#lsLater').addEventListener('click', () => nudgeLyrics(250));
+    pop.querySelector('#lsReset').addEventListener('click', () => { setLyricOffset(0); showToast('Lyrics timing reset'); });
+  }
+  pop.hidden = false; lsOpen = true; b.setAttribute('aria-expanded', 'true'); paintLs();
+  const a = b.getBoundingClientRect(), w = pop.offsetWidth || 270, h = pop.offsetHeight || 150, vw = window.innerWidth, vh = window.innerHeight;
+  pop.style.left = Math.min(Math.max(12, a.left), vw - w - 12) + 'px';
+  let top = a.bottom + 10; if(top + h > vh - 12) top = Math.max(12, a.top - h - 10);
+  pop.style.top = top + 'px';
+  document.getElementById('lsLater').focus({ preventScroll: true });
+}
+function setupLyricsTiming(){
+  const b = document.getElementById('lsBtn'); if(!b) return;
+  b.onclick = () => { if(lsOpen) closeLs(true); else openLs(); };
+  paintLs();
+}
+document.addEventListener('click', (e) => { if(lsOpen && !e.target.closest('#lsPop') && !e.target.closest('#lsBtn')) closeLs(false); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && lsOpen){ e.stopPropagation(); closeLs(true); } }, true);
+document.addEventListener('keydown', (e) => {
+  if((e.key !== '[' && e.key !== ']') || e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target && e.target.tagName) || ''; if(/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+  if(!lyricsMeta.lines || !lyricsMeta.lines.length) return;
+  e.preventDefault(); nudgeLyrics(e.key === ']' ? 250 : -250);
+});
+
+/* ---------- night dimming ---------- */
+let ndPreviewUntil = 0;
+const ndGet = (k, d) => { try{ return localStorage.getItem(k) || d; }catch(e){ return d; } };
+function ndMinutes(v){ const p = String(v || '').split(':'); return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0); }
+function nightActive(){
+  if(ndGet('np_nd', '0') !== '1') return false;
+  const d = new Date(), m = d.getHours() * 60 + d.getMinutes(), a = ndMinutes(ndGet('np_ndfrom', '22:00')), b = ndMinutes(ndGet('np_ndto', '07:00'));
+  if(a === b) return false;
+  return a < b ? (m >= a && m < b) : (m >= a || m < b);
+}
+function applyNight(){
+  const root = document.documentElement;
+  const on = ndGet('np_nd', '0') === '1' && (nightActive() || Date.now() < ndPreviewUntil);
+  root.classList.toggle('night-dim', on);
+  ['nd-1', 'nd-2', 'nd-3'].forEach(c => root.classList.remove(c));
+  if(on) root.classList.add('nd-' + (ndGet('np_ndlevel', '2')));
+}
+setInterval(applyNight, 30000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) applyNight(); });
+function previewNight(){ ndPreviewUntil = Date.now() + 4500; applyNight(); setTimeout(applyNight, 4700); }
+
 /* ---------- settings flyout ---------- */
 let rmOn = document.documentElement.classList.contains('reduce-motion');
 const SETTINGS = {
@@ -3195,6 +3315,10 @@ const SETTINGS = {
     const on = !clockEnabled();
     try{ localStorage.setItem('np_clock', on ? '1' : '0'); }catch(e){}
     if(idleKey){ const was = idleKey; idleKey = null; if(!on) stopIdleClock(); renderIdle(); }
+  },
+  spNight(){
+    try{ localStorage.setItem('np_nd', ndGet('np_nd', '0') === '1' ? '0' : '1'); }catch(e){}
+    applyNight();
   },
   spClock24(){
     try{ localStorage.setItem('np_24h', clock24() ? '0' : '1'); }catch(e){}
@@ -3257,10 +3381,17 @@ function syncSettings(){
   const curBg = currentBgStyle();
   document.querySelectorAll('.bg-tile').forEach(t => t.setAttribute('aria-pressed', t.dataset.bg === curBg ? 'true' : 'false'));
   const curCt = cityTimeMode();
-  document.querySelectorAll('.ct-b:not(.rot-b)').forEach(t => t.setAttribute('aria-pressed', t.dataset.ct === curCt ? 'true' : 'false'));
+  document.querySelectorAll('.ct-b:not(.rot-b):not(.nd-b)').forEach(t => t.setAttribute('aria-pressed', t.dataset.ct === curCt ? 'true' : 'false'));
   set('spClock', clockEnabled(), false, 'Big clock instead of "Quiet for now"');
   set('spClock24', clock24(), !clockEnabled(), clockEnabled() ? '' : 'Needs the idle clock');
   document.querySelectorAll('.rot-b').forEach(t => t.setAttribute('aria-pressed', Number(t.dataset.rot) === rotMinutes() ? 'true' : 'false'));
+  const ndOn = ndGet('np_nd', '0') === '1';
+  set('spNight', ndOn, false, ndOn ? `From ${ndGet('np_ndfrom', '22:00')} to ${ndGet('np_ndto', '07:00')}` : 'Softer screen on a schedule');
+  const ndb = document.getElementById('ndBlock'); if(ndb) ndb.hidden = !ndOn;
+  const nf = document.getElementById('ndFrom'), nt = document.getElementById('ndTo');
+  if(nf && document.activeElement !== nf) nf.value = ndGet('np_ndfrom', '22:00');
+  if(nt && document.activeElement !== nt) nt.value = ndGet('np_ndto', '07:00');
+  document.querySelectorAll('.nd-b').forEach(t => t.setAttribute('aria-pressed', t.dataset.nd === ndGet('np_ndlevel', '2') ? 'true' : 'false'));
   rmOn = has('reduce-motion');
   if(cmReady) cmSyncVideo();
   set('spReduce', rmOn, false, '');
@@ -3288,9 +3419,11 @@ function setupSettings(){
       if(tile.dataset.bg === 'custom'){ cmRenderGrid(); cmAll().then(l => { if(!l.length){ const f = document.getElementById('cmFile'); if(f) f.click(); } }).catch(() => {}); }
       return;
     }
+    const ndbtn = e.target.closest('.nd-b');
+    if(ndbtn){ try{ localStorage.setItem('np_ndlevel', ndbtn.dataset.nd); }catch(err){} syncSettings(); previewNight(); return; }
     const rotb = e.target.closest('.rot-b');
     if(rotb){ setRotation(Number(rotb.dataset.rot)); return; }
-    const ctb = e.target.closest('.ct-b:not(.rot-b)');
+    const ctb = e.target.closest('.ct-b:not(.rot-b):not(.nd-b)');
     if(ctb){ applyCityTime(ctb.dataset.ct); syncSettings(); return; }
     const row = e.target.closest('.sp-row');
     if(!row || row.getAttribute('aria-disabled') === 'true') return;
