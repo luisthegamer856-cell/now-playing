@@ -443,6 +443,7 @@
   /* Reduce motion (user setting, or the system setting): nothing drifts, spins or fades in. */
   html.reduce-motion .blob, html.reduce-motion .bgs, html.reduce-motion .bgs *, html.reduce-motion .bgs::before, html.reduce-motion .bgs::after{ animation: none !important; }
   html.reduce-motion *{ scroll-behavior: auto !important; }
+  html.reduce-motion .lyric-line{ transition: opacity .01ms, color .01ms, transform .01ms; }
   html.reduce-motion .settings-panel, html.reduce-motion .toast, html.reduce-motion .like-btn svg{ transition-duration: .01ms !important; }
 
   /* High contrast: darker backdrop, solid panels, brighter text. */
@@ -751,15 +752,23 @@
     font-size: 15px;
     opacity: .6;
   }
+  /* The active line is the same text, scaled up. Scaling is a transform, so it never changes the layout:
+     nothing re-wraps and no line below it moves while it grows, which is what made the scroll stutter before.
+     --lr is how much bigger the active line gets; the line is laid out at 1/--lr of the width so that,
+     once scaled, it fills exactly the full width. */
   .lyric-line{
+    --lr: 1.267;
     margin: 0;
-    padding: 10px 0;
+    padding: 12px 0;
+    width: calc(100% / var(--lr));
+    transform-origin: left center;
     font-family: -apple-system, BlinkMacSystemFont, 'Onest', sans-serif;
     font-size: 30px;
     font-weight: 800;
     line-height: 1.45;
     color: rgba(255,255,255,.3);
-    transition: font-size .35s ease, opacity .5s ease, color .3s ease;
+    transition: transform .6s cubic-bezier(.22,.8,.24,1), opacity .5s ease, color .45s ease, text-shadow .45s ease;
+    backface-visibility: hidden;
     cursor: pointer;
     -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -768,7 +777,7 @@
     color: rgba(255,255,255,.65);
   }
   .lyric-line.active{
-    font-size: 38px;
+    transform: scale(var(--lr));
     color: rgba(255,255,255,.92);
     text-shadow: 0 0 4px rgba(255,255,255,.5), 0 0 12px rgba(255,255,255,.28);
   }
@@ -845,7 +854,7 @@
   @media (max-width: 420px){
     .stage{ padding: 36px 22px 50px; }
     .art-card{ width: 160px; height: 160px; }
-    .lyric-line{ font-size: 24px; }
+    .lyric-line{ font-size: 24px; --lr: 1.34; }
   }
 
   /* ---------- manual mobile layout (View button) ---------- */
@@ -854,7 +863,7 @@
   html.mobile .main-col{ flex: none; max-width: none; width: 100%; }
   html.mobile .lyrics-col{ width: 100%; position: static; }
   html.mobile .art-card{ width: min(64vw, 240px); height: min(64vw, 240px); margin-left: auto; margin-right: auto; }
-  html.mobile .lyric-line{ font-size: 24px; }
+  html.mobile .lyric-line{ font-size: 24px; --lr: 1; }
   html.mobile .lyrics-box{ height: 52vh; }
   html.mobile .topbar{ top: calc(12px + env(safe-area-inset-top)); right: calc(12px + var(--sa-r)); gap: 8px; }
   html.mobile .profile-chip{ padding: 5px; }
@@ -1087,7 +1096,7 @@
     .track-title{ font-size: clamp(18px, 3.4vw, 24px); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .track-artist{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lyrics-box{ height: calc(100dvh - 116px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
-    .lyric-line{ font-size: 22px; }
+    .lyric-line{ font-size: 22px; --lr: 1.36; }
     .topbar{ top: calc(10px + env(safe-area-inset-top)); right: calc(12px + var(--sa-r)); gap: 8px; }
     .track-artist{ font-size: 14px; margin-bottom: 10px; }
     .time-row{ margin-bottom: 8px; }
@@ -1330,6 +1339,21 @@
   html.night-dim:not(.hi-contrast) .bg-veil{ background: rgba(0,0,0,var(--ndv)); }
   html.night-dim:not(.hi-contrast) .art-card, html.night-dim:not(.hi-contrast) .up-next-art{ filter: brightness(var(--ndb)); }
   .art-card, .up-next-art{ transition: filter 1.2s ease; }
+
+  /* "Open in Spotify": a small round badge in the corner of the album art */
+  .art-card .sp-link.sp-badge{
+    position: absolute; right: 10px; bottom: 10px; z-index: 2; width: 34px; height: 34px; margin: 0 !important; padding: 0;
+    display: grid; place-items: center; border-radius: 50%; gap: 0;
+    background: rgba(12,10,20,.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.16);
+  }
+  .art-card .sp-link.sp-badge:hover{ background: rgba(12,10,20,.75); }
+  .art-card .sp-link.sp-badge svg{ width: 24px; height: 24px; }
+  .art-card .sp-link.sp-badge span{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (max-width: 420px), (orientation: landscape) and (max-height: 520px){
+    .art-card .sp-link.sp-badge{ right: 6px; bottom: 6px; width: 28px; height: 28px; }
+    .art-card .sp-link.sp-badge svg{ width: 20px; height: 20px; }
+  }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{if(localStorage.getItem('np_nd')==='1'&&localStorage.getItem('np_hc')!=='1'){var _f=(localStorage.getItem('np_ndfrom')||'22:00').split(':'),_t=(localStorage.getItem('np_ndto')||'07:00').split(':'),_d=new Date(),_m=_d.getHours()*60+_d.getMinutes(),_a=+_f[0]*60+ +_f[1],_b=+_t[0]*60+ +_t[1];if(_a!==_b&&(_a<_b?(_m>=_a&&_m<_b):(_m>=_a||_m<_b)))document.documentElement.classList.add('night-dim','nd-'+(localStorage.getItem('np_ndlevel')||'2'));}}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
@@ -1728,13 +1752,12 @@ function buildTrackCard(track){
   const art = safeUrl(track.album.images[0]?.url);
 
   nowPlayingEl.innerHTML = `
-    <div class="art-card"><img src="${escapeHtml(art)}" alt="Album cover for ${escapeHtml(track.album.name)}"></div>
+    <div class="art-card"><img src="${escapeHtml(art)}" alt="Album cover for ${escapeHtml(track.album.name)}"><a class="sp-link sp-badge" id="spLink" aria-label="Open this song in Spotify" title="Open in Spotify" href="#" target="_blank" rel="noopener noreferrer" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1ED760"/><path d="M6.2 9.2c3.8-1.1 8.6-.8 11.9 1.2M6.9 12.4c3.2-.9 7-.6 9.8 1.1M7.6 15.4c2.5-.7 5.4-.4 7.6.9" fill="none" stroke="#0b0b0b" stroke-width="1.7" stroke-linecap="round"/></svg><span>Open in Spotify</span></a></div>
     <div class="title-row">
       <h1 class="track-title">${escapeHtml(track.name)}</h1>
       <button class="like-btn" id="likeBtn" type="button" aria-label="Add to Liked Songs" aria-pressed="false" hidden>${ICON.heart}</button>
     </div>
-    <div class="artist-row"><p class="track-artist">${escapeHtml(artists)}</p>
-    <a class="sp-link" id="spLink" href="#" target="_blank" rel="noopener noreferrer" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1ED760"/><path d="M6.2 9.2c3.8-1.1 8.6-.8 11.9 1.2M6.9 12.4c3.2-.9 7-.6 9.8 1.1M7.6 15.4c2.5-.7 5.4-.4 7.6.9" fill="none" stroke="#0b0b0b" stroke-width="1.7" stroke-linecap="round"/></svg><span>Open in Spotify</span></a></div>
+    <p class="track-artist">${escapeHtml(artists)}</p>
     <div class="progress">
       <div class="progress-track" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuenow="0" aria-valuetext="0:00"><div class="progress-fill" id="progressFill" style="width:0%"></div><div class="progress-thumb" id="progressThumb"></div></div>
     </div>
@@ -2335,9 +2358,9 @@ async function loadLyricsFor(track, durationMs){
 
 /* Runs every animation frame (not tied to the 5s poll) for a continuously
    smooth scroll and word sweep, instead of snapping in discrete steps. */
-function lyricsFrame(){
+function lyricsFrame(ts){
   updateProgressUI();
-  updateLyrics();
+  updateLyrics(ts);
   lyricsRAF = requestAnimationFrame(lyricsFrame);
 }
 function startLyricsLoop(){
@@ -2355,7 +2378,7 @@ function setLineSung(lineEl, sung){
   lineEl.classList.toggle('sung', sung);
 }
 
-function updateLyrics(){
+function updateLyrics(ts){
   if(!lyricsMeta.lines || lyricsMeta.lines.length === 0) return;
   const box = document.getElementById('lyricsBox');
   const track = document.getElementById('lyricsTrack');
@@ -2374,6 +2397,7 @@ function updateLyrics(){
   if(idx < 0) idx = 0;
 
   const lineEls = track.querySelectorAll('.lyric-line');
+  const firstFrame = lyricsMeta.lastActiveIdx === -1;
   if(idx !== lyricsMeta.lastActiveIdx){
     lineEls.forEach((el, i) => {
       el.classList.toggle('active', i === idx);
@@ -2393,18 +2417,23 @@ function updateLyrics(){
 
   const currentLineEl = lineEls[idx];
   if(currentLineEl){
-    // continuous, eased vertical scroll toward centering the active line
+    // eased vertical scroll toward centering the active line
     const boxHeight = box.clientHeight;
     const lineTop = currentLineEl.offsetTop;
     const lineHeight = currentLineEl.offsetHeight;
     const targetY = boxHeight / 2 - (lineTop + lineHeight / 2);
-    lyricsMeta.currentY += (targetY - lyricsMeta.currentY) * (rmOn ? 1 : 0.12);
-    // Skip the write once the position has effectively settled — avoids
-    // repainting every frame while sitting still on a long line.
-    const rounded = Math.round(lyricsMeta.currentY * 10) / 10;
+    // Easing is based on real elapsed time, so it feels the same on 60 Hz and 120 Hz screens
+    // (the old fixed per-frame step ran twice as fast on a 120 Hz iPhone/iPad).
+    const now = (typeof ts === 'number') ? ts : performance.now();
+    const dt = Math.min(64, Math.max(1, now - (lyricsMeta.lastTs || (now - 16))));
+    lyricsMeta.lastTs = now;
+    if(firstFrame || rmOn){ lyricsMeta.currentY = targetY; }            // a new song starts centred instead of sliding in from the top
+    else { lyricsMeta.currentY += (targetY - lyricsMeta.currentY) * (1 - Math.exp(-dt / 150)); }
+    // Skip the write once the position has effectively settled.
+    const rounded = Math.round(lyricsMeta.currentY * 100) / 100;
     if(lyricsMeta.lastY !== rounded){
       lyricsMeta.lastY = rounded;
-      track.style.transform = `translateY(${rounded}px)`;
+      track.style.transform = `translate3d(0, ${rounded}px, 0)`;
     }
   }
 }
