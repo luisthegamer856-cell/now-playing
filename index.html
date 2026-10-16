@@ -767,8 +767,7 @@
     font-weight: 800;
     line-height: 1.45;
     color: rgba(255,255,255,.3);
-    transition: transform .6s cubic-bezier(.22,.8,.24,1), opacity .5s ease, color .45s ease, text-shadow .45s ease;
-    backface-visibility: hidden;
+    transition: transform .6s cubic-bezier(.22,.8,.24,1), opacity .5s ease, color .45s ease, filter .45s ease;
     cursor: pointer;
     -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -779,7 +778,9 @@
   .lyric-line.active{
     transform: scale(var(--lr));
     color: rgba(255,255,255,.92);
-    text-shadow: 0 0 4px rgba(255,255,255,.5), 0 0 12px rgba(255,255,255,.28);
+    /* the glow is a filter (not text-shadow): a text-shadow on a scaled, animated line can get cut off into a visible
+       box on iPhone Safari, while a filter's glow is always given room around the text */
+    filter: drop-shadow(0 0 4px rgba(255,255,255,.45)) drop-shadow(0 0 12px rgba(255,255,255,.26));
   }
   .lyric-line.sung{
     color: var(--paper);
@@ -1365,6 +1366,65 @@
     .controls .ctrl-btn:not(.sm){ width: 38px; height: 38px; }
     .controls .ctrl-btn.main{ width: 46px; height: 46px; }
     .controls .ctrl-btn.sm{ width: 28px !important; height: 28px !important; }
+  }
+
+  /* Phone in landscape: the title stays on ONE line with an ellipsis. The typography block above sets
+     `text-wrap: balance`, which silently cancels `white-space: nowrap` (nowrap is itself part of text-wrap),
+     so long titles such as "Abba Padre (En Vivo)" wrapped and pushed "Up next" off the bottom of the screen. */
+  @media (orientation: landscape) and (max-height: 520px){
+    .track-title{ white-space: nowrap; text-wrap: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .title-row .track-title{ min-width: 0; }
+  }
+
+  /* give the active line's glow room on the left (the box clips anything outside it); the text itself doesn't move */
+  .lyrics-box{ margin-left: -16px; }
+  .lyrics-track{ padding-left: 16px; box-sizing: border-box; }
+
+  /* ---------- Apple Watch (and any screen under about 280px wide) ----------
+     The phone layouts need far more room, so on a watch the page becomes a small player:
+     cover + title + artist, a progress bar, previous / play / next, and the current lyric line.
+     Everything else (settings, heart, shuffle, volume, Up next, the lyric list) is left out. */
+  @media (max-width: 280px){
+    html, html body{ overflow-x: hidden; }
+    html body{ display: block; min-height: 0; }
+    html .stage{ padding: 6px 9px 18px !important; max-width: none; min-height: 0; justify-content: flex-start; }
+    html .topbar, html .state-label, html .like-btn, html .up-next, html .up-next-label, html #upNext,
+    html .lyrics-head, html .controls .ctrl-btn.sm:not(.sp-ctrl), html:not(.no-premium) .controls .sp-ctrl,
+    html .time-row .time-total-pad, html.lyrics-static .lyrics-col, html.lyrics-off .lyrics-col{ display: none !important; }
+    html .layout{ display: flex !important; flex-direction: column !important; height: auto !important; min-height: 0 !important; gap: 6px !important; }
+    html .main-col, html .lyrics-col{ width: 100% !important; max-width: none !important; flex: none !important; height: auto !important; min-height: 0 !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; }
+
+    html .art-card, html.lyrics-off .art-card, html.lyrics-static .art-card{ float: left; width: 42px !important; height: 42px !important; margin: 0 8px 4px 0 !important; border-radius: 11px !important; box-shadow: 0 0 0 1px rgba(255,255,255,.2) inset; }
+    html .title-row{ display: block !important; margin: 0 0 1px !important; }
+    html .track-title, html.lyrics-off .track-title, html.lyrics-static .track-title{ font-size: 15px !important; line-height: 1.15 !important; margin: 0 !important; white-space: nowrap !important; text-wrap: nowrap !important; overflow: hidden; text-overflow: ellipsis; text-align: left !important; }
+    html .artist-row{ display: block; }
+    html .track-artist, html.lyrics-off .track-artist, html.lyrics-static .track-artist{ font-size: 11.5px !important; line-height: 1.2 !important; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left !important; }
+
+    html .progress-track{ clear: both; height: 5px !important; margin: 4px 0 0 !important; }
+    html .time-row{ font-size: 10px !important; margin: 3px 0 5px !important; }
+    html .controls, html.lyrics-off .controls, html.lyrics-static .controls{ gap: 12px !important; justify-content: center !important; margin: 0 0 4px !important; }
+    html .ctrl-btn, html.lyrics-off .ctrl-btn, html.lyrics-static .ctrl-btn{ width: 44px !important; height: 44px !important; }
+    html .ctrl-btn.main, html.lyrics-off .ctrl-btn.main, html.lyrics-static .ctrl-btn.main{ width: 54px !important; height: 54px !important; }
+    html .ctrl-btn.sp-ctrl{ width: 40px !important; height: 40px !important; }
+
+    /* only the line being sung, in one readable block */
+    html .lyrics-box{ height: auto !important; min-height: 0 !important; max-height: none !important; margin: 0 !important; -webkit-mask-image: none; mask-image: none; overflow: visible !important; }
+    html .lyrics-track{ position: static !important; transform: none !important; padding: 0 !important; }
+    html .lyric-line{ display: none; width: 100% !important; transform: none !important; padding: 2px 0 !important; margin: 0 !important; font-size: 15px !important; line-height: 1.25 !important; filter: none !important; }
+    html .lyric-line.active{ display: block; color: #fff; }
+    html .lyric-line .lyric-tr{ font-size: 11px; }
+    html .lyrics-status{ font-size: 11px; }
+
+    html .ic-time{ font-size: clamp(28px, 17vw, 46px); white-space: nowrap; letter-spacing: -.03em; }
+    html .ic-date{ font-size: 12px; }
+    html .ic-note{ display: none; }
+    html .big-headline{ font-size: 28px !important; line-height: 1.05; }
+    html .kicker{ font-size: 10px; }
+    html .sub{ font-size: 12px; }
+    html .cta{ width: 100%; padding: 10px 12px; font-size: 14px; }
+    html .consent{ font-size: 11px; gap: 8px; margin-bottom: 12px; }
+    html .fine{ font-size: 10px; }
+    html .toast{ font-size: 11px; padding: 6px 10px; max-width: 92vw; }
   }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{if(localStorage.getItem('np_nd')==='1'&&localStorage.getItem('np_hc')!=='1'){var _f=(localStorage.getItem('np_ndfrom')||'22:00').split(':'),_t=(localStorage.getItem('np_ndto')||'07:00').split(':'),_d=new Date(),_m=_d.getHours()*60+_d.getMinutes(),_a=+_f[0]*60+ +_f[1],_b=+_t[0]*60+ +_t[1];if(_a!==_b&&(_a<_b?(_m>=_a&&_m<_b):(_m>=_a||_m<_b)))document.documentElement.classList.add('night-dim','nd-'+(localStorage.getItem('np_ndlevel')||'2'));}}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
