@@ -1426,6 +1426,80 @@
     html .fine{ font-size: 10px; }
     html .toast{ font-size: 11px; padding: 6px 10px; max-width: 92vw; }
   }
+
+  /* ---------- Liquid Glass (playback buttons, settings, menus) ----------
+     Frosted body with boosted colour, a thin bright rim that is strongest on the top-left and bottom-right
+     edges (light from above-left), and a soft inner glow so it reads as a thick piece of glass.
+     Real lens-bending of the background isn't possible in iPhone Safari CSS, so the edge light does that job. */
+  :root{
+    --lg-drop: 0 12px 28px -8px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.2);
+    --lg-rim: inset 0 0 0 1px rgba(255,255,255,.22);
+    --lg-spec: inset 2px 2px 1px -1px rgba(255,255,255,.75), inset -2px -2px 1px -1px rgba(255,255,255,.4);
+    --lg-glow: inset 0 0 16px rgba(255,255,255,.12);
+  }
+  .ctrl-btn:not(.main):not(.sm), .gear-btn, .profile-chip{
+    background:
+      radial-gradient(120% 90% at 28% 10%, rgba(255,255,255,.27), rgba(255,255,255,0) 46%),
+      linear-gradient(150deg, rgba(255,255,255,.18), rgba(255,255,255,.05) 55%, rgba(255,255,255,.12)),
+      rgba(255,255,255,.05);
+    -webkit-backdrop-filter: blur(16px) saturate(210%) brightness(1.1);
+    backdrop-filter: blur(16px) saturate(210%) brightness(1.1);
+    box-shadow: var(--lg-drop), var(--lg-rim), var(--lg-spec), var(--lg-glow);
+  }
+  .ctrl-btn:not(.main):not(.sm):hover, .gear-btn:hover, .profile-chip:hover{
+    background:
+      radial-gradient(120% 90% at 28% 10%, rgba(255,255,255,.46), rgba(255,255,255,0) 50%),
+      linear-gradient(150deg, rgba(255,255,255,.26), rgba(255,255,255,.09) 55%, rgba(255,255,255,.18)),
+      rgba(255,255,255,.06);
+  }
+  /* the play / pause button is the brightest piece of glass */
+  .ctrl-btn.main{
+    background: radial-gradient(120% 95% at 28% 8%, #fff, rgba(255,255,255,.8) 60%), rgba(255,255,255,.7);
+    -webkit-backdrop-filter: blur(14px) saturate(190%); backdrop-filter: blur(14px) saturate(190%);
+    box-shadow: var(--lg-drop), inset 0 0 0 1px rgba(255,255,255,.65), inset 2px 2px 1px -1px #fff, inset -2px -3px 3px -1px rgba(120,100,170,.35);
+  }
+  .ctrl-btn.main:hover{ background: radial-gradient(120% 95% at 28% 8%, #fff, rgba(255,255,255,.9) 60%), rgba(255,255,255,.8); }
+  /* the open state is a darker, tinted piece of glass (like the selected tab in iOS) */
+  .gear-btn[aria-expanded="true"]{
+    background: radial-gradient(120% 90% at 28% 10%, rgba(255,255,255,.2), rgba(255,255,255,0) 50%), rgba(14,10,24,.5);
+    color: var(--paper);
+  }
+
+  .settings-panel{
+    background:
+      radial-gradient(130% 80% at 14% -6%, rgba(255,255,255,.27), rgba(255,255,255,0) 46%),
+      radial-gradient(90% 60% at 100% 112%, rgba(150,130,255,.22), rgba(150,130,255,0) 56%),
+      linear-gradient(150deg, rgba(255,255,255,.17), rgba(255,255,255,.05) 45%, rgba(255,255,255,.11)),
+      rgba(20,14,32,.32);
+    -webkit-backdrop-filter: blur(30px) saturate(230%) brightness(1.12) contrast(1.04);
+    backdrop-filter: blur(30px) saturate(230%) brightness(1.12) contrast(1.04);
+    border: none;
+    box-shadow: 0 36px 80px -14px rgba(0,0,0,.6), 0 4px 14px rgba(0,0,0,.25),
+      inset 0 0 0 1px rgba(255,255,255,.24), inset 3px 3px 2px -2px rgba(255,255,255,.78), inset -3px -3px 2px -2px rgba(255,255,255,.42), inset 0 0 46px rgba(255,255,255,.07);
+  }
+  .pop{
+    background:
+      radial-gradient(130% 80% at 14% -6%, rgba(255,255,255,.34), rgba(255,255,255,0) 46%),
+      linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.05) 45%, rgba(255,255,255,.1)),
+      rgba(20,14,32,.4);
+    -webkit-backdrop-filter: blur(28px) saturate(220%) brightness(1.1); backdrop-filter: blur(28px) saturate(220%) brightness(1.1);
+    border: none;
+    box-shadow: 0 24px 56px -12px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.24), inset 2px 2px 2px -1px rgba(255,255,255,.7), inset -2px -2px 2px -1px rgba(255,255,255,.38), inset 0 0 30px rgba(255,255,255,.06);
+  }
+  /* chosen tile / segment: a darker glass pill, like the selected tab in the iOS tab bar */
+  .bg-tile[aria-pressed="true"], .cm-item[aria-pressed="true"]{
+    border-color: transparent; background: rgba(10,6,20,.38);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.34), inset 0 0 14px rgba(255,255,255,.1);
+  }
+  .ct-b[aria-pressed="true"]{ background: rgba(255,255,255,.9); box-shadow: 0 2px 8px rgba(0,0,0,.25), inset 0 1px 1px #fff; }
+
+  /* people who ask for less transparency (or high contrast) get solid panels */
+  @media (prefers-reduced-transparency: reduce){
+    .ctrl-btn:not(.main):not(.sm), .gear-btn, .profile-chip, .settings-panel, .pop{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(34,27,48,.94); }
+  }
+  html.hi-contrast .ctrl-btn:not(.main):not(.sm), html.hi-contrast .gear-btn, html.hi-contrast .profile-chip, html.hi-contrast .pop{
+    -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(12,9,20,.92); box-shadow: inset 0 0 0 2px #fff;
+  }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{if(localStorage.getItem('np_nd')==='1'&&localStorage.getItem('np_hc')!=='1'){var _f=(localStorage.getItem('np_ndfrom')||'22:00').split(':'),_t=(localStorage.getItem('np_ndto')||'07:00').split(':'),_d=new Date(),_m=_d.getHours()*60+_d.getMinutes(),_a=+_f[0]*60+ +_f[1],_b=+_t[0]*60+ +_t[1];if(_a!==_b&&(_a<_b?(_m>=_a&&_m<_b):(_m>=_a||_m<_b)))document.documentElement.classList.add('night-dim','nd-'+(localStorage.getItem('np_ndlevel')||'2'));}}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
