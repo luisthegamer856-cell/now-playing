@@ -1428,78 +1428,65 @@
   }
 
   /* ---------- Liquid Glass (playback buttons, settings, menus) ----------
-     Frosted body with boosted colour, a thin bright rim that is strongest on the top-left and bottom-right
-     edges (light from above-left), and a soft inner glow so it reads as a thick piece of glass.
+     Clear glass: almost no tint, so the background shows through, softly blurred with its colour boosted.
+     The only highlights are a thin rim and small bright edges on the top-left and bottom-right (light from above-left),
+     plus a faint inner glow for thickness. No big shine across the surface.
      Real lens-bending of the background isn't possible in iPhone Safari CSS, so the edge light does that job. */
   :root{
-    --lg-drop: 0 12px 28px -8px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.2);
-    --lg-rim: inset 0 0 0 1px rgba(255,255,255,.22);
-    --lg-spec: inset 2px 2px 1px -1px rgba(255,255,255,.75), inset -2px -2px 1px -1px rgba(255,255,255,.4);
-    --lg-glow: inset 0 0 16px rgba(255,255,255,.12);
+    --lg-drop: 0 10px 24px -10px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.18);
+    --lg-rim: inset 0 0 0 1px rgba(255,255,255,.17);
+    --lg-spec: inset 1.5px 1.5px .5px -1px rgba(255,255,255,.6), inset -1.5px -1.5px .5px -1px rgba(255,255,255,.32);
+    --lg-glow: inset 0 0 10px rgba(255,255,255,.05);
   }
   .ctrl-btn:not(.main):not(.sm), .gear-btn, .profile-chip{
-    background:
-      radial-gradient(120% 90% at 28% 10%, rgba(255,255,255,.27), rgba(255,255,255,0) 46%),
-      linear-gradient(150deg, rgba(255,255,255,.18), rgba(255,255,255,.05) 55%, rgba(255,255,255,.12)),
-      rgba(255,255,255,.05);
-    -webkit-backdrop-filter: blur(16px) saturate(210%) brightness(1.1);
-    backdrop-filter: blur(16px) saturate(210%) brightness(1.1);
+    background: rgba(255,255,255,.05);
+    -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+    backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
     box-shadow: var(--lg-drop), var(--lg-rim), var(--lg-spec), var(--lg-glow);
   }
-  .ctrl-btn:not(.main):not(.sm):hover, .gear-btn:hover, .profile-chip:hover{
-    background:
-      radial-gradient(120% 90% at 28% 10%, rgba(255,255,255,.46), rgba(255,255,255,0) 50%),
-      linear-gradient(150deg, rgba(255,255,255,.26), rgba(255,255,255,.09) 55%, rgba(255,255,255,.18)),
-      rgba(255,255,255,.06);
-  }
-  /* the play / pause button is the brightest piece of glass */
+  .ctrl-btn:not(.main):not(.sm):hover, .gear-btn:hover, .profile-chip:hover{ background: rgba(255,255,255,.11); }
+  /* play / pause: the same clear glass, just a little more body so it stands out */
   .ctrl-btn.main{
-    background: radial-gradient(120% 95% at 28% 8%, #fff, rgba(255,255,255,.8) 60%), rgba(255,255,255,.7);
-    -webkit-backdrop-filter: blur(14px) saturate(190%); backdrop-filter: blur(14px) saturate(190%);
-    box-shadow: var(--lg-drop), inset 0 0 0 1px rgba(255,255,255,.65), inset 2px 2px 1px -1px #fff, inset -2px -3px 3px -1px rgba(120,100,170,.35);
-  }
-  .ctrl-btn.main:hover{ background: radial-gradient(120% 95% at 28% 8%, #fff, rgba(255,255,255,.9) 60%), rgba(255,255,255,.8); }
-  /* the open state is a darker, tinted piece of glass (like the selected tab in iOS) */
-  .gear-btn[aria-expanded="true"]{
-    background: radial-gradient(120% 90% at 28% 10%, rgba(255,255,255,.2), rgba(255,255,255,0) 50%), rgba(14,10,24,.5);
+    background: rgba(255,255,255,.16);
     color: var(--paper);
+    -webkit-backdrop-filter: blur(14px) saturate(190%) brightness(1.06);
+    backdrop-filter: blur(14px) saturate(190%) brightness(1.06);
+    box-shadow: var(--lg-drop), inset 0 0 0 1px rgba(255,255,255,.24), inset 1.5px 1.5px .5px -1px rgba(255,255,255,.75), inset -1.5px -1.5px .5px -1px rgba(255,255,255,.4), var(--lg-glow);
   }
+  .ctrl-btn.main:hover{ background: rgba(255,255,255,.24); }
+  /* the open state is a darker, tinted piece of glass (like the selected tab in iOS) */
+  .gear-btn[aria-expanded="true"]{ background: rgba(14,10,24,.5); color: var(--paper); }
 
   .settings-panel{
-    background:
-      radial-gradient(130% 80% at 14% -6%, rgba(255,255,255,.27), rgba(255,255,255,0) 46%),
-      radial-gradient(90% 60% at 100% 112%, rgba(150,130,255,.22), rgba(150,130,255,0) 56%),
-      linear-gradient(150deg, rgba(255,255,255,.17), rgba(255,255,255,.05) 45%, rgba(255,255,255,.11)),
-      rgba(20,14,32,.32);
-    -webkit-backdrop-filter: blur(30px) saturate(230%) brightness(1.12) contrast(1.04);
-    backdrop-filter: blur(30px) saturate(230%) brightness(1.12) contrast(1.04);
+    background: linear-gradient(150deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 50%, rgba(255,255,255,.05)), rgba(20,14,32,.27);
+    -webkit-backdrop-filter: blur(26px) saturate(210%) brightness(1.05) contrast(1.03);
+    backdrop-filter: blur(26px) saturate(210%) brightness(1.05) contrast(1.03);
     border: none;
-    box-shadow: 0 36px 80px -14px rgba(0,0,0,.6), 0 4px 14px rgba(0,0,0,.25),
-      inset 0 0 0 1px rgba(255,255,255,.24), inset 3px 3px 2px -2px rgba(255,255,255,.78), inset -3px -3px 2px -2px rgba(255,255,255,.42), inset 0 0 46px rgba(255,255,255,.07);
+    box-shadow: 0 34px 76px -16px rgba(0,0,0,.6), 0 3px 12px rgba(0,0,0,.22),
+      inset 0 0 0 1px rgba(255,255,255,.2), inset 2.5px 2.5px 1px -2px rgba(255,255,255,.65), inset -2.5px -2.5px 1px -2px rgba(255,255,255,.36), inset 0 0 30px rgba(255,255,255,.04);
   }
+  .settings-panel::before{ display: none; }
   .pop{
-    background:
-      radial-gradient(130% 80% at 14% -6%, rgba(255,255,255,.34), rgba(255,255,255,0) 46%),
-      linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.05) 45%, rgba(255,255,255,.1)),
-      rgba(20,14,32,.4);
-    -webkit-backdrop-filter: blur(28px) saturate(220%) brightness(1.1); backdrop-filter: blur(28px) saturate(220%) brightness(1.1);
+    background: linear-gradient(150deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 50%, rgba(255,255,255,.05)), rgba(20,14,32,.33);
+    -webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.05); backdrop-filter: blur(24px) saturate(200%) brightness(1.05);
     border: none;
-    box-shadow: 0 24px 56px -12px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.24), inset 2px 2px 2px -1px rgba(255,255,255,.7), inset -2px -2px 2px -1px rgba(255,255,255,.38), inset 0 0 30px rgba(255,255,255,.06);
+    box-shadow: 0 22px 50px -12px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.2), inset 2px 2px 1px -1px rgba(255,255,255,.6), inset -2px -2px 1px -1px rgba(255,255,255,.33), inset 0 0 24px rgba(255,255,255,.04);
   }
   /* chosen tile / segment: a darker glass pill, like the selected tab in the iOS tab bar */
   .bg-tile[aria-pressed="true"], .cm-item[aria-pressed="true"]{
     border-color: transparent; background: rgba(10,6,20,.38);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.34), inset 0 0 14px rgba(255,255,255,.1);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), inset 0 0 12px rgba(255,255,255,.07);
   }
   .ct-b[aria-pressed="true"]{ background: rgba(255,255,255,.9); box-shadow: 0 2px 8px rgba(0,0,0,.25), inset 0 1px 1px #fff; }
 
   /* people who ask for less transparency (or high contrast) get solid panels */
   @media (prefers-reduced-transparency: reduce){
-    .ctrl-btn:not(.main):not(.sm), .gear-btn, .profile-chip, .settings-panel, .pop{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(34,27,48,.94); }
+    .ctrl-btn:not(.sm), .gear-btn, .profile-chip, .settings-panel, .pop{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(34,27,48,.94); }
   }
   html.hi-contrast .ctrl-btn:not(.main):not(.sm), html.hi-contrast .gear-btn, html.hi-contrast .profile-chip, html.hi-contrast .pop{
     -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(12,9,20,.92); box-shadow: inset 0 0 0 2px #fff;
   }
+  html.hi-contrast .ctrl-btn.main{ -webkit-backdrop-filter: none; backdrop-filter: none; background: #fff; color: #14101F; box-shadow: none; }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{if(localStorage.getItem('np_nd')==='1'&&localStorage.getItem('np_hc')!=='1'){var _f=(localStorage.getItem('np_ndfrom')||'22:00').split(':'),_t=(localStorage.getItem('np_ndto')||'07:00').split(':'),_d=new Date(),_m=_d.getHours()*60+_d.getMinutes(),_a=+_f[0]*60+ +_f[1],_b=+_t[0]*60+ +_t[1];if(_a!==_b&&(_a<_b?(_m>=_a&&_m<_b):(_m>=_a||_m<_b)))document.documentElement.classList.add('night-dim','nd-'+(localStorage.getItem('np_ndlevel')||'2'));}}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
