@@ -1487,6 +1487,36 @@
     -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(12,9,20,.92); box-shadow: inset 0 0 0 2px #fff;
   }
   html.hi-contrast .ctrl-btn.main{ -webkit-backdrop-filter: none; backdrop-filter: none; background: #fff; color: #14101F; box-shadow: none; }
+
+  /* ---------- album art: a polished glass-style edge ----------
+     A bright-to-faint gradient rim (light from above-left, a softer return on the bottom-right), a dark hairline just
+     outside it, a little inner shading for depth, and a deeper, softer shadow underneath. */
+  .art-card{
+    box-shadow: 0 36px 64px -28px rgba(0,0,0,.7), 0 12px 24px -12px rgba(0,0,0,.42), 0 0 0 1px rgba(0,0,0,.3);
+  }
+  .art-card::before{
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 26px rgba(0,0,0,.22), inset 0 1px 1px rgba(255,255,255,.22);
+  }
+  .art-card::after{
+    box-shadow: none; padding: 1.5px;
+    background: linear-gradient(140deg, rgba(255,255,255,.85) 0%, rgba(255,255,255,.16) 26%, rgba(255,255,255,.05) 52%, rgba(255,255,255,.18) 76%, rgba(255,255,255,.55) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  }
+  .up-next-art{ outline: 1px solid rgba(255,255,255,.22); outline-offset: -1px; box-shadow: 0 4px 10px -3px rgba(0,0,0,.5); }
+
+  /* ---------- Up next: the same clear glass as the buttons ---------- */
+  .up-next-content{
+    background: rgba(255,255,255,.05);
+    -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+    backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+    box-shadow: var(--lg-drop), var(--lg-rim), var(--lg-spec), var(--lg-glow);
+  }
+  @media (prefers-reduced-transparency: reduce){
+    .up-next-content{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(34,27,48,.94); }
+  }
+  html.hi-contrast .up-next-content{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(12,9,20,.92); box-shadow: inset 0 0 0 2px #fff; }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{if(localStorage.getItem('np_nd')==='1'&&localStorage.getItem('np_hc')!=='1'){var _f=(localStorage.getItem('np_ndfrom')||'22:00').split(':'),_t=(localStorage.getItem('np_ndto')||'07:00').split(':'),_d=new Date(),_m=_d.getHours()*60+_d.getMinutes(),_a=+_f[0]*60+ +_f[1],_b=+_t[0]*60+ +_t[1];if(_a!==_b&&(_a<_b?(_m>=_a&&_m<_b):(_m>=_a||_m<_b)))document.documentElement.classList.add('night-dim','nd-'+(localStorage.getItem('np_ndlevel')||'2'));}}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
