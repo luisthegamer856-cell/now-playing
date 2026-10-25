@@ -1439,36 +1439,36 @@
     --lg-glow: inset 0 0 10px rgba(255,255,255,.05);
   }
   .ctrl-btn:not(.main):not(.sm), .gear-btn, .profile-chip{
-    background: rgba(255,255,255,.05);
-    -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
-    backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+    background: rgba(255,255,255,.03);
+    -webkit-backdrop-filter: blur(9px) saturate(190%) brightness(1.02);
+    backdrop-filter: blur(9px) saturate(190%) brightness(1.02);
     box-shadow: var(--lg-drop), var(--lg-rim), var(--lg-spec), var(--lg-glow);
   }
-  .ctrl-btn:not(.main):not(.sm):hover, .gear-btn:hover, .profile-chip:hover{ background: rgba(255,255,255,.11); }
+  .ctrl-btn:not(.main):not(.sm):hover, .gear-btn:hover, .profile-chip:hover{ background: rgba(255,255,255,.09); }
   /* play / pause: the same clear glass, just a little more body so it stands out */
   .ctrl-btn.main{
-    background: rgba(255,255,255,.16);
+    background: rgba(255,255,255,.115);
     color: var(--paper);
-    -webkit-backdrop-filter: blur(14px) saturate(190%) brightness(1.06);
-    backdrop-filter: blur(14px) saturate(190%) brightness(1.06);
+    -webkit-backdrop-filter: blur(11px) saturate(190%) brightness(1.04);
+    backdrop-filter: blur(11px) saturate(190%) brightness(1.04);
     box-shadow: var(--lg-drop), inset 0 0 0 1px rgba(255,255,255,.24), inset 1.5px 1.5px .5px -1px rgba(255,255,255,.75), inset -1.5px -1.5px .5px -1px rgba(255,255,255,.4), var(--lg-glow);
   }
-  .ctrl-btn.main:hover{ background: rgba(255,255,255,.24); }
+  .ctrl-btn.main:hover{ background: rgba(255,255,255,.19); }
   /* the open state is a darker, tinted piece of glass (like the selected tab in iOS) */
   .gear-btn[aria-expanded="true"]{ background: rgba(14,10,24,.5); color: var(--paper); }
 
   .settings-panel{
-    background: linear-gradient(150deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 50%, rgba(255,255,255,.05)), rgba(20,14,32,.27);
-    -webkit-backdrop-filter: blur(26px) saturate(210%) brightness(1.05) contrast(1.03);
-    backdrop-filter: blur(26px) saturate(210%) brightness(1.05) contrast(1.03);
+    background: linear-gradient(150deg, rgba(255,255,255,.05), rgba(255,255,255,.012) 50%, rgba(255,255,255,.035)), rgba(20,14,32,.19);
+    -webkit-backdrop-filter: blur(22px) saturate(210%) brightness(1.03) contrast(1.03);
+    backdrop-filter: blur(22px) saturate(210%) brightness(1.03) contrast(1.03);
     border: none;
     box-shadow: 0 34px 76px -16px rgba(0,0,0,.6), 0 3px 12px rgba(0,0,0,.22),
       inset 0 0 0 1px rgba(255,255,255,.2), inset 2.5px 2.5px 1px -2px rgba(255,255,255,.65), inset -2.5px -2.5px 1px -2px rgba(255,255,255,.36), inset 0 0 30px rgba(255,255,255,.04);
   }
   .settings-panel::before{ display: none; }
   .pop{
-    background: linear-gradient(150deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 50%, rgba(255,255,255,.05)), rgba(20,14,32,.33);
-    -webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.05); backdrop-filter: blur(24px) saturate(200%) brightness(1.05);
+    background: linear-gradient(150deg, rgba(255,255,255,.05), rgba(255,255,255,.012) 50%, rgba(255,255,255,.035)), rgba(20,14,32,.25);
+    -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(1.03); backdrop-filter: blur(20px) saturate(200%) brightness(1.03);
     border: none;
     box-shadow: 0 22px 50px -12px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.2), inset 2px 2px 1px -1px rgba(255,255,255,.6), inset -2px -2px 1px -1px rgba(255,255,255,.33), inset 0 0 24px rgba(255,255,255,.04);
   }
@@ -1508,15 +1508,49 @@
 
   /* ---------- Up next: the same clear glass as the buttons ---------- */
   .up-next-content{
-    background: rgba(255,255,255,.05);
-    -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
-    backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+    background: rgba(255,255,255,.03);
+    -webkit-backdrop-filter: blur(9px) saturate(190%) brightness(1.02);
+    backdrop-filter: blur(9px) saturate(190%) brightness(1.02);
     box-shadow: var(--lg-drop), var(--lg-rim), var(--lg-spec), var(--lg-glow);
   }
   @media (prefers-reduced-transparency: reduce){
     .up-next-content{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(34,27,48,.94); }
   }
   html.hi-contrast .up-next-content{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(12,9,20,.92); box-shadow: inset 0 0 0 2px #fff; }
+
+  /* ---------- iPhone portrait, no lyrics (or lyrics turned off): everything fits on one screen ----------
+     The profile + settings float over the top-right corner of the album art instead of using their own row,
+     the profile is just the picture, the art shrinks to whatever room is left, and the spacing is tighter.
+     --art-room is the height of everything that is NOT the art (measured, plus a little slack). */
+  @media (max-width: 600px) and (min-width: 281px) and (orientation: portrait){
+    html.lyrics-off, html.lyrics-static{ --art-room: 450px; --art: min(86vw, max(150px, calc(100vh - var(--art-room)))); }
+    @supports (height: 100dvh){ html.lyrics-off, html.lyrics-static{ --art: min(86vw, max(150px, calc(100dvh - var(--art-room)))); } }
+    /* the page body already keeps clear of the notch / home bar, so the stage only needs a small gap */
+    html.lyrics-off .stage, html.lyrics-static .stage{ padding: 10px 5vw 8px; }
+    html.lyrics-off .stage, html.lyrics-static .stage{ justify-content: flex-start; }
+    html.lyrics-off .layout, html.lyrics-static .layout{ justify-content: flex-start; min-height: 0; }
+    html.lyrics-off .art-card, html.lyrics-static .art-card{ width: var(--art); height: var(--art); margin: 0 auto clamp(12px, 2.4vh, 26px); }
+    html.lyrics-off .track-title, html.lyrics-static .track-title{ font-size: clamp(25px, 7.4vw, 30px); }
+    html.lyrics-off .title-row, html.lyrics-static .title-row{ margin-bottom: 0; }
+    html.lyrics-off .track-artist, html.lyrics-static .track-artist{ font-size: 16px; margin-bottom: clamp(10px, 2.2vh, 22px); }
+    html.lyrics-off .time-row, html.lyrics-static .time-row{ margin-bottom: clamp(6px, 1.4vh, 14px); }
+    html.lyrics-off .controls, html.lyrics-static .controls{ margin-bottom: clamp(6px, 1.6vh, 16px); gap: clamp(8px, 2.4vw, 16px); }
+    html.lyrics-off .state-label, html.lyrics-static .state-label{ margin-bottom: clamp(4px, 1.4vh, 14px); }
+    html.lyrics-off .up-next, html.lyrics-static .up-next{ margin-top: clamp(4px, 1.4vh, 14px); }
+    /* settings + profile: small glass buttons over the corner of the art; the profile is only the picture */
+    html.lyrics-off .topbar, html.lyrics-static .topbar{
+      top: calc(env(safe-area-inset-top) + 20px);
+      right: calc((100vw - var(--art)) / 2 + 10px);
+      gap: 8px;
+    }
+    html.lyrics-off .profile-name, html.lyrics-static .profile-name{ display: none; }
+    html.lyrics-off .profile-chip, html.lyrics-static .profile-chip{ padding: 3px; }
+    html.lyrics-off .profile-avatar, html.lyrics-static .profile-avatar{ width: 36px; height: 36px; }
+    html.lyrics-off .gear-btn, html.lyrics-static .gear-btn{ width: 42px; height: 42px; }
+    /* the panel opens below the corner buttons, so leave room for the notch and the home bar */
+    html.lyrics-off .settings-panel, html.lyrics-static .settings-panel{ position: fixed; top: calc(env(safe-area-inset-top) + 76px); right: 12px; left: auto; max-height: calc(100vh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); max-height: calc(100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+    html.lyrics-off .track-title, html.lyrics-static .track-title{ margin-bottom: 2px; }
+  }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{if(localStorage.getItem('np_nd')==='1'&&localStorage.getItem('np_hc')!=='1'){var _f=(localStorage.getItem('np_ndfrom')||'22:00').split(':'),_t=(localStorage.getItem('np_ndto')||'07:00').split(':'),_d=new Date(),_m=_d.getHours()*60+_d.getMinutes(),_a=+_f[0]*60+ +_f[1],_b=+_t[0]*60+ +_t[1];if(_a!==_b&&(_a<_b?(_m>=_a&&_m<_b):(_m>=_a||_m<_b)))document.documentElement.classList.add('night-dim','nd-'+(localStorage.getItem('np_ndlevel')||'2'));}}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
