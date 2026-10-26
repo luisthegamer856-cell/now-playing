@@ -1519,14 +1519,14 @@
   html.hi-contrast .up-next-content{ -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(12,9,20,.92); box-shadow: inset 0 0 0 2px #fff; }
 
   /* ---------- iPhone portrait, no lyrics (or lyrics turned off): everything fits on one screen ----------
-     The profile + settings float over the top-right corner of the album art instead of using their own row,
+     The profile + settings sit as a small pair at the bottom of the screen instead of in a row above the art,
      the profile is just the picture, the art shrinks to whatever room is left, and the spacing is tighter.
      --art-room is the height of everything that is NOT the art (measured, plus a little slack). */
   @media (max-width: 600px) and (min-width: 281px) and (orientation: portrait){
-    html.lyrics-off, html.lyrics-static{ --art-room: 450px; --art: min(86vw, max(150px, calc(100vh - var(--art-room)))); }
+    html.lyrics-off, html.lyrics-static{ --art-room: 506px; --art: min(86vw, max(150px, calc(100vh - var(--art-room)))); }
     @supports (height: 100dvh){ html.lyrics-off, html.lyrics-static{ --art: min(86vw, max(150px, calc(100dvh - var(--art-room)))); } }
     /* the page body already keeps clear of the notch / home bar, so the stage only needs a small gap */
-    html.lyrics-off .stage, html.lyrics-static .stage{ padding: 10px 5vw 8px; }
+    html.lyrics-off .stage, html.lyrics-static .stage{ padding: 10px 5vw 64px; }
     html.lyrics-off .stage, html.lyrics-static .stage{ justify-content: flex-start; }
     html.lyrics-off .layout, html.lyrics-static .layout{ justify-content: flex-start; min-height: 0; }
     html.lyrics-off .art-card, html.lyrics-static .art-card{ width: var(--art); height: var(--art); margin: 0 auto clamp(12px, 2.4vh, 26px); }
@@ -1537,20 +1537,45 @@
     html.lyrics-off .controls, html.lyrics-static .controls{ margin-bottom: clamp(6px, 1.6vh, 16px); gap: clamp(8px, 2.4vw, 16px); }
     html.lyrics-off .state-label, html.lyrics-static .state-label{ margin-bottom: clamp(4px, 1.4vh, 14px); }
     html.lyrics-off .up-next, html.lyrics-static .up-next{ margin-top: clamp(4px, 1.4vh, 14px); }
-    /* settings + profile: small glass buttons over the corner of the art; the profile is only the picture */
+    /* settings + profile: a small glass pair at the bottom of the screen (below Up next); the profile is only the picture */
     html.lyrics-off .topbar, html.lyrics-static .topbar{
-      top: calc(env(safe-area-inset-top) + 20px);
-      right: calc((100vw - var(--art)) / 2 + 10px);
-      gap: 8px;
+      top: auto; left: 0; right: 0;
+      bottom: calc(env(safe-area-inset-bottom) + 10px);
+      justify-content: center; gap: 12px;
     }
     html.lyrics-off .profile-name, html.lyrics-static .profile-name{ display: none; }
     html.lyrics-off .profile-chip, html.lyrics-static .profile-chip{ padding: 3px; }
     html.lyrics-off .profile-avatar, html.lyrics-static .profile-avatar{ width: 36px; height: 36px; }
     html.lyrics-off .gear-btn, html.lyrics-static .gear-btn{ width: 42px; height: 42px; }
-    /* the panel opens below the corner buttons, so leave room for the notch and the home bar */
-    html.lyrics-off .settings-panel, html.lyrics-static .settings-panel{ position: fixed; top: calc(env(safe-area-inset-top) + 76px); right: 12px; left: auto; max-height: calc(100vh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); max-height: calc(100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+    /* the panel opens upwards from the bottom pair, centred, and never taller than the room above it */
+    html.lyrics-off .settings-panel, html.lyrics-static .settings-panel{
+      position: fixed; top: auto; left: 12px; right: 12px; margin: 0 auto; width: min(320px, calc(100vw - 24px));
+      bottom: calc(env(safe-area-inset-bottom) + 68px);
+      max-height: calc(100vh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      max-height: calc(100dvh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+    html.lyrics-off .settings-panel:not(.open), html.lyrics-static .settings-panel:not(.open){ transform-origin: 50% 100%; transform: scale(.88) translateY(12px); }
     html.lyrics-off .track-title, html.lyrics-static .track-title{ margin-bottom: 2px; }
   }
+
+  /* ---------- text boxes: a clean focus state (no thick outline + dark halo glow) ----------
+     The general focus ring (white outline with a dark halo) is great for buttons, but on a text box it looked like a
+     double border and covered the label above it. Text boxes get a brighter edge and a soft glass fill instead. */
+  .nd-times input, .cm-dimrow input[type=range]{ outline: none; }
+  .nd-times input:focus, .nd-times input:focus-visible{
+    outline: none; box-shadow: none; border-color: rgba(255,255,255,.9); background: rgba(255,255,255,.2);
+  }
+  .nd-times input{ transition: border-color .15s ease, background .15s ease; }
+  .cm-dimrow input[type=range]:focus-visible{ outline: 2px solid rgba(255,255,255,.9); outline-offset: 4px; box-shadow: none; border-radius: 6px; }
+  .consent input:focus-visible{ outline: 2px solid #fff; outline-offset: 3px; box-shadow: none; }
+
+  /* Up next: the title and the artist line up on the same left edge (the artist used to sit centred under the title) */
+  .up-next-content, .up-next-text, .up-next-title, .up-next-artist{ text-align: left; }
+  .up-next-text{ align-items: flex-start; }
+
+  /* the active lyric line's glow also gets room on the right (the box clips anything outside it) */
+  .lyrics-box{ margin-right: -16px; }
+  .lyrics-track{ padding-right: 16px; }
 </style>
 <script>try{if(localStorage.getItem('np_mobile')==='1')document.documentElement.classList.add('mobile');}catch(e){}try{if(localStorage.getItem('np_free')==='1')document.documentElement.classList.add('no-premium');}catch(e){}try{if(localStorage.getItem('np_translate')==='1')document.documentElement.classList.add('tr-on');}catch(e){}try{if(localStorage.getItem('np_lyrics')==='0')document.documentElement.classList.add('lyrics-off');}catch(e){}try{if(localStorage.getItem('np_cursor')==='1')document.documentElement.classList.add('hide-cursor');}catch(e){}try{if(localStorage.getItem('np_bgstill')==='1')document.documentElement.classList.add('bg-still');}catch(e){}try{if(localStorage.getItem('np_nd')==='1'&&localStorage.getItem('np_hc')!=='1'){var _f=(localStorage.getItem('np_ndfrom')||'22:00').split(':'),_t=(localStorage.getItem('np_ndto')||'07:00').split(':'),_d=new Date(),_m=_d.getHours()*60+_d.getMinutes(),_a=+_f[0]*60+ +_f[1],_b=+_t[0]*60+ +_t[1];if(_a!==_b&&(_a<_b?(_m>=_a&&_m<_b):(_m>=_a||_m<_b)))document.documentElement.classList.add('night-dim','nd-'+(localStorage.getItem('np_ndlevel')||'2'));}}catch(e){}try{var _r=localStorage.getItem('np_rm');if(_r==='1'||(_r===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('reduce-motion');if(localStorage.getItem('np_hc')==='1')document.documentElement.classList.add('hi-contrast');}catch(e){}try{var _m=localStorage.getItem('np_citytime')||'auto',_h=new Date().getHours();document.documentElement.classList.add((_m==='day'||(_m==='auto'&&_h>=6&&_h<18))?'ct-day':'ct-night');}catch(e){document.documentElement.classList.add('ct-night');}try{var _b=localStorage.getItem('np_bgstyle');if(_b&&_b!=='aurora')document.documentElement.setAttribute('data-bg',_b);}catch(e){}</script>
 </head>
